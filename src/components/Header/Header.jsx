@@ -54,11 +54,11 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Navigation items
-  const navItems = [
+  // Navigation items - Sử dụng location để xác định trang hiện tại
+  const getNavItems = () => [
     {
       key: '/',
-      label: <Link to="/">Trang chủ</Link>,
+      label: <Link to="/" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Trang chủ</Link>,
     },
     {
       key: 'watches',
@@ -66,16 +66,16 @@ const Header = () => {
         <Dropdown
           menu={{
             items: [
-              { key: 'mechanical', label: <Link to="/products?category=mechanical">Đồng hồ cơ</Link> },
-              { key: 'sport', label: <Link to="/products?category=sport">Đồng hồ thể thao</Link> },
-              { key: 'smart', label: <Link to="/products?category=smart">Đồng hồ thông minh</Link> },
-              { key: 'classic', label: <Link to="/products?category=classic">Đồng hồ cổ điển</Link> },
+              { key: 'mechanical', label: <Link to="/products?category=mechanical" className="hover:no-underline">Đồng hồ cơ</Link> },
+              { key: 'sport', label: <Link to="/products?category=sport" className="hover:no-underline">Đồng hồ thể thao</Link> },
+              { key: 'smart', label: <Link to="/products?category=smart" className="hover:no-underline">Đồng hồ thông minh</Link> },
+              { key: 'classic', label: <Link to="/products?category=classic" className="hover:no-underline">Đồng hồ cổ điển</Link> },
               { type: 'divider' },
-              { key: 'all', label: <Link to="/products">Tất cả sản phẩm</Link> },
+              { key: 'all', label: <Link to="/products" className="hover:no-underline">Tất cả sản phẩm</Link> },
             ]
           }}
         >
-          <Space>
+          <Space className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>
             Đồng hồ
             <DownOutlined />
           </Space>
@@ -83,22 +83,42 @@ const Header = () => {
       )
     },
     {
-      key: '/brands',
-      label: <Link to="/products?filter=brands">Thương hiệu</Link>,
+      key: '/products',
+      label: <Link to="/products?filter=brands" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Thương hiệu</Link>,
     },
     {
       key: '/sale',
-      label: <Link to="/products?sale=true" className="text-red-500 font-semibold">SALE</Link>,
+      label: <Link to="/products?sale=true" className={`text-red-500 font-semibold hover:no-underline ${scrolled ? '' : 'text-white'}`}>SALE</Link>,
     },
     {
       key: '/about',
-      label: <Link to="/about">Giới thiệu</Link>,
+      label: <Link to="/about" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Giới thiệu</Link>,
     },
     {
       key: '/contact',
-      label: <Link to="/contact">Liên hệ</Link>,
+      label: <Link to="/contact" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Liên hệ</Link>,
     },
   ];
+  
+  const navItems = getNavItems();
+
+  // Xác định trang hiện tại để đánh dấu menu item đang active
+  const getCurrentMenuKey = () => {
+    const pathname = location.pathname;
+    if (pathname === '/') return '/';
+    
+    // Kiểm tra xem pathname có chứa '/products' không
+    if (pathname.includes('/products')) {
+      // Nếu URL có chứa 'sale=true' thì đánh dấu menu SALE
+      if (location.search.includes('sale=true')) return '/sale';
+      // Nếu URL có chứa 'filter=brands' thì đánh dấu menu Thương hiệu
+      if (location.search.includes('filter=brands')) return '/products';
+      // Nếu là trang products khác thì đánh dấu menu Đồng hồ
+      return 'watches';
+    }
+    
+    return pathname;
+  };
 
   // User dropdown items
   const userMenuItems = isAuthenticated
@@ -106,17 +126,17 @@ const Header = () => {
         {
           key: 'profile',
           icon: <UserOutlined />,
-          label: <Link to="/profile">Tài khoản</Link>,
+          label: <Link to="/profile" className="hover:no-underline">Tài khoản</Link>,
         },
         {
           key: 'orders',
           icon: <ShoppingCartOutlined />,
-          label: <Link to="/orders">Đơn hàng</Link>,
+          label: <Link to="/orders" className="hover:no-underline">Đơn hàng</Link>,
         },
         {
           key: 'wishlist',
           icon: <HeartOutlined />,
-          label: <Link to="/wishlist">Danh sách yêu thích</Link>,
+          label: <Link to="/wishlist" className="hover:no-underline">Danh sách yêu thích</Link>,
         },
         { type: 'divider' },
         {
@@ -129,12 +149,12 @@ const Header = () => {
         {
           key: 'login',
           icon: <LoginOutlined />,
-          label: <Link to="/auth">Đăng nhập</Link>,
+          label: <Link to="/auth" className="hover:no-underline">Đăng nhập</Link>,
         },
         {
           key: 'register',
           icon: <UserAddOutlined />,
-          label: <Link to="/auth?tab=register">Đăng ký</Link>,
+          label: <Link to="/auth?tab=register" className="hover:no-underline">Đăng ký</Link>,
         },
       ];
 
@@ -142,7 +162,7 @@ const Header = () => {
     <>
       <AntHeader 
         className={`fixed w-full z-10 px-4 sm:px-8 flex items-center justify-between transition-all duration-300 ${
-          scrolled ? 'bg-white shadow-md text-gray-800' : 'bg-verdigris-500 text-white'
+          scrolled ? 'bg-white shadow-md' : 'bg-verdigris-500'
         }`}
         style={{ height: 'auto', lineHeight: '1.5', padding: '10px 20px' }}
       >
@@ -152,13 +172,14 @@ const Header = () => {
           icon={<MenuOutlined />} 
           onClick={() => setVisible(true)} 
           className={`lg:hidden ${scrolled ? 'text-gray-800' : 'text-white'}`}
+          style={{ color: scrolled ? '#1f2937' : '#ffffff' }}
         />
         
         {/* Logo */}
         <div className="flex items-center">
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center hover:no-underline">
             <img 
-              src="/assets/images/logo.svg" 
+              src="/assets/images/logo.png" 
               alt="Watch Store Logo" 
               className="h-10 mr-2" 
               onError={(e) => {
@@ -176,10 +197,15 @@ const Header = () => {
         <div className="hidden lg:block flex-grow px-4">
           <Menu 
             mode="horizontal" 
-            selectedKeys={[location.pathname]} 
+            selectedKeys={[getCurrentMenuKey()]}
             items={navItems}
-            className={`border-0 ${scrolled ? 'bg-white text-gray-800' : 'bg-verdigris-500 text-white'}`}
-            style={{ background: 'transparent' }}
+            className={`border-0 custom-menu ${scrolled ? 'bg-white' : 'bg-verdigris-500'}`}
+            style={{ 
+              background: 'transparent',
+              color: scrolled ? '#1f2937' : '#ffffff',
+              borderBottom: 'none'
+            }}
+            theme={scrolled ? "light" : "dark"}
           />
         </div>
         
@@ -191,15 +217,17 @@ const Header = () => {
             icon={<SearchOutlined />} 
             onClick={() => setSearchVisible(!searchVisible)} 
             className={`flex items-center justify-center ${scrolled ? 'text-gray-800' : 'text-white'}`}
+            style={{ color: scrolled ? '#1f2937' : '#ffffff' }}
           />
           
           {/* Wishlist - with counter */}
-          <Link to="/wishlist" className="hidden sm:block">
+          <Link to="/wishlist" className="hidden sm:block hover:no-underline">
             <Badge count={wishlistItems.length} size="small">
               <Button 
                 type="text" 
                 icon={<HeartOutlined />} 
                 className={`flex items-center justify-center ${scrolled ? 'text-gray-800' : 'text-white'}`}
+                style={{ color: scrolled ? '#1f2937' : '#ffffff' }}
               />
             </Badge>
           </Link>
@@ -212,16 +240,18 @@ const Header = () => {
                 {user?.name?.charAt(0) || 'U'}
               </Avatar> : <UserOutlined />}
               className={`flex items-center justify-center ${scrolled ? 'text-gray-800' : 'text-white'}`}
+              style={{ color: scrolled ? '#1f2937' : '#ffffff' }}
             />
           </Dropdown>
           
           {/* Cart */}
-          <Link to="/cart">
+          <Link to="/cart" className="hover:no-underline">
             <Badge count={cartItems.length} size="small">
               <Button 
                 type="text" 
                 icon={<ShoppingCartOutlined />} 
                 className={`flex items-center justify-center ${scrolled ? 'text-gray-800' : 'text-white'}`}
+                style={{ color: scrolled ? '#1f2937' : '#ffffff' }}
               />
             </Badge>
           </Link>
@@ -248,7 +278,7 @@ const Header = () => {
         title={
           <div className="flex items-center">
             <img 
-              src="/assets/images/logo.svg" 
+              src="/assets/images/logo.png" 
               alt="Watch Store Logo" 
               className="h-8 mr-2"
               onError={(e) => {
@@ -266,24 +296,58 @@ const Header = () => {
       >
         <Menu
           mode="inline"
-          selectedKeys={[location.pathname]}
+          selectedKeys={[getCurrentMenuKey()]}
           style={{ border: 'none' }}
+          className="custom-mobile-menu"
         >
-          {navItems.map(item => (
-            <Menu.Item key={item.key} onClick={() => setVisible(false)}>
-              {item.label}
-            </Menu.Item>
-          ))}
+          {navItems.map(item => {
+            // Clone item và điều chỉnh label để không áp dụng màu sắc trong mobile drawer
+            const itemForMobile = {...item};
+            if (item.key === 'watches') {
+              // Xử lý đặc biệt cho dropdown
+              itemForMobile.label = (
+                <span className="hover:no-underline">
+                  Đồng hồ
+                </span>
+              );
+            } else if (item.key === '/sale') {
+              itemForMobile.label = (
+                <Link to="/products?sale=true" className="text-red-500 font-semibold hover:no-underline">
+                  SALE
+                </Link>
+              );
+            } else {
+              // Lấy URL từ item gốc
+              const linkTo = item.key === '/' ? '/' : item.key;
+              itemForMobile.label = (
+                <Link to={linkTo} className="hover:no-underline">
+                  {item.key === '/' ? 'Trang chủ' : 
+                   item.key === '/products' ? 'Thương hiệu' : 
+                   item.key === '/about' ? 'Giới thiệu' : 
+                   item.key === '/contact' ? 'Liên hệ' : item.key}
+                </Link>
+              );
+            }
+            return (
+              <Menu.Item 
+                key={item.key} 
+                onClick={() => setVisible(false)}
+                className={location.pathname === item.key ? 'font-bold' : ''}
+              >
+                {itemForMobile.label}
+              </Menu.Item>
+            );
+          })}
           
           <Divider />
           
           {!isAuthenticated ? (
             <>
               <Menu.Item key="login" icon={<LoginOutlined />} onClick={() => setVisible(false)}>
-                <Link to="/auth">Đăng nhập</Link>
+                <Link to="/auth" className="hover:no-underline">Đăng nhập</Link>
               </Menu.Item>
               <Menu.Item key="register" icon={<UserAddOutlined />} onClick={() => setVisible(false)}>
-                <Link to="/auth?tab=register">Đăng ký</Link>
+                <Link to="/auth?tab=register" className="hover:no-underline">Đăng ký</Link>
               </Menu.Item>
             </>
           ) : (
@@ -300,13 +364,13 @@ const Header = () => {
                 </div>
               </div>
               <Menu.Item key="profile" icon={<UserOutlined />} onClick={() => setVisible(false)}>
-                <Link to="/profile">Tài khoản</Link>
+                <Link to="/profile" className="hover:no-underline">Tài khoản</Link>
               </Menu.Item>
               <Menu.Item key="orders" icon={<ShoppingCartOutlined />} onClick={() => setVisible(false)}>
-                <Link to="/orders">Đơn hàng</Link>
+                <Link to="/orders" className="hover:no-underline">Đơn hàng</Link>
               </Menu.Item>
               <Menu.Item key="mobile-wishlist" icon={<HeartOutlined />} onClick={() => setVisible(false)}>
-                <Link to="/wishlist">
+                <Link to="/wishlist" className="hover:no-underline">
                   Danh sách yêu thích
                   {wishlistItems.length > 0 && (
                     <Badge count={wishlistItems.length} size="small" className="ml-2" />

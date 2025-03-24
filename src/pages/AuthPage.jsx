@@ -15,9 +15,9 @@ const AuthPage = () => {
       {isLogin ? <LoginForm /> : <RegisterForm />}
       <button
         onClick={toggleForm}
-        className="mt-4 text-blue-500 hover:underline"
+        className="mt-4 text-verdigris-500 hover:text-verdigris-600 hover:no-underline"
       >
-        {isLogin ? 'Need an account? Register' : 'Already have an account? Login'}
+        {isLogin ? 'Chưa có tài khoản? Đăng ký' : 'Đã có tài khoản? Đăng nhập'}
       </button>
     </div>
   );

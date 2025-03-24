@@ -45,10 +45,10 @@ const HomePage = () => {
 
   // Categories
   const categories = [
-    { id: 1, name: 'Đồng hồ cơ', image: '/assets/images/categories/mechanical.jpg', count: 24 },
-    { id: 2, name: 'Đồng hồ thể thao', image: '/assets/images/categories/sport.jpg', count: 18 },
-    { id: 3, name: 'Đồng hồ thông minh', image: '/assets/images/categories/smart.jpg', count: 32 },
-    { id: 4, name: 'Đồng hồ sang trọng', image: '/assets/images/categories/luxury.jpg', count: 15 },
+    { id: 1, name: 'Đồng hồ cơ', image: '/assets/images/products/watch.jpg', count: 24 },
+    { id: 2, name: 'Đồng hồ thể thao', image: '/assets/images/products/watch.jpg', count: 18 },
+    { id: 3, name: 'Đồng hồ thông minh', image: '/assets/images/products/watch.jpg', count: 32 },
+    { id: 4, name: 'Đồng hồ sang trọng', image: '/assets/images/products/watch.jpg', count: 15 },
   ];
 
   // Testimonials
@@ -105,7 +105,7 @@ const HomePage = () => {
                     <Tag color="blue" className="mb-4">{item.subtitle}</Tag>
                     <Title level={1} className="text-white mb-4 drop-shadow-lg">{item.title}</Title>
                     <Paragraph className="text-white text-lg mb-8">{item.description}</Paragraph>
-                    <Link to={item.buttonLink}>
+                    <Link to={item.buttonLink} className='hover:no-underline'> 
                       <Button type="primary" size="large" icon={<ArrowRightOutlined />}>
                         {item.buttonText}
                       </Button>
@@ -158,7 +158,7 @@ const HomePage = () => {
       <div className="py-16 container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
           <Title level={2} className="m-0">Sản Phẩm Nổi Bật</Title>
-          <Link to="/products">
+          <Link to="/products" className='hover:no-underline'>
             <Button type="link" icon={<ArrowRightOutlined />}>Xem tất cả</Button>
           </Link>
         </div>
@@ -166,7 +166,7 @@ const HomePage = () => {
         <Row gutter={[24, 24]}>
           {featuredProducts.map(product => (
             <Col xs={24} sm={12} lg={6} key={product.id}>
-              <Link to={`/products/${product.id}`}>
+              <Link to={`/products/${product.id}`} className='hover:no-underline'>
                 <Card
                   hoverable
                   cover={
@@ -211,7 +211,7 @@ const HomePage = () => {
           <Row gutter={[24, 24]}>
             {categories.map(category => (
               <Col xs={24} sm={12} lg={6} key={category.id}>
-                <Link to={`/products?category=${category.name}`}>
+                <Link to={`/products?category=${category.name}`} className='hover:no-underline'>
                   <Card 
                     hoverable 
                     className="category-card overflow-hidden"
@@ -268,7 +268,7 @@ const HomePage = () => {
               Với đội ngũ chuyên viên tư vấn giàu kinh nghiệm, chúng tôi cam kết mang đến cho khách hàng những sản phẩm
               chính hãng với giá cả cạnh tranh nhất và dịch vụ hậu mãi tận tâm.
             </Paragraph>
-            <Link to="/about">
+            <Link to="/about" className='hover:no-underline'>
               <Button type="primary" size="large">Tìm hiểu thêm</Button>
             </Link>
           </Col>
@@ -309,10 +309,10 @@ const HomePage = () => {
           </Paragraph>
           <Space direction="horizontal" size="large">
             <Button size="large" type="default" ghost>
-              <Link to="/products?sale=true">Xem khuyến mãi</Link>
+              <Link to="/products?sale=true" className='hover:no-underline'>Xem khuyến mãi</Link>
             </Button>
             <Button size="large" type="primary" className="bg-white text-blue-600 border-white hover:bg-gray-100">
-              <Link to="/register">Đăng ký ngay</Link>
+              <Link to="/register" className='hover:no-underline'>Đăng ký ngay</Link>
             </Button>
           </Space>
         </div>

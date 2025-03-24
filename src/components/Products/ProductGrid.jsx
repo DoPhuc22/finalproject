@@ -17,9 +17,9 @@ const ProductGrid = ({ products, loading = false, pagination = false }) => {
 
   return (
     <div className="product-grid">
-      <Row gutter={[24, 24]}>
+      <Row gutter={[24, 32]}>
         {products.map(product => (
-          <Col xs={24} sm={12} md={8} lg={6} key={product.id}>
+          <Col xs={24} sm={12} md={8} key={product.id} className="product-grid-item">
             <ProductCard product={product} />
           </Col>
         ))}
@@ -30,7 +30,8 @@ const ProductGrid = ({ products, loading = false, pagination = false }) => {
           <Pagination
             defaultCurrent={1}
             total={products.length}
-            defaultPageSize={8}
+            defaultPageSize={9}
+            pageSizeOptions={[9, 18, 27, 36]}
             showSizeChanger
             showTotal={(total) => `Tổng cộng ${total} sản phẩm`}
           />

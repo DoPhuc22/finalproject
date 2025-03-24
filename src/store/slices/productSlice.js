@@ -20,7 +20,7 @@ export const fetchProductById = createAsyncThunk(
 );
 
 // Đường dẫn hình ảnh mặc định cho tất cả sản phẩm
-const defaultImageUrl = '/src/assets/images/products/watch.jpg';
+const defaultImageUrl = '/assets/images/products/watch.jpg';
 
 // Dữ liệu mẫu cho các sản phẩm
 const initialProducts = [

@@ -60,7 +60,7 @@ const ProductCard = ({ product }) => {
 
   const cardActions = [
     <Tooltip title="Xem chi tiết">
-      <Link to={`/products/${product.id}`}>
+      <Link to={`/products/${product.id}`} className='hover:no-underline'>
         <EyeOutlined key="view" />
       </Link>
     </Tooltip>,
@@ -109,7 +109,7 @@ const ProductCard = ({ product }) => {
         className="product-card h-full"
       >
         <Meta
-          title={<Link to={`/products/${product.id}`} className="text-lg font-medium hover:text-verdigris-500">{product.name}</Link>}
+          title={<Link to={`/products/${product.id}`} className="text-lg font-medium hover:text-verdigris-500 hover:no-underline">{product.name}</Link>}
           description={
             <div>
               <div className="mb-2">

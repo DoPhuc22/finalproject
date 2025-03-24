@@ -255,3 +255,117 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: #2a8281;
 }
+
+/* Thêm vào cuối file global.css */
+
+/* Tùy chỉnh menu đang được chọn */
+.custom-menu .ant-menu-item-selected {
+  font-weight: bold !important;
+  color: var(--primary-color) !important;
+  border-bottom-color: var(--primary-color) !important;
+}
+
+/* Loại bỏ gạch chân cho các liên kết trong menu */
+.custom-menu .ant-menu-item a,
+.custom-menu .ant-menu-submenu a,
+.custom-menu .ant-dropdown a,
+.ant-dropdown-menu-item a {
+  text-decoration: none !important;
+}
+
+/* Tùy chỉnh menu trong mobile */
+.custom-mobile-menu .ant-menu-item-selected {
+  font-weight: bold !important;
+  color: var(--primary-color) !important;
+  background-color: rgba(58, 161, 160, 0.1) !important;
+}
+
+/* Loại bỏ mọi gạch chân cho các liên kết */
+a.hover\:no-underline:hover {
+  text-decoration: none !important;
+}
+
+/* Icon các tính năng trong header */
+.header-icon {
+  color: inherit;
+  transition: color 0.3s;
+}
+
+.header-icon:hover {
+  color: var(--secondary-color) !important;
+}
+
+/* Màu mặc định cho các đường dẫn trong trang */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--primary-color);
+  opacity: 0.8;
+}
+
+/* Thêm vào file global.css */
+
+/* Tùy chỉnh Menu khi ở trạng thái không scroll */
+.ant-menu.custom-menu.bg-verdigris-500 {
+  color: white;
+}
+
+.ant-menu.custom-menu.bg-verdigris-500 .ant-menu-item {
+  color: white !important;
+}
+
+.ant-menu.custom-menu.bg-verdigris-500 .ant-menu-item:hover {
+  color: white !important;
+  opacity: 0.8;
+}
+
+.ant-menu.custom-menu.bg-verdigris-500 .ant-menu-item-selected {
+  color: white !important;
+  font-weight: bold;
+  border-bottom-color: white !important;
+}
+
+/* Dropdown menu trong trạng thái mặc định */
+.ant-menu.custom-menu.bg-verdigris-500 .ant-menu-submenu {
+  color: white !important;
+}
+
+.ant-menu.custom-menu.bg-verdigris-500 .ant-menu-submenu:hover {
+  color: white !important;
+  opacity: 0.8;
+}
+
+.ant-menu.custom-menu.bg-verdigris-500 .ant-menu-submenu-selected {
+  color: white !important;
+}
+
+/* Tùy chỉnh màu của Menu khi đã scroll */
+.ant-menu.custom-menu.bg-white .ant-menu-item-selected {
+  color: #3AA1A0 !important;
+  font-weight: bold;
+  border-bottom-color: #3AA1A0 !important;
+}
+
+/* Fix màu và gạch chân khi hover */
+.hover\:no-underline:hover {
+  text-decoration: none !important;
+}
+
+/* Animation mượt mà khi chuyển màu */
+.ant-menu-item,
+.ant-menu-submenu {
+  transition: color 0.3s, border-color 0.3s !important;
+}
+
+/* Sale item luôn có màu đặc biệt */
+.ant-menu-item a.text-red-500 {
+  color: #ef4444 !important;
+}
+
+.bg-verdigris-500 .ant-menu-item a.text-red-500 {
+  color: white !important;
+  font-weight: bold;
+}

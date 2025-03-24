@@ -13,7 +13,9 @@ const CartPage = () => {
       {cartItems.length === 0 ? (
         <div className="text-center">
           <p className="text-lg">Giỏ hàng của bạn đang trống.</p>
-          <Link to="/products" className="text-blue-500 hover:underline">Tiếp tục mua sắm</Link>
+          <Link to="/products" className="text-verdigris-500 hover:text-verdigris-600 hover:no-underline">
+            Tiếp tục mua sắm
+          </Link>
         </div>
       ) : (
         <>
@@ -24,7 +26,7 @@ const CartPage = () => {
           </div>
           <div className="mt-4">
             <h2 className="text-xl font-semibold">Tổng cộng: {totalAmount.toLocaleString()} VNĐ</h2>
-            <Link to="/checkout" className="mt-4 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+            <Link to="/checkout" className="mt-4 inline-block bg-verdigris-500 text-white py-2 px-4 rounded hover:bg-verdigris-600 hover:no-underline">
               Thanh toán
             </Link>
           </div>

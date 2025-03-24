@@ -12,6 +12,7 @@ import {
 } from '@ant-design/icons';
 import ProductGrid from '../components/Products/ProductGrid';
 import { selectAllProducts, selectFilteredProducts } from '../store/slices/productSlice';
+import { Link } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -82,7 +83,7 @@ const ProductsPage = () => {
     <div className="container mx-auto px-4 py-6">
       <Breadcrumb 
         items={[
-          { title: 'Trang chủ', href: '/' },
+          { title: <Link to="/" className="hover:no-underline">Trang chủ</Link>, href: '/' },
           { title: 'Sản phẩm' }
         ]}
         className="mb-4"
