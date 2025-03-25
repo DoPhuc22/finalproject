@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { 
@@ -23,7 +23,8 @@ import {
   DownOutlined,
   LoginOutlined,
   UserAddOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  CloseOutlined
 } from '@ant-design/icons';
 
 const { Header: AntHeader } = Layout;
@@ -39,6 +40,7 @@ const Header = () => {
   const wishlistItems = useSelector((state) => state.wishlist.items);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const user = useSelector((state) => state.auth.user);
+  const searchInputRef = useRef(null);
 
   // Handle scroll effect for the header
   useEffect(() => {
@@ -53,6 +55,15 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Focus input when search becomes visible
+  useEffect(() => {
+    if (searchVisible && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current.focus();
+      }, 300);
+    }
+  }, [searchVisible]);
 
   // Navigation items - Sử dụng location để xác định trang hiện tại
   const getNavItems = () => [
@@ -158,6 +169,15 @@ const Header = () => {
         },
       ];
 
+  // Handle search
+  const handleSearch = (value) => {
+    if (value.trim()) {
+      // Redirect to search results page
+      window.location.href = `/products?search=${encodeURIComponent(value.trim())}`;
+      setSearchVisible(false);
+    }
+  };
+
   return (
     <>
       <AntHeader 
@@ -211,14 +231,37 @@ const Header = () => {
         
         {/* Action buttons */}
         <div className="flex items-center space-x-3">
-          {/* Search button - visible on all screens */}
-          <Button 
-            type="text" 
-            icon={<SearchOutlined />} 
-            onClick={() => setSearchVisible(!searchVisible)} 
-            className={`flex items-center justify-center ${scrolled ? 'text-gray-800' : 'text-white'}`}
-            style={{ color: scrolled ? '#1f2937' : '#ffffff' }}
-          />
+          {/* Animated Search Bar */}
+          <div className="relative flex items-center">
+            <div 
+              className={`search-animation overflow-hidden transition-all duration-300 ease-in-out mr-2 ${
+                searchVisible ? 'w-48 md:w-64 opacity-100' : 'w-0 opacity-0'
+              }`}
+            >
+              <Input
+                ref={searchInputRef}
+                placeholder="Tìm kiếm..."
+                className="rounded-full"
+                onPressEnter={(e) => handleSearch(e.target.value)}
+                suffix={
+                  <Button 
+                    type="text" 
+                    size="small" 
+                    icon={<CloseOutlined />} 
+                    onClick={() => setSearchVisible(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  />
+                }
+              />
+            </div>
+            <Button 
+              type="text" 
+              icon={searchVisible ? <SearchOutlined /> : <SearchOutlined />} 
+              onClick={() => setSearchVisible(!searchVisible)} 
+              className={`flex items-center justify-center ${scrolled ? 'text-gray-800' : 'text-white'}`}
+              style={{ color: scrolled ? '#1f2937' : '#ffffff' }}
+            />
+          </div>
           
           {/* Wishlist - with counter */}
           <Link to="/wishlist" className="hidden sm:block hover:no-underline">
@@ -258,21 +301,6 @@ const Header = () => {
         </div>
       </AntHeader>
       
-      {/* Search input that appears when the search icon is clicked */}
-      {searchVisible && (
-        <div className={`fixed top-[64px] left-0 w-full z-10 px-4 py-3 shadow-md transition-all duration-300 ${
-          scrolled ? 'bg-white' : 'bg-verdigris-400'
-        }`}>
-          <Search
-            placeholder="Tìm kiếm sản phẩm..."
-            enterButton
-            size="large"
-            className="max-w-3xl mx-auto"
-            onSearch={(value) => console.log('Searching for:', value)}
-          />
-        </div>
-      )}
-      
       {/* Mobile side drawer */}
       <Drawer
         title={
@@ -294,6 +322,15 @@ const Header = () => {
         open={visible}
         width={280}
       >
+        {/* Mobile Search */}
+        <div className="px-4 pb-4">
+          <Input.Search
+            placeholder="Tìm kiếm sản phẩm..."
+            enterButton
+            onSearch={handleSearch}
+          />
+        </div>
+        
         <Menu
           mode="inline"
           selectedKeys={[getCurrentMenuKey()]}
@@ -386,7 +423,31 @@ const Header = () => {
       </Drawer>
       
       {/* Spacer to prevent content from hiding under the fixed header */}
-      <div style={{ height: searchVisible ? '120px' : '64px' }}></div>
+      <div style={{ height: '64px' }}></div>
+      
+      {/* Add styles for search animation */}
+      <style jsx="true">{`
+        .search-animation {
+          max-width: 300px;
+        }
+        
+        .search-animation input {
+          height: 36px;
+          background: ${scrolled ? 'white' : 'rgba(255, 255, 255, 0.15)'};
+          border: 1px solid ${scrolled ? '#d9d9d9' : 'rgba(255, 255, 255, 0.3)'};
+          color: ${scrolled ? 'inherit' : 'white'};
+        }
+        
+        .search-animation input::placeholder {
+          color: ${scrolled ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 255, 255, 0.7)'};
+        }
+        
+        @media (max-width: 640px) {
+          .search-animation {
+            max-width: 150px;
+          }
+        }
+      `}</style>
     </>
   );
 };
