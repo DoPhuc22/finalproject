@@ -101,7 +101,7 @@ const WishlistPage = () => {
 
   return (
     <div className="container mx-auto p-4 py-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 mt-12">
         <Title level={2} className="mb-0">Danh Sách Yêu Thích</Title>
         <Link to="/products" className="text-verdigris-500 hover:text-verdigris-600">
           <Space>

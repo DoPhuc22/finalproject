@@ -151,7 +151,7 @@ const Footer = () => {
               <ul className="list-none p-0">
                 <li className="mb-3 flex items-start">
                   <EnvironmentOutlined className="mt-1 mr-2 text-white/80" />
-                  <span className="text-white/80">123 Đường Thời Gian, Quận 1, TP. Hồ Chí Minh</span>
+                  <span className="text-white/80">123 Đường Sigma, Thanh Xuân, TP. Hà Nội</span>
                 </li>
                 <li className="mb-3 flex items-center">
                   <PhoneOutlined className="mr-2 text-white/80" />
@@ -159,7 +159,7 @@ const Footer = () => {
                 </li>
                 <li className="mb-3 flex items-center">
                   <MailOutlined className="mr-2 text-white/80" />
-                  <a href="mailto:info@watchstore.com" className="text-white/80 hover:text-white hover:no-underline">info@watchstore.com</a>
+                  <a href="mailto:info@watchstore.com" className="text-white/80 hover:text-white hover:no-underline">WatchSigma@watchstore.com</a>
                 </li>
                 <li className="mb-3 flex items-start">
                   <ClockCircleOutlined className="mt-1 mr-2 text-white/80" />

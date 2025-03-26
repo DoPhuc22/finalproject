@@ -92,7 +92,7 @@ const ProductCard = ({ product }) => {
       <Card
         hoverable
         cover={
-          <div className="relative h-48 overflow-hidden">
+          <div className="relative h-90 overflow-hidden">
             <img 
               alt={product.name}
               src={product.imageUrl || product.image || '/assets/images/products/watch.jpg'}
@@ -118,7 +118,7 @@ const ProductCard = ({ product }) => {
               </div>
               <p className="text-gray-500 mb-2 text-sm line-clamp-2">{product.description}</p>
               <div className="flex justify-between items-center mt-3">
-                <span className="text-xl font-bold text-verdigris-600">{product.price?.toLocaleString() || 0} VNĐ</span>
+                <span className="text-lg font-bold text-verdigris-600">{product.price?.toLocaleString() || 0} VNĐ</span>
                 <Button 
                   type="primary" 
                   shape="round" 
