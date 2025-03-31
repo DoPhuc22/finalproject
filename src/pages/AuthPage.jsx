@@ -1,24 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, Tabs, Typography, Space, Divider } from 'antd';
+import { UserOutlined, KeyOutlined, LoginOutlined, UserAddOutlined } from '@ant-design/icons';
+import { useSearchParams } from 'react-router-dom';
 import LoginForm from '../components/Auth/LoginForm';
 import RegisterForm from '../components/Auth/RegisterForm';
 
-const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+const { Title, Text } = Typography;
 
-  const toggleForm = () => {
-    setIsLogin((prev) => !prev);
+const AuthPage = () => {
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState('login');
+  
+  useEffect(() => {
+    // Check URL query params to see if we should show login or register tab
+    const tab = searchParams.get('tab');
+    if (tab === 'register') {
+      setActiveTab('register');
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (key) => {
+    setActiveTab(key);
   };
 
+  const items = [
+    {
+      key: 'login',
+      label: (
+        <span className="flex items-center">
+          <LoginOutlined className="mr-2" />
+          Đăng Nhập
+        </span>
+      ),
+      children: <LoginForm />,
+    },
+    {
+      key: 'register',
+      label: (
+        <span className="flex items-center">
+          <UserAddOutlined className="mr-2" />
+          Đăng Ký
+        </span>
+      ),
+      children: <RegisterForm />,
+    },
+  ];
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold mb-6">{isLogin ? 'Login' : 'Register'}</h1>
-      {isLogin ? <LoginForm /> : <RegisterForm />}
-      <button
-        onClick={toggleForm}
-        className="mt-4 text-verdigris-500 hover:text-verdigris-600 hover:no-underline"
+    <div className="flex justify-center items-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-[80vh]">
+      <Card 
+        bordered={false}
+        className="w-full max-w-md shadow-lg rounded-lg"
+        bodyStyle={{ padding: '24px 32px' }}
       >
-        {isLogin ? 'Chưa có tài khoản? Đăng ký' : 'Đã có tài khoản? Đăng nhập'}
-      </button>
+        <div className="text-center mb-6">
+          <Space direction="vertical" size={1}>
+            <div className="flex justify-center mb-3">
+              <div className="bg-verdigris-500 text-white p-3 rounded-full">
+                {activeTab === 'login' ? <LoginOutlined style={{ fontSize: '24px' }} /> : <UserAddOutlined style={{ fontSize: '24px' }} />}
+              </div>
+            </div>
+            <Title level={3} className="m-0">
+              {activeTab === 'login' ? 'Chào Mừng Trở Lại' : 'Tạo Tài Khoản Mới'}
+            </Title>
+            <Text type="secondary">
+              {activeTab === 'login' 
+                ? 'Đăng nhập để tiếp tục mua sắm' 
+                : 'Đăng ký để theo dõi đơn hàng và nhiều hơn nữa'}
+            </Text>
+          </Space>
+        </div>
+
+        <Divider />
+
+        <Tabs 
+          activeKey={activeTab} 
+          onChange={handleTabChange}
+          centered
+          items={items}
+          className="auth-tabs"
+        />
+      </Card>
     </div>
   );
 };

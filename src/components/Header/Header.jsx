@@ -102,10 +102,6 @@ const Header = () => {
       label: <Link to="/products?sale=true" className={`text-red-500 font-semibold hover:no-underline ${scrolled ? '' : 'text-white'}`}>SALE</Link>,
     },
     {
-      key: '/about',
-      label: <Link to="/about" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Giới thiệu</Link>,
-    },
-    {
       key: '/contact',
       label: <Link to="/contact" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Liên hệ</Link>,
     },

@@ -369,3 +369,56 @@ a:hover {
   color: white !important;
   font-weight: bold;
 }
+
+/* Add to your global.css */
+
+/* Auth form styling */
+.auth-tabs .ant-tabs-nav::before {
+  border-bottom: none !important;
+}
+
+.auth-tabs .ant-tabs-tab {
+  font-size: 16px;
+  padding: 12px 0;
+}
+
+.auth-tabs .ant-tabs-tab-active {
+  font-weight: 600;
+}
+
+.auth-tabs .ant-tabs-ink-bar {
+  background-color: var(--primary-color);
+  height: 3px;
+  border-radius: 3px;
+}
+
+.login-form .ant-form-item,
+.register-form .ant-form-item {
+  margin-bottom: 20px;
+}
+
+.login-form .ant-input-affix-wrapper,
+.register-form .ant-input-affix-wrapper {
+  border-radius: 8px;
+  padding: 6px 11px;
+}
+
+.login-form .ant-input-affix-wrapper:focus,
+.login-form .ant-input-affix-wrapper-focused,
+.register-form .ant-input-affix-wrapper:focus,
+.register-form .ant-input-affix-wrapper-focused {
+  box-shadow: 0 0 0 2px rgba(58, 161, 160, 0.2);
+  border-color: var(--primary-color);
+}
+
+.login-form .ant-input-prefix,
+.register-form .ant-input-prefix {
+  color: rgba(0, 0, 0, 0.3);
+  margin-right: 10px;
+}
+
+.ant-btn.ant-btn-primary.bg-verdigris-500:hover,
+.ant-btn.ant-btn-primary.bg-verdigris-500:focus {
+  background-color: #2a8281 !important;
+  border-color: #2a8281 !important;
+}
