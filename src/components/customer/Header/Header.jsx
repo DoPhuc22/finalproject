@@ -17,7 +17,6 @@ import {
 import { 
   ShoppingCartOutlined, 
   UserOutlined, 
-  HeartOutlined, 
   SearchOutlined,
   MenuOutlined,
   DownOutlined,
@@ -37,7 +36,6 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const cartItems = useSelector((state) => state.cart.items);
-  const wishlistItems = useSelector((state) => state.wishlist.items);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const user = useSelector((state) => state.auth.user);
   const searchInputRef = useRef(null);
@@ -139,11 +137,6 @@ const Header = () => {
           key: 'orders',
           icon: <ShoppingCartOutlined />,
           label: <Link to="/orders" className="hover:no-underline">Đơn hàng</Link>,
-        },
-        {
-          key: 'wishlist',
-          icon: <HeartOutlined />,
-          label: <Link to="/wishlist" className="hover:no-underline">Danh sách yêu thích</Link>,
         },
         { type: 'divider' },
         {
@@ -258,18 +251,6 @@ const Header = () => {
               style={{ color: scrolled ? '#1f2937' : '#ffffff' }}
             />
           </div>
-          
-          {/* Wishlist - with counter */}
-          <Link to="/wishlist" className="hidden sm:block hover:no-underline">
-            <Badge count={wishlistItems.length} size="small">
-              <Button 
-                type="text" 
-                icon={<HeartOutlined />} 
-                className={`flex items-center justify-center ${scrolled ? 'text-gray-800' : 'text-white'}`}
-                style={{ color: scrolled ? '#1f2937' : '#ffffff' }}
-              />
-            </Badge>
-          </Link>
           
           {/* User dropdown or auth links */}
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
@@ -402,14 +383,6 @@ const Header = () => {
               <Menu.Item key="orders" icon={<ShoppingCartOutlined />} onClick={() => setVisible(false)}>
                 <Link to="/orders" className="hover:no-underline">Đơn hàng</Link>
               </Menu.Item>
-              <Menu.Item key="mobile-wishlist" icon={<HeartOutlined />} onClick={() => setVisible(false)}>
-                <Link to="/wishlist" className="hover:no-underline">
-                  Danh sách yêu thích
-                  {wishlistItems.length > 0 && (
-                    <Badge count={wishlistItems.length} size="small" className="ml-2" />
-                  )}
-                </Link>
-              </Menu.Item>
               <Menu.Item key="logout" icon={<LogoutOutlined />} danger>
                 Đăng xuất
               </Menu.Item>
@@ -419,31 +392,7 @@ const Header = () => {
       </Drawer>
       
       {/* Spacer to prevent content from hiding under the fixed header */}
-      <div style={{ height: '64px' }}></div>
-      
-      {/* Add styles for search animation */}
-      <style jsx="true">{`
-        .search-animation {
-          max-width: 300px;
-        }
-        
-        .search-animation input {
-          height: 36px;
-          background: ${scrolled ? 'white' : 'rgba(255, 255, 255, 0.15)'};
-          border: 1px solid ${scrolled ? '#d9d9d9' : 'rgba(255, 255, 255, 0.3)'};
-          color: ${scrolled ? 'inherit' : 'white'};
-        }
-        
-        .search-animation input::placeholder {
-          color: ${scrolled ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 255, 255, 0.7)'};
-        }
-        
-        @media (max-width: 640px) {
-          .search-animation {
-            max-width: 150px;
-          }
-        }
-      `}</style>
+      <div style={{ height: '60px' }}></div>
     </>
   );
 };

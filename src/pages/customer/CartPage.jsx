@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import CartItem from '../components/Cart/CartItem';
+import CartItem from '../../components/customer/Cart/CartItem';
 import { Link } from 'react-router-dom';
 
 const CartPage = () => {

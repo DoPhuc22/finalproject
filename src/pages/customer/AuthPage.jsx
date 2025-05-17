@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, Tabs, Typography, Space, Divider } from 'antd';
 import { UserOutlined, KeyOutlined, LoginOutlined, UserAddOutlined } from '@ant-design/icons';
 import { useSearchParams } from 'react-router-dom';
-import LoginForm from '../components/Auth/LoginForm';
-import RegisterForm from '../components/Auth/RegisterForm';
+import LoginForm from '../../components/customer/Auth/LoginForm';
+import RegisterForm from '../../components/customer/Auth/RegisterForm';
 
 const { Title, Text } = Typography;
 

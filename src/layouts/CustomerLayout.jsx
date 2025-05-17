@@ -1,8 +1,8 @@
 import React from 'react';
-import Header from '../components/Header/Header';
-import Footer from '../components/Footer/Footer';
+import Header from '../components/customer/Header/Header';
+import Footer from '../components/customer/Footer/Footer';
 
-const MainLayout = ({ children }) => {
+const CustomerLayout = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -12,4 +12,4 @@ const MainLayout = ({ children }) => {
   );
 };
 
-export default MainLayout;
+export default CustomerLayout;

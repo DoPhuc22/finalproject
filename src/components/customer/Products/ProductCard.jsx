@@ -3,14 +3,12 @@ import { Card, Badge, Rate, Button, Tag, Tooltip } from 'antd';
 import { ShoppingCartOutlined, HeartOutlined, EyeOutlined, HeartFilled } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { addToCart } from '../../store/slices/cartSlice';
-import { toggleWishlistItem, selectIsInWishlist } from '../../store/slices/wishlistSlice';
+import { addToCart } from '../../../store/slices/cartSlice';
 
 const { Meta } = Card;
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
-  const isInWishlist = useSelector(state => selectIsInWishlist(state, product.id));
 
   const handleAddToCart = () => {
     dispatch(addToCart({
@@ -20,22 +18,6 @@ const ProductCard = ({ product }) => {
       image: product.imageUrl || product.image,
       brand: product.brand,
       quantity: 1
-    }));
-  };
-
-  const handleToggleWishlist = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dispatch(toggleWishlistItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.imageUrl || product.image,
-      brand: product.brand,
-      description: product.description,
-      rating: product.rating,
-      reviews: product.reviews,
-      inStock: product.inStock
     }));
   };
 
@@ -63,20 +45,6 @@ const ProductCard = ({ product }) => {
       <Link to={`/products/${product.id}`} className='hover:no-underline'>
         <EyeOutlined key="view" />
       </Link>
-    </Tooltip>,
-    <Tooltip title={isInWishlist ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}>
-      {isInWishlist ? (
-        <HeartFilled 
-          key="wishlist" 
-          onClick={handleToggleWishlist} 
-          style={{ color: '#ff4d4f' }}
-        />
-      ) : (
-        <HeartOutlined 
-          key="wishlist" 
-          onClick={handleToggleWishlist}
-        />
-      )}
     </Tooltip>,
     <Tooltip title="Thêm vào giỏ hàng">
       <ShoppingCartOutlined key="cart" onClick={handleAddToCart} />

@@ -10,8 +10,8 @@ import {
   AppstoreOutlined, BarsOutlined, 
   ReloadOutlined, SearchOutlined
 } from '@ant-design/icons';
-import ProductGrid from '../components/Products/ProductGrid';
-import { selectAllProducts, selectFilteredProducts } from '../store/slices/productSlice';
+import ProductGrid from '../../components/customer/Products/ProductGrid';
+import { selectAllProducts, selectFilteredProducts } from '../../store/slices/productSlice';
 import { Link } from 'react-router-dom';
 
 const { Title, Text } = Typography;

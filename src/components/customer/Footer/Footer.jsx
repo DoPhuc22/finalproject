@@ -62,7 +62,7 @@ const Footer = () => {
                 />
                 <Title level={3} className="text-white m-0">Watch Store</Title>
               </div>
-              <Paragraph className="text-white/80 mb-6">
+              <Paragraph className="text-white/80 mb-6 text-justify">
                 Cửa hàng cung cấp các mẫu đồng hồ chính hãng với giá cả cạnh tranh và dịch vụ hậu mãi tốt nhất. Chúng tôi tự hào mang đến cho khách hàng những sản phẩm chất lượng cao từ các thương hiệu nổi tiếng thế giới.
               </Paragraph>
               <Space size="large">

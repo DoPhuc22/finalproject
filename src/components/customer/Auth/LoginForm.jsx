@@ -3,7 +3,7 @@ import { Form, Input, Button, Checkbox, Divider, message } from 'antd';
 import { UserOutlined, LockOutlined, GoogleOutlined, FacebookOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { login } from '../../store/slices/authSlice';
+import { login } from '../../../store/slices/authSlice';
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);

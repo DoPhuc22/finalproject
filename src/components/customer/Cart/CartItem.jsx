@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { DeleteOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, InputNumber } from 'antd';
-import { removeFromCart, updateQuantity } from '../../store/slices/cartSlice';
+import { removeFromCart, updateQuantity } from '../../../store/slices/cartSlice';
 
 const CartItem = ({ item }) => {
   const dispatch = useDispatch();

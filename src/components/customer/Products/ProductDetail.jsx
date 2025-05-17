@@ -1,8 +1,8 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectProductById } from '../../store/slices/productSlice';
-import Button from '../UI/Button';
+import { selectProductById } from '../../../store/slices/productSlice';
+import { Button } from 'antd';
 
 const ProductDetail = () => {
   const { productId } = useParams();

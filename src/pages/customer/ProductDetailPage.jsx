@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import ProductDetail from '../components/Products/ProductDetail';
+import ProductDetail from '../../components/customer/Products/ProductDetail';
 import { useSelector } from 'react-redux';
 
 const ProductDetailPage = () => {

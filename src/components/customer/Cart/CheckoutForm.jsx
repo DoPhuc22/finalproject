@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { clearCart } from '../../store/slices/cartSlice';
-import { processPayment } from '../../services/payment';
+import { clearCart } from '../../../store/slices/cartSlice';
+import { processPayment } from '../../../services/payment';
 
 const CheckoutForm = () => {
   const [formData, setFormData] = useState({
@@ -32,7 +32,8 @@ const CheckoutForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="checkout-form">
+    <div className="container mx-auto p-4">
+      <form onSubmit={handleSubmit} className="checkout-form">
       <h2 className="text-2xl font-bold mb-4">Checkout</h2>
       <div className="mb-4">
         <label className="block mb-1" htmlFor="name">Name</label>
@@ -108,6 +109,7 @@ const CheckoutForm = () => {
       </div>
       <button type="submit" className="bg-blue-500 text-white p-2 rounded">Pay Now</button>
     </form>
+    </div>
   );
 };
 

@@ -3,8 +3,8 @@ import { Form, Input, Button, Checkbox, Divider, message } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, GoogleOutlined, FacebookOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { register } from '../../services/auth';
-import { loginSuccess } from '../../store/slices/authSlice';
+import { register } from '../../../services/auth';
+import { loginSuccess } from '../../../store/slices/authSlice';
 
 const RegisterForm = () => {
   const [loading, setLoading] = useState(false);

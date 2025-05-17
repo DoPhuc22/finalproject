@@ -3,7 +3,7 @@ import { Typography, Button, Carousel, Card, Row, Col, Space, Divider, Rate, Ava
 import { ArrowRightOutlined, ClockCircleOutlined, TagOutlined, TrophyOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectAllProducts } from '../store/slices/productSlice';
+import { selectAllProducts } from '../../store/slices/productSlice';
 
 const { Title, Paragraph, Text } = Typography;
 const { Meta } = Card;
