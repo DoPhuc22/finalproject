@@ -103,6 +103,10 @@ const Header = () => {
       key: '/contact',
       label: <Link to="/contact" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Liên hệ</Link>,
     },
+    {
+      key: '/admin/dashboard',
+      label: <Link to="/admin/dashboard" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Link sang trang quản trị (để tạm)</Link>,
+    },
   ];
   
   const navItems = getNavItems();
@@ -338,7 +342,7 @@ const Header = () => {
                   {item.key === '/' ? 'Trang chủ' : 
                    item.key === '/products' ? 'Thương hiệu' : 
                    item.key === '/about' ? 'Giới thiệu' : 
-                   item.key === '/contact' ? 'Liên hệ' : item.key}
+                   item.key === '/contact' ? 'Liên hệ' : item.key === '/admin/dashboard' ? 'trang quản trị (để tạm)' : item.key}
                 </Link>
               );
             }

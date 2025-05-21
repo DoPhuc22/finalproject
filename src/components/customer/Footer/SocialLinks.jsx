@@ -1,21 +1,48 @@
 import React from 'react';
+import { Space, Button } from 'antd';
+import { 
+  FacebookOutlined, 
+  InstagramOutlined, 
+  TwitterOutlined, 
+  LinkedinOutlined 
+} from '@ant-design/icons';
 
 const SocialLinks = () => {
   return (
-    <div className="flex justify-center space-x-4">
-      <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
-        <img src="/assets/images/facebook.svg" alt="Facebook" className="w-6 h-6" />
-      </a>
-      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
-        <img src="/assets/images/instagram.svg" alt="Instagram" className="w-6 h-6" />
-      </a>
-      <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
-        <img src="/assets/images/twitter.svg" alt="Twitter" className="w-6 h-6" />
-      </a>
-      <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
-        <img src="/assets/images/linkedin.svg" alt="LinkedIn" className="w-6 h-6" />
-      </a>
-    </div>
+    <Space size="large">
+      <Button 
+        type="text" 
+        shape="circle" 
+        icon={<FacebookOutlined className="text-xl" />} 
+        className="bg-white/10 text-white hover:bg-white hover:text-verdigris-600"
+        href="https://facebook.com"
+        target="_blank"
+      />
+      <Button 
+        type="text" 
+        shape="circle" 
+        icon={<InstagramOutlined className="text-xl" />} 
+        className="bg-white/10 text-white hover:bg-white hover:text-verdigris-600"
+        href="https://instagram.com"
+        target="_blank"
+      />
+      <Button 
+        type="text" 
+        shape="circle" 
+        icon={<TwitterOutlined className="text-xl" />} 
+        className="bg-white/10 text-white hover:bg-white hover:text-verdigris-600"
+        href="https://twitter.com"
+        target="_blank"
+      />
+      <Button 
+        type="text" 
+        shape="circle" 
+        icon={<LinkedinOutlined className="text-xl" />} 
+        className="bg-white/10 text-white hover:bg-white hover:text-verdigris-600"
+        href="https://linkedin.com"
+        target="_blank"
+      />
+    </Space>
   );
 };
 

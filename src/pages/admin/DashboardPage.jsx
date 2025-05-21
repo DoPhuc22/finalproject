@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Layout, 
-  Menu, 
-  Button, 
+  Breadcrumb, 
   Typography, 
   Row, 
   Col, 
@@ -10,38 +9,25 @@ import {
   Statistic, 
   Table, 
   Tag, 
-  Avatar, 
-  Breadcrumb,
-  Dropdown,
-  Badge,
-  Progress,
-  Checkbox,
-  Divider
+  Progress, 
+  Checkbox, 
+  Divider 
 } from 'antd';
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  DashboardOutlined,
-  ShoppingOutlined,
-  UserOutlined,
-  TagOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-  BellOutlined,
-  ShoppingCartOutlined,
-  RiseOutlined,
-  FallOutlined,
-  InboxOutlined,
-  ClockCircleOutlined,
-  SearchOutlined,
-  DownOutlined
-} from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { 
+  RiseOutlined, 
+  ShoppingCartOutlined, 
+  InboxOutlined, 
+  UserOutlined 
+} from '@ant-design/icons';
+import getNotificationItems from '../../components/admin/NotificationItems';
+import AdminHeader from '../../components/admin/Header';
+import Sidebar from '../../components/admin/SideBar';
 
-const { Header, Sider, Content } = Layout;
+const { Content } = Layout;
 const { Title, Text } = Typography;
 
-// Mock data
+// Mock data for orders
 const recentOrders = [
   {
     key: '1',
@@ -49,7 +35,7 @@ const recentOrders = [
     customer: 'Nguyễn Văn A',
     status: 'Completed',
     total: 2540000,
-    date: '2023-05-12'
+    date: '2025-05-12'
   },
   {
     key: '2',
@@ -57,7 +43,7 @@ const recentOrders = [
     customer: 'Trần Thị B',
     status: 'Pending',
     total: 1890000,
-    date: '2023-05-12'
+    date: '2025-05-12'
   },
   {
     key: '3',
@@ -65,7 +51,7 @@ const recentOrders = [
     customer: 'Lê Văn C',
     status: 'Processing',
     total: 3650000,
-    date: '2023-05-11'
+    date: '2025-05-11'
   },
   {
     key: '4',
@@ -73,7 +59,7 @@ const recentOrders = [
     customer: 'Phạm Thị D',
     status: 'Cancelled',
     total: 780000,
-    date: '2023-05-11'
+    date: '2025-05-11'
   },
   {
     key: '5',
@@ -81,10 +67,11 @@ const recentOrders = [
     customer: 'Hoàng Văn E',
     status: 'Completed',
     total: 4250000,
-    date: '2023-05-10'
+    date: '2025-05-10'
   },
 ];
 
+// Table columns
 const columns = [
   {
     title: 'Mã đơn hàng',
@@ -100,6 +87,11 @@ const columns = [
   {
     title: 'Ngày đặt',
     dataIndex: 'date',
+    render: (date) => new Date(date).toLocaleDateString('vi-VN', {  
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }),
     key: 'date',
   },
   {
@@ -139,92 +131,6 @@ const columns = [
   },
 ];
 
-const notificationItems = [
-  {
-    key: '1',
-    label: (
-      <div className="flex items-start py-2 px-1">
-        <Badge status="processing" className="mt-1 mr-2" />
-        <div>
-          <Text strong>Đơn hàng mới #WS-3245</Text>
-          <div>Khách hàng: Nguyễn Văn A</div>
-          <div className="text-xs text-gray-500 mt-1">2 phút trước</div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    key: '2',
-    label: (
-      <div className="flex items-start py-2 px-1">
-        <Badge status="warning" className="mt-1 mr-2" />
-        <div>
-          <Text strong>Sản phẩm sắp hết hàng</Text>
-          <div>Đồng hồ Seiko Presage - Còn 2 sản phẩm</div>
-          <div className="text-xs text-gray-500 mt-1">1 giờ trước</div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    key: '3',
-    label: (
-      <div className="flex items-start py-2 px-1">
-        <Badge status="success" className="mt-1 mr-2" />
-        <div>
-          <Text strong>Đơn hàng đã hoàn thành</Text>
-          <div>Đơn hàng #WS-3242 đã giao thành công</div>
-          <div className="text-xs text-gray-500 mt-1">3 giờ trước</div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    type: 'divider',
-  },
-  {
-    key: '4',
-    label: (
-      <div className="text-center">
-        <Text className="text-verdigris-500">Xem tất cả thông báo</Text>
-      </div>
-    ),
-  },
-];
-
-const userMenuItems = [
-  {
-    key: '1',
-    label: (
-      <div className="flex items-center">
-        <UserOutlined className="mr-2" />
-        <span>Thông tin cá nhân</span>
-      </div>
-    ),
-  },
-  {
-    key: '2',
-    label: (
-      <div className="flex items-center">
-        <SettingOutlined className="mr-2" />
-        <span>Cài đặt</span>
-      </div>
-    ),
-  },
-  {
-    type: 'divider',
-  },
-  {
-    key: '3',
-    label: (
-      <div className="flex items-center text-red-500">
-        <LogoutOutlined className="mr-2" />
-        <span>Đăng xuất</span>
-      </div>
-    ),
-  },
-];
-
 const AdminDashboardPage = () => {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -232,155 +138,23 @@ const AdminDashboardPage = () => {
     setCollapsed(!collapsed);
   };
 
+  // Lấy dữ liệu thông báo
+  const notificationItems = getNotificationItems();
+
   return (
     <Layout className="min-h-screen bg-gray-100">
-      <Sider 
-        trigger={null} 
-        collapsible 
-        collapsed={collapsed}
-        theme="light"
-        className="shadow-md"
-        width={250}
-        style={{ 
-          overflow: 'auto', 
-          height: '100vh', 
-          position: 'fixed', 
-          left: 0, 
-          top: 0, 
-          bottom: 0,
-          zIndex: 10,
-          borderRight: '1px solid #f0f0f0'
-        }}
-      >
-        <div className="p-4 flex items-center justify-center">
-          <div className="flex items-center">
-            <img 
-              src="/assets/images/logo.png" 
-              alt="Watch Store Admin" 
-              className="h-8 mr-2"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://via.placeholder.com/32x32/3AA1A0/FFFFFF?text=WS";
-              }}
-            />
-            {!collapsed && (
-              <Title level={4} className="m-0 text-verdigris-500">
-                Admin Panel
-              </Title>
-            )}
-          </div>
-        </div>
-        
-        <Menu
-          mode="inline"
-          defaultSelectedKeys={['1']}
-          className="border-0 mt-2"
-          items={[
-            {
-              key: '1',
-              icon: <DashboardOutlined />,
-              label: 'Tổng quan',
-            },
-            {
-              key: '2',
-              icon: <ShoppingOutlined />,
-              label: 'Sản phẩm',
-              children: [
-                {
-                  key: '2.1',
-                  label: 'Tất cả sản phẩm',
-                },
-                {
-                  key: '2.2',
-                  label: 'Thêm sản phẩm mới',
-                },
-                {
-                  key: '2.3',
-                  label: 'Danh mục',
-                },
-              ],
-            },
-            {
-              key: '3',
-              icon: <ShoppingCartOutlined />,
-              label: 'Đơn hàng',
-            },
-            {
-              key: '4',
-              icon: <UserOutlined />,
-              label: 'Khách hàng',
-            },
-            {
-              key: '5',
-              icon: <TagOutlined />,
-              label: 'Khuyến mãi',
-            },
-            {
-              key: '6',
-              icon: <SettingOutlined />,
-              label: 'Cài đặt',
-            },
-          ]}
-        />
-        
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <Button 
-            type="primary" 
-            icon={<LogoutOutlined />} 
-            danger
-            block
-            className="flex items-center justify-center"
-          >
-            {!collapsed && <span className="ml-2">Đăng xuất</span>}
-          </Button>
-        </div>
-      </Sider>
+      <Sidebar collapsed={collapsed} onCollapse={toggleCollapsed} />
       
       <Layout className="min-h-screen" style={{ marginLeft: collapsed ? 80 : 250, transition: 'margin-left 0.2s' }}>
-        <Header className="bg-white p-0 shadow-sm flex items-center justify-between z-1" style={{ position: 'sticky', top: 0, height: 64, paddingLeft: 16, paddingRight: 16 }}>
-          <div className="flex items-center">
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={toggleCollapsed}
-              className="mr-4"
-            />
-            <div className="bg-gray-100 rounded-full hidden md:flex items-center px-3 py-1">
-              <SearchOutlined className="text-gray-400 mr-2" />
-              <input 
-                type="text" 
-                placeholder="Tìm kiếm..." 
-                className="bg-transparent border-0 outline-none text-sm py-1 w-64"
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <Dropdown
-              menu={{
-                items: notificationItems,
-              }}
-              trigger={['click']}
-              placement="bottomRight"
-            >
-              <Badge count={3} className="cursor-pointer">
-                <Button type="text" shape="circle" icon={<BellOutlined />} />
-              </Badge>
-            </Dropdown>
-            
-            <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
-              <div className="flex items-center cursor-pointer">
-                <Avatar className="bg-verdigris-500">A</Avatar>
-                <div className="ml-2 hidden md:block">
-                  <Text strong>Admin</Text>
-                  <DownOutlined className="ml-1 text-xs" />
-                </div>
-              </div>
-            </Dropdown>
-          </div>
-        </Header>
+        <AdminHeader 
+          collapsed={collapsed} 
+          toggleCollapsed={toggleCollapsed} 
+          notificationItems={notificationItems} 
+          className="z-50"
+        />
         
         <Content className="m-4 p-4 bg-white rounded-lg">
+          {/* Dashboard Content Start */}
           <Breadcrumb className="mb-4">
             <Breadcrumb.Item>
               <Link to="/admin/dashboard">Dashboard</Link>
@@ -393,7 +167,7 @@ const AdminDashboardPage = () => {
             <Text type="secondary">Chào mừng trở lại, Admin</Text>
           </div>
           
-          <Row gutter={[16, 16]}>
+          <Row gutter={[16, 16]} className='z-40'>
             <Col xs={24} sm={12} lg={6}>
               <Card bordered={false} className="shadow-sm h-full">
                 <Statistic
@@ -515,7 +289,7 @@ const AdminDashboardPage = () => {
                 </div>
               </Card>
               
-              <Card 
+              {/* <Card 
                 title="Nhiệm vụ hôm nay" 
                 bordered={false} 
                 className="shadow-sm mt-4"
@@ -543,9 +317,10 @@ const AdminDashboardPage = () => {
                     <Tag color="processing" className="ml-auto">Đang thực hiện</Tag>
                   </div>
                 </div>
-              </Card>
+              </Card> */}
             </Col>
           </Row>
+          {/* Dashboard Content End */}
         </Content>
       </Layout>
     </Layout>
