@@ -9,13 +9,10 @@ import {
   PhoneOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import { register } from "../../../services/auth";
-import { loginSuccess } from "../../../store/slices/authSlice";
 
 const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
@@ -25,23 +22,40 @@ const RegisterForm = () => {
       // Loại bỏ confirmPassword và agreement khỏi dữ liệu gửi lên API
       const { confirmPassword, agreement, ...userData } = values;
       
-      // Gọi API đăng ký
+      // Gọi API đăng ký (không lưu token vào localStorage trong service)
       const response = await register(userData);
       
-      // Dispatch action để update Redux store
-      dispatch(loginSuccess({
-        user: response.user,
-        token: response.token
-      }));
+      message.success("Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.");
       
-      message.success("Đăng ký thành công!");
-      
-      // Chuyển hướng về trang chủ hoặc dashboard
-      navigate('/');
+      // Chỉ chuyển hướng về trang đăng nhập, không tự động đăng nhập
+      navigate('/auth');
       
     } catch (error) {
       console.error('Register error:', error);
-      message.error(error?.message || "Đăng ký thất bại, vui lòng thử lại!");
+      let errorMessage = 'Đăng ký thất bại, vui lòng thử lại!';
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message;
+      }
+      
+      // Hiển thị lỗi cụ thể cho người dùng
+      if (errorMessage.includes('email')) {
+        errorMessage = 'Email đã được sử dụng!';
+      } else if (errorMessage.includes('phone')) {
+        errorMessage = 'Số điện thoại đã được sử dụng!';
+      } else if (errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
+        errorMessage = 'Thông tin đăng ký không hợp lệ!';
+      } else if (errorMessage.includes('409') || errorMessage.includes('Conflict')) {
+        errorMessage = 'Tài khoản đã tồn tại!';
+      } else if (errorMessage.includes('500')) {
+        errorMessage = 'Lỗi hệ thống, vui lòng thử lại sau!';
+      }
+      
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -144,8 +158,8 @@ const RegisterForm = () => {
         rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
       >
         <Radio.Group>
-          <Radio value="male">Nam</Radio>
-          <Radio value="female">Nữ</Radio>
+          <Radio value="M">Nam</Radio>
+          <Radio value="F">Nữ</Radio>
         </Radio.Group>
       </Form.Item>
 

@@ -13,10 +13,10 @@ export const register = async (userData) => {
     });
     
     // Lưu token và user info vào localStorage
-    if (response.token) {
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-    }
+    // if (response.token) {
+    //   localStorage.setItem('token', response.token);
+    //   localStorage.setItem('user', JSON.stringify(response.user));
+    // }
     
     return response;
   } catch (error) {
