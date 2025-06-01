@@ -91,10 +91,10 @@ const Header = () => {
         </Dropdown>
       )
     },
-    {
-      key: '/products',
-      label: <Link to="/products?filter=brands" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Thương hiệu</Link>,
-    },
+    // {
+    //   key: '/products',
+    //   label: <Link to="/products?filter=brands" className={`hover:no-underline ${scrolled ? 'text-gray-800' : 'text-white'}`}>Thương hiệu</Link>,
+    // },
     {
       key: '/sale',
       label: <Link to="/products?sale=true" className={`text-red-500 font-semibold hover:no-underline ${scrolled ? '' : 'text-white'}`}>SALE</Link>,

@@ -47,7 +47,7 @@ const AuthPage = () => {
   ];
 
   return (
-    <div className="flex justify-center items-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-[80vh]">
+    <div className="flex justify-center items-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-[80vh]" style={{ backgroundColor: '#E6F2F1' }}>
       <Card 
         bordered={false}
         className="w-full max-w-md shadow-lg rounded-lg"

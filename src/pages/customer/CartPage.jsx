@@ -25,7 +25,7 @@ const CartPage = () => {
             ))}
           </div>
           <div className="mt-4">
-            <h2 className="text-xl font-semibold">Tổng cộng: {totalAmount.toLocaleString()} VNĐ</h2>
+            <h2 className="text-xl font-semibold">Tổng cộng: {totalAmount.toLocaleString("de-DE")} VNĐ</h2>
             <Link to="/checkout" className="mt-4 inline-block bg-verdigris-500 text-white py-2 px-4 rounded hover:bg-verdigris-600 hover:no-underline">
               Thanh toán
             </Link>

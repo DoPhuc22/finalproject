@@ -27,7 +27,7 @@ const CartItem = ({ item }) => {
         <div>
           <h3 className="font-medium text-lg">{item.name}</h3>
           <p className="text-gray-500">{item.brand}</p>
-          <p className="text-blue-600 font-semibold">{item.price.toLocaleString()} VNĐ</p>
+          <p className="text-blue-600 font-semibold">{item.price.toLocaleString("de-DE")} VNĐ</p>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ const CartItem = ({ item }) => {
         </div>
         
         <p className="font-semibold w-24 text-right">
-          {(item.price * item.quantity).toLocaleString()} VNĐ
+          {(item.price * item.quantity).toLocaleString("de-DE")} VNĐ
         </p>
         
         <Button 

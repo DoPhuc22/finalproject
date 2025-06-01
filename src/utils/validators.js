@@ -1,19 +1,20 @@
-// filepath: watch-store/src/utils/validators.js
-
 export const validateEmail = (email) => {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(String(email).toLowerCase());
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 };
 
 export const validatePassword = (password) => {
-  return password.length >= 6; // Minimum length of 6 characters
+  return password && password.length >= 6;
 };
 
-export const validateRequired = (value) => {
-  return value.trim() !== '';
+export const validatePhone = (phone) => {
+  const phoneRegex = /^[0-9]{9,11}$/;
+  return phoneRegex.test(phone);
 };
 
-export const validatePhoneNumber = (phone) => {
-  const re = /^\d{10}$/; // Example for a 10-digit phone number
-  return re.test(String(phone));
+export const getErrorMessage = (error) => {
+  if (typeof error === 'string') return error;
+  if (error?.message) return error.message;
+  if (error?.data?.message) return error.data.message;
+  return 'Có lỗi xảy ra, vui lòng thử lại!';
 };

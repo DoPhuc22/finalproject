@@ -45,7 +45,7 @@ const FeaturedProducts = () => {
                       <Rate allowHalf disabled defaultValue={product.rating} className="text-sm mb-2" />
                       <div className="flex justify-between items-center">
                         <Text strong className="text-lg text-blue-600">
-                          {product.price.toLocaleString()} VNĐ
+                          {product.price.toLocaleString('de-DE')} VNĐ
                         </Text>
                         <Tag color={product.inStock ? 'success' : 'error'}>
                           {product.inStock ? 'Còn hàng' : 'Hết hàng'}

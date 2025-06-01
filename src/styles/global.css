@@ -6,7 +6,7 @@
 :root {
   --primary-color: #3AA1A0; /* Verdigris color for the brand */
   --secondary-color: #fbbf24; /* Yellow for accents */
-  --background-color: #f9fafb; /* Light background */
+  --background-color: #E6F2F1   ; /* Light background */
   --text-color: #111827; /* Dark text */
   --font-family: 'Roboto', sans-serif;
 }
@@ -421,4 +421,46 @@ a:hover {
 .ant-btn.ant-btn-primary.bg-verdigris-500:focus {
   background-color: #2a8281 !important;
   border-color: #2a8281 !important;
+}
+
+/* Thêm các styles cho trang chi tiết sản phẩm */
+.product-detail-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.product-detail-tabs .ant-tabs-ink-bar {
+  background-color: var(--primary-color);
+}
+
+.detailed-content h3 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.detailed-content p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #4a4a4a;
+  margin-bottom: 1rem;
+}
+
+.specifications-table .ant-table-cell {
+  vertical-align: top;
+}
+
+/* Animation cho hình ảnh sản phẩm */
+.product-card:hover .ant-card-cover img {
+  transform: scale(1.05);
+}
+
+.main-image-container img {
+  transition: transform 0.5s ease;
+}
+
+.main-image-container:hover img {
+  transform: scale(1.05);
 }

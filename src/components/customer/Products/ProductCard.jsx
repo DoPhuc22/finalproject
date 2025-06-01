@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, Badge, Rate, Button, Tag, Tooltip } from 'antd';
-import { ShoppingCartOutlined, HeartOutlined, EyeOutlined, HeartFilled } from '@ant-design/icons';
+import { Card, Badge, Rate, Button, Tag, Tooltip, message } from 'antd';
+import { ShoppingCartOutlined, EyeOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../../store/slices/cartSlice';
@@ -19,6 +19,12 @@ const ProductCard = ({ product }) => {
       brand: product.brand,
       quantity: 1
     }));
+    message.success(
+  <span style={{ fontSize: '25px', textAlign: 'right' }}>
+    Đã thêm "{product.name}" vào giỏ hàng
+  </span>
+);
+
   };
 
   const getStockStatus = () => {
@@ -86,7 +92,7 @@ const ProductCard = ({ product }) => {
               </div>
               <p className="text-gray-500 mb-2 text-sm line-clamp-2">{product.description}</p>
               <div className="flex justify-between items-center mt-3">
-                <span className="text-lg font-bold text-verdigris-600">{product.price?.toLocaleString() || 0} VNĐ</span>
+                <span className="text-lg font-bold text-verdigris-600">{product.price?.toLocaleString('de-DE') || 0} VNĐ</span>
                 <Button 
                   type="primary" 
                   shape="round" 
