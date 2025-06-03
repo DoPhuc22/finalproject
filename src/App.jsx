@@ -13,6 +13,7 @@ import AdminDashboardPage from "./pages/admin/DashboardPage";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { restoreAuthState } from "./store/slices/authSlice";
+import ProductPage from "./pages/admin/ProductPage";
 
 function App() {
   // Customize Ant Design theme to match your brand colors
@@ -36,7 +37,7 @@ function App() {
 
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(restoreAuthState()); 
+    dispatch(restoreAuthState());
   }, [dispatch]);
   return (
     <ConfigProvider theme={theme}>
@@ -45,6 +46,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/products" element={<ProductPage />} />
 
           {/* Customer Routes */}
           <Route element={<CustomerLayout />}>

@@ -464,3 +464,61 @@ a:hover {
 .main-image-container:hover img {
   transform: scale(1.05);
 }
+
+/* Product Management Styles */
+.product-form-modal .ant-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.custom-table .table-row-light {
+  background-color: #fafafa;
+}
+
+.custom-table .table-row-dark {
+  background-color: #ffffff;
+}
+
+.custom-table .ant-table-tbody > tr:hover > td {
+  background-color: #e6f7ff !important;
+}
+
+/* Image upload styles */
+.ant-upload-select-picture-card {
+  width: 104px;
+  height: 104px;
+}
+
+.ant-upload-list-picture-card .ant-upload-list-item {
+  width: 104px;
+  height: 104px;
+}
+
+/* Filter card styles */
+.filter-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Statistics card hover effect */
+.ant-card-small:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.3s;
+}
+
+/* Status switch styles */
+.ant-switch-checked {
+  background-color: #52c41a;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .product-form-modal {
+    width: 95% !important;
+    margin: 10px;
+  }
+  
+  .ant-table-scroll {
+    overflow-x: auto;
+  }
+}

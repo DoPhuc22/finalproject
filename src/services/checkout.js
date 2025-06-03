@@ -1,4 +1,4 @@
-import api from '../../utils/request';
+import api from '../utils/request';
 
 // API endpoints cho checkout
 const CHECKOUT_ENDPOINTS = {
