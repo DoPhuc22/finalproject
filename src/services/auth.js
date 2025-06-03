@@ -31,13 +31,13 @@ export const login = async (credentials) => {
       email: credentials.email,
       password: credentials.password
     });
-    
+    console.log('Login response:', response);
     // Lưu token và user info vào localStorage
     if (response.token) {
       localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      const { token, ...user } = response;
+      localStorage.setItem('user', JSON.stringify(user));
     }
-    
     return response;
   } catch (error) {
     throw error;
