@@ -11,21 +11,23 @@ import {
   message,
   Modal,
   Breadcrumb,
+  Avatar,
+  Tag,
 } from "antd";
 import {
   PlusOutlined,
   ExportOutlined,
   ImportOutlined,
-  ShoppingOutlined,
-  DollarOutlined,
-  InboxOutlined,
-  ExclamationCircleOutlined,
+  TrademarkOutlined,
+  TagOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
-import ProductFilters from "../../components/admin/products/ProductFilters";
-import ProductTable from "../../components/admin/products/ProductTable";
-import ProductForm from "../../components/admin/products/ProductForm";
-import useProducts from "../../hooks/useProducts";
+import BrandFilters from "../../components/admin/brands/BrandFilters";
+import BrandTable from "../../components/admin/brands/BrandTable";
+import BrandForm from "../../components/admin/brands/BrandForm";
+import useBrand from "../../hooks/useBrand";
 import getNotificationItems from "../../components/admin/NotificationItems";
 import AdminHeader from "../../components/admin/Header";
 import Sidebar from "../../components/admin/SideBar";
@@ -33,22 +35,20 @@ import Sidebar from "../../components/admin/SideBar";
 const { Content } = Layout;
 const { Title } = Typography;
 
-const ProductPage = () => {
+const BrandPage = () => {
   const {
-    products,
-    categories,
     brands,
     loading,
     pagination,
-    fetchProducts,
-    createProduct,
-    updateProduct,
-    deleteProduct,
+    fetchBrands,
+    createBrand,
+    updateBrand,
+    deleteBrand,
     handleTableChange,
-  } = useProducts();
+  } = useBrand();
 
   const [showForm, setShowForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingBrand, setEditingBrand] = useState(null);
   const [filters, setFilters] = useState({});
   const [collapsed, setCollapsed] = useState(false);
 
@@ -61,75 +61,83 @@ const ProductPage = () => {
 
   // Handle form operations
   const handleCreate = () => {
-    setEditingProduct(null);
+    setEditingBrand(null);
     setShowForm(true);
   };
 
-  const handleEdit = (product) => {
-    setEditingProduct(product);
+  const handleEdit = (brand) => {
+    console.log("Editing brand:", brand); // Debug log
+    setEditingBrand(brand);
     setShowForm(true);
   };
 
-  const handleView = (product) => {
+  const handleView = (brand) => {
     Modal.info({
-      title: "Chi tiết sản phẩm",
-      width: 800,
+      title: (
+        <Space>
+          <Avatar
+            icon={<TrademarkOutlined />}
+            style={{ backgroundColor: "#722ed1" }}
+          />
+          <span>Chi tiết nhãn hàng</span>
+        </Space>
+      ),
+      width: 600,
       content: (
         <div className="mt-4">
           <Row gutter={[16, 16]}>
-            <Col span={8}>
-              <img
-                src={product.imageUrl || "/assets/images/products/default.jpg"}
-                alt={product.name}
-                style={{ width: "100%", borderRadius: 8 }}
-              />
-            </Col>
-            <Col span={16}>
-              <Space
-                direction="vertical"
-                size="middle"
-                style={{ width: "100%" }}
-              >
-                <div>
-                  <Title level={4}>{product.name}</Title>
-                  <p className="text-gray-600">{product.description}</p>
-                </div>
-                <Row gutter={[16, 8]}>
-                  <Col span={12}>
+            <Col span={24}>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <Title level={4} className="mb-3">
+                  {brand.name}
+                  <Tag
+                    color={brand.status === "active" ? "success" : "error"}
+                    icon={
+                      brand.status === "active" ? (
+                        <CheckCircleOutlined />
+                      ) : (
+                        <StopOutlined />
+                      )
+                    }
+                    className="ml-2"
+                  >
+                    {brand.status === "active"
+                      ? "Hoạt động"
+                      : "Ngừng hoạt động"}
+                  </Tag>
+                </Title>
+                <p className="text-gray-600 mb-4">
+                  {brand.description || "Chưa có mô tả"}
+                </p>
+
+                <Row gutter={[16, 16]}>
+                  <Col span={8}>
                     <Statistic
-                      title="Giá bán"
-                      value={product.price}
-                      suffix="₫"
-                      precision={0}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic
-                      title="Tồn kho"
-                      value={product.stockQuantity || 0}
-                      suffix="sản phẩm"
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic
-                      title="Danh mục"
-                      value={product.category?.name || product.category}
+                      title="ID nhãn hàng"
+                      value={brand.brandId || brand.id}
                       formatter={(value) => (
-                        <span className="text-blue-600">{value}</span>
+                        <span className="text-purple-600">#{value}</span>
                       )}
                     />
                   </Col>
-                  <Col span={12}>
+
+                  <Col span={8}>
                     <Statistic
-                      title="Thương hiệu"
-                      value={product.brand?.name || product.brand}
+                      title="Ngày tạo"
+                      value={
+                        brand.createdAt
+                          ? new Date(brand.createdAt).toLocaleDateString(
+                              "vi-VN"
+                            )
+                          : "-"
+                      }
                       formatter={(value) => (
-                        <span className="text-green-600">{value}</span>
+                        <span className="text-gray-600">{value}</span>
                       )}
                     />
                   </Col>
                 </Row>
-              </Space>
+              </div>
             </Col>
           </Row>
         </div>
@@ -137,46 +145,75 @@ const ProductPage = () => {
     });
   };
 
-  const handleDelete = async (productId) => {
+  const handleDelete = async (brandId) => {
     try {
-      await deleteProduct(productId);
+      await deleteBrand(brandId);
     } catch (error) {
-      message.error("Có lỗi xảy ra khi xóa sản phẩm");
+      message.error("Có lỗi xảy ra khi xóa nhãn hàng");
     }
   };
 
-  const handleFormSubmit = async (productData, productId = null) => {
+  // Fix handleStatusChange - lấy đầy đủ thông tin brand trước khi update
+  const handleStatusChange = async (brandId, isActive) => {
     try {
-      if (productId) {
-        await updateProduct(productId, productData);
-      } else {
-        await createProduct(productData);
+      console.log("Status change for brand:", { brandId, isActive }); // Debug log
+
+      // Tìm brand trong danh sách để lấy thông tin đầy đủ
+      const currentBrand = brands.find(
+        (brand) => (brand.brandId || brand.id) === brandId
+      );
+
+      if (!currentBrand) {
+        throw new Error("Không tìm thấy thông tin nhãn hàng");
       }
-      setShowForm(false);
-    } catch (error) {
-      message.error("Có lỗi xảy ra khi lưu sản phẩm");
-    }
-  };
 
-  const handleStatusChange = async (productId, isActive) => {
-    try {
-      await updateProduct(productId, { isActive });
+      // Chuẩn bị dữ liệu đầy đủ cho API
+      const updateData = {
+        name: currentBrand.name,
+        description: currentBrand.description,
+        status: isActive ? "active" : "inactive",
+      };
+
+      console.log("Update data for status change:", updateData); // Debug log
+
+      await updateBrand(brandId, updateData);
       message.success(
-        `${isActive ? "Kích hoạt" : "Ngừng bán"} sản phẩm thành công`
+        `${isActive ? "Kích hoạt" : "Ngừng hoạt động"} nhãn hàng thành công`
       );
     } catch (error) {
+      console.error("Status change error:", error);
       message.error("Có lỗi xảy ra khi cập nhật trạng thái");
+    }
+  };
+
+  // Fix handleFormSubmit - thay đổi thứ tự tham số
+  const handleFormSubmit = async (brandData, brandId = null) => {
+    try {
+      console.log("Form submit:", { brandData, brandId }); // Debug log
+
+      if (brandId) {
+        // Edit mode - truyền brandId và brandData
+        await updateBrand(brandId, brandData);
+      } else {
+        // Create mode - chỉ truyền brandData
+        await createBrand(brandData);
+      }
+      setShowForm(false);
+      setEditingBrand(null);
+    } catch (error) {
+      console.error("Form submit error:", error);
+      message.error("Có lỗi xảy ra khi lưu nhãn hàng");
     }
   };
 
   const handleFilter = (newFilters) => {
     setFilters(newFilters);
-    fetchProducts(newFilters);
+    fetchBrands(newFilters);
   };
 
   const handleResetFilter = () => {
     setFilters({});
-    fetchProducts();
+    fetchBrands();
   };
 
   const handleExport = () => {
@@ -188,15 +225,11 @@ const ProductPage = () => {
   };
 
   // Calculate statistics
-  const totalProducts = products.length;
-  const activeProducts = products.filter(
-    (p) => p.isActive || p.status === "active"
-  ).length;
-  const outOfStockProducts = products.filter(
-    (p) => !p.inStock || p.stockQuantity === 0
-  ).length;
-  const totalValue = products.reduce(
-    (sum, p) => sum + p.price * (p.stockQuantity || 0),
+  const totalBrands = brands.length;
+  const activeBrands = brands.filter((b) => b.status === "active").length;
+  const inactiveBrands = totalBrands - activeBrands;
+  const totalProducts = brands.reduce(
+    (sum, b) => sum + (b.productCount || 0),
     0
   );
 
@@ -224,7 +257,7 @@ const ProductPage = () => {
               <Breadcrumb.Item>
                 <Link to="/admin/dashboard">Dashboard</Link>
               </Breadcrumb.Item>
-              <Breadcrumb.Item>Quản lý sản phẩm</Breadcrumb.Item>
+              <Breadcrumb.Item>Quản lý nhãn hàng</Breadcrumb.Item>
             </Breadcrumb>
           </div>
 
@@ -233,24 +266,24 @@ const ProductPage = () => {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <Title level={2} className="mb-2 text-slate-800">
-                  Quản lý sản phẩm
+                  Quản lý nhãn hàng
                 </Title>
                 <p className="text-slate-600 mb-0">
-                  Quản lý toàn bộ sản phẩm trong cửa hàng
+                  Quản lý toàn bộ nhãn hàng sản phẩm trong cửa hàng
                 </p>
               </div>
               <Space>
                 <Button
                   icon={<ImportOutlined />}
                   onClick={handleImport}
-                  className="border-slate-300 hover:border-blue-400"
+                  className="border-slate-300 hover:border-purple-400"
                 >
                   Nhập dữ liệu
                 </Button>
                 <Button
                   icon={<ExportOutlined />}
                   onClick={handleExport}
-                  className="border-slate-300 hover:border-blue-400"
+                  className="border-slate-300 hover:border-purple-400"
                 >
                   Xuất dữ liệu
                 </Button>
@@ -258,9 +291,9 @@ const ProductPage = () => {
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={handleCreate}
-                  className="bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700"
+                  className="bg-purple-600 hover:bg-purple-700 border-purple-600 hover:border-purple-700"
                 >
-                  Thêm sản phẩm
+                  Thêm nhãn hàng
                 </Button>
               </Space>
             </div>
@@ -274,10 +307,10 @@ const ProductPage = () => {
                   className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                 >
                   <Statistic
-                    title="Tổng sản phẩm"
-                    value={totalProducts}
-                    prefix={<ShoppingOutlined />}
-                    valueStyle={{ color: "#1890ff" }}
+                    title="Tổng nhãn hàng"
+                    value={totalBrands}
+                    prefix={<TrademarkOutlined />}
+                    valueStyle={{ color: "#722ed1" }}
                   />
                 </Card>
               </Col>
@@ -288,9 +321,9 @@ const ProductPage = () => {
                   className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                 >
                   <Statistic
-                    title="Đang bán"
-                    value={activeProducts}
-                    prefix={<InboxOutlined />}
+                    title="Đang hoạt động"
+                    value={activeBrands}
+                    prefix={<CheckCircleOutlined />}
                     valueStyle={{ color: "#52c41a" }}
                   />
                 </Card>
@@ -302,27 +335,10 @@ const ProductPage = () => {
                   className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                 >
                   <Statistic
-                    title="Hết hàng"
-                    value={outOfStockProducts}
-                    prefix={<ExclamationCircleOutlined />}
+                    title="Ngừng hoạt động"
+                    value={inactiveBrands}
+                    prefix={<StopOutlined />}
                     valueStyle={{ color: "#f5222d" }}
-                  />
-                </Card>
-              </Col>
-              <Col xs={24} sm={12} lg={6}>
-                <Card
-                  size="small"
-                  bordered={false}
-                  className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
-                >
-                  <Statistic
-                    title="Tổng giá trị kho"
-                    value={totalValue}
-                    prefix={<DollarOutlined />}
-                    suffix="₫"
-                    precision={0}
-                    valueStyle={{ color: "#722ed1" }}
-                    formatter={(value) => `${value.toLocaleString()}`}
                   />
                 </Card>
               </Col>
@@ -331,9 +347,7 @@ const ProductPage = () => {
 
           {/* Filters */}
           <div className="bg-white border border-slate-200 rounded-lg mb-4 shadow-sm">
-            <ProductFilters
-              categories={categories}
-              brands={brands}
+            <BrandFilters
               onFilter={handleFilter}
               onReset={handleResetFilter}
               loading={loading}
@@ -345,8 +359,8 @@ const ProductPage = () => {
             bordered={false}
             className="bg-white rounded-lg shadow-sm border border-slate-200"
           >
-            <ProductTable
-              products={products}
+            <BrandTable
+              brands={brands}
               loading={loading}
               pagination={pagination}
               onEdit={handleEdit}
@@ -358,13 +372,14 @@ const ProductPage = () => {
           </Card>
 
           {/* Form Modal */}
-          <ProductForm
+          <BrandForm
             visible={showForm}
-            onCancel={() => setShowForm(false)}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingBrand(null);
+            }}
             onSubmit={handleFormSubmit}
-            product={editingProduct}
-            categories={categories}
-            brands={brands}
+            brand={editingBrand}
             loading={loading}
           />
         </Content>
@@ -373,4 +388,4 @@ const ProductPage = () => {
   );
 };
 
-export default ProductPage;
+export default BrandPage;

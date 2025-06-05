@@ -1,8 +1,8 @@
-import api from '../utils/request';
+import api from "../utils/request";
 
 // API endpoints cho user management
 const USER_ENDPOINTS = {
-  BASE: '/users',
+  BASE: "/users",
   BY_ID: (id) => `/users/${id}`,
 };
 
@@ -25,9 +25,10 @@ export const updateUser = async (id, userData) => {
       email: userData.email,
       phone: userData.phone,
       password: userData.password,
-      role: userData.role,
+      role: userData.role || 'customer', // Mặc định là 'customer' nếu không có role
+      status: userData.status || 'active',
       gender: userData.gender,
-      resetToken: userData.resetToken
+      resetToken: userData.resetToken,
     });
     return response;
   } catch (error) {
@@ -35,7 +36,7 @@ export const updateUser = async (id, userData) => {
   }
 };
 
-// Xóa user
+// Xóa user (hard delete)
 export const deleteUser = async (id) => {
   try {
     const response = await api.delete(USER_ENDPOINTS.BY_ID(id));
@@ -66,7 +67,7 @@ export const createUser = async (userData) => {
       password: userData.password,
       role: userData.role,
       gender: userData.gender,
-      resetToken: userData.resetToken
+      resetToken: userData.resetToken,
     });
     return response;
   } catch (error) {

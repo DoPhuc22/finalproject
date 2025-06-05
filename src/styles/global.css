@@ -1,14 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --primary-color: #3AA1A0; /* Verdigris color for the brand */
+  --primary-color: #3aa1a0; /* Verdigris color for the brand */
   --secondary-color: #fbbf24; /* Yellow for accents */
-  --background-color: #E6F2F1   ; /* Light background */
+  --background-color: #e6f2f1; /* Light background */
   --text-color: #111827; /* Dark text */
-  --font-family: 'Roboto', sans-serif;
+  --font-family: "Roboto", sans-serif;
 }
 
 * {
@@ -24,7 +24,12 @@ body {
   line-height: 1.6;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin-bottom: 1rem;
 }
 
@@ -43,7 +48,8 @@ a:hover {
   padding: 0 1rem;
 }
 
-.header, .footer {
+.header,
+.footer {
   background-color: var(--primary-color);
   color: white;
   padding: 1rem 0;
@@ -69,7 +75,7 @@ a:hover {
   border-color: var(--primary-color) !important;
 }
 
-.ant-btn-primary:hover, 
+.ant-btn-primary:hover,
 .ant-btn-primary:focus {
   background-color: #2a8281 !important; /* Darker verdigris */
   border-color: #2a8281 !important;
@@ -118,7 +124,9 @@ a:hover {
 
 /* Hover effects for cards */
 .product-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transform: translateY(-2px);
 }
 
@@ -156,7 +164,7 @@ a:hover {
 
 /* Custom utilities for verdigris color */
 .text-verdigris-500 {
-  color: #3AA1A0 !important;
+  color: #3aa1a0 !important;
 }
 
 .text-verdigris-600 {
@@ -164,7 +172,7 @@ a:hover {
 }
 
 .bg-verdigris-500 {
-  background-color: #3AA1A0 !important;
+  background-color: #3aa1a0 !important;
 }
 
 .bg-verdigris-600 {
@@ -172,7 +180,7 @@ a:hover {
 }
 
 .border-verdigris-500 {
-  border-color: #3AA1A0 !important;
+  border-color: #3aa1a0 !important;
 }
 
 /* Responsive styles */
@@ -180,11 +188,11 @@ a:hover {
   .container {
     padding: 0 0.5rem;
   }
-  
+
   h1 {
     font-size: 1.75rem;
   }
-  
+
   h2 {
     font-size: 1.5rem;
   }
@@ -205,13 +213,13 @@ a:hover {
 }
 
 .hero-banner::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5));
+  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
 }
 
 .hero-content {
@@ -248,7 +256,7 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3AA1A0;
+  background: #efefef;
   border-radius: 4px;
 }
 
@@ -344,9 +352,9 @@ a:hover {
 
 /* Tùy chỉnh màu của Menu khi đã scroll */
 .ant-menu.custom-menu.bg-white .ant-menu-item-selected {
-  color: #3AA1A0 !important;
+  color: #3aa1a0 !important;
   font-weight: bold;
-  border-bottom-color: #3AA1A0 !important;
+  border-bottom-color: #3aa1a0 !important;
 }
 
 /* Fix màu và gạch chân khi hover */
@@ -357,7 +365,9 @@ a:hover {
 /* Animation mượt mà khi chuyển màu */
 .ant-menu-item,
 .ant-menu-submenu {
-  transition: color 0.3s, border-color 0.3s !important;
+  transition:
+    color 0.3s,
+    border-color 0.3s !important;
 }
 
 /* Sale item luôn có màu đặc biệt */
@@ -517,7 +527,7 @@ a:hover {
     width: 95% !important;
     margin: 10px;
   }
-  
+
   .ant-table-scroll {
     overflow-x: auto;
   }

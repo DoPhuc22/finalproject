@@ -13,6 +13,7 @@ import { loginSuccess } from "../../../store/slices/authSlice";
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm(); // Thêm form instance
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -54,16 +55,24 @@ const LoginForm = () => {
       // Xử lý các loại lỗi khác nhau
       let errorMessage = "Đăng nhập thất bại, vui lòng thử lại!";
 
-      if (error?.message) {
+      // Kiểm tra chi tiết lỗi từ response
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
         errorMessage = error.message;
       } else if (typeof error === "string") {
         errorMessage = error;
-      } else if (error?.data?.message) {
-        errorMessage = error.data.message;
       }
 
       // Hiển thị lỗi cụ thể cho người dùng
-      if (errorMessage.includes("email") || errorMessage.includes("password")) {
+      if (
+        errorMessage.includes("email") ||
+        errorMessage.includes("password") ||
+        errorMessage.includes("Invalid") ||
+        errorMessage.includes("incorrect")
+      ) {
         errorMessage = "Email hoặc mật khẩu không chính xác!";
       } else if (
         errorMessage.includes("401") ||
@@ -76,7 +85,15 @@ const LoginForm = () => {
         errorMessage = "Lỗi hệ thống, vui lòng thử lại sau!";
       }
 
+      // Hiển thị thông báo lỗi
       message.error(errorMessage);
+
+      // Giữ lại email, xóa password
+      const currentEmail = form.getFieldValue("email");
+      form.setFieldsValue({
+        email: currentEmail, // Giữ lại email
+        password: "", // Xóa password
+      });
     } finally {
       setLoading(false);
     }
@@ -84,6 +101,7 @@ const LoginForm = () => {
 
   return (
     <Form
+      form={form} // Thêm form instance
       name="login"
       initialValues={{ remember: true }}
       onFinish={onFinish}

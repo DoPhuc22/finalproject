@@ -14,6 +14,9 @@ import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { restoreAuthState } from "./store/slices/authSlice";
 import ProductPage from "./pages/admin/ProductPage";
+import CategoryPage from "./pages/admin/CategoryPage";
+import BrandPage from "./pages/admin/BrandPage";
+import CustomerPage from "./pages/admin/CustomerPage";
 
 function App() {
   // Customize Ant Design theme to match your brand colors
@@ -47,6 +50,9 @@ function App() {
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/products" element={<ProductPage />} />
+          <Route path="/admin/categories" element={<CategoryPage />} />
+          <Route path="/admin/brands" element={<BrandPage />} />
+          <Route path="/admin/customers" element={<CustomerPage />} />
 
           {/* Customer Routes */}
           <Route element={<CustomerLayout />}>

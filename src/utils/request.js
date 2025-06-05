@@ -8,6 +8,7 @@ const api = axios.create({
       ? window.REACT_APP_API_URL
       : "http://localhost:8080/api",
   timeout: 20000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },

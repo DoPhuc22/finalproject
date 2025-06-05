@@ -119,7 +119,7 @@ const Sidebar = ({ collapsed, onCollapse }) => {
           {!collapsed && (
             <span className="ml-2">
               <Link
-                to="/auth"
+                to="/admin/login"
                 className="text-white hover:no-underline hover:text-red-100"
               >
                 Đăng xuất

@@ -1,9 +1,10 @@
-import api from '../utils/request';
+import api from "../utils/request";
 
 // API endpoints cho discounts
 const DISCOUNT_ENDPOINTS = {
-  BASE: '/discounts',
+  BASE: "/discounts",
   BY_ID: (id) => `/discounts/${id}`,
+  SOFT_DELETE: (id) => `/discounts/soft-delete/${id}`,
 };
 
 // Lấy thông tin discount theo ID
@@ -28,7 +29,7 @@ export const updateDiscount = async (id, discountData) => {
       validUntil: discountData.validUntil,
       maxUses: discountData.maxUses,
       usesCount: discountData.usesCount,
-      active: discountData.active
+      active: discountData.active,
     });
     return response;
   } catch (error) {
@@ -36,10 +37,20 @@ export const updateDiscount = async (id, discountData) => {
   }
 };
 
-// Xóa discount
+// Xóa discount (hard delete)
 export const deleteDiscount = async (id) => {
   try {
     const response = await api.delete(DISCOUNT_ENDPOINTS.BY_ID(id));
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Xóa mềm discount (soft delete)
+export const softDeleteDiscount = async (id) => {
+  try {
+    const response = await api.delete(DISCOUNT_ENDPOINTS.SOFT_DELETE(id));
     return response;
   } catch (error) {
     throw error;
@@ -68,7 +79,7 @@ export const createDiscount = async (discountData) => {
       validUntil: discountData.validUntil,
       maxUses: discountData.maxUses,
       usesCount: discountData.usesCount,
-      active: discountData.active
+      active: discountData.active,
     });
     return response;
   } catch (error) {
