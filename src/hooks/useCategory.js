@@ -24,10 +24,57 @@ const useCategory = () => {
       const response = await getAllCategories(params);
       const data = response.data || response;
 
-      const categoriesWithCount = data.map((category) => ({
+      let categoriesWithCount = data.map((category) => ({
         ...category,
         createdAt: category.createdAt || new Date().toISOString(),
+        status: category.status || "active",
+        productCount: Math.floor(Math.random() * 50) + 1, // mô phỏng
       }));
+
+      // Filter by search keyword
+      if (params.search) {
+        const keywords = params.search
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .split(/\s+/);
+
+        categoriesWithCount = categoriesWithCount.filter((category) => {
+          const name = category.name
+            ?.toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") || "";
+          const description = category.description?.toLowerCase() || "";
+          const status = category.status?.toLowerCase() || "";
+
+          return keywords.every(
+            (word) =>
+              name.includes(word) ||
+              description.includes(word) ||
+              status.includes(word)
+          );
+        });
+      }
+
+      // Filter by status
+      if (params.status && params.status !== "all") {
+        categoriesWithCount = categoriesWithCount.filter(
+          (category) => category.status === params.status
+        );
+      }
+
+      // Filter by date range
+      if (params.dateRange && params.dateRange.start && params.dateRange.end) {
+        categoriesWithCount = categoriesWithCount.filter((category) => {
+          if (!category.createdAt) return false;
+          const createdAt = new Date(category.createdAt);
+          const startDate = new Date(params.dateRange.start);
+          const endDate = new Date(params.dateRange.end);
+          endDate.setHours(23,59,59,999)
+          return createdAt >= startDate && createdAt <= endDate;
+        });
+      }
+
       setCategories(categoriesWithCount);
       setPagination((prev) => ({
         ...prev,
@@ -44,10 +91,9 @@ const useCategory = () => {
   // Create category
   const createCategoryHandler = async (categoryData) => {
     try {
-      console.log("Creating category:", categoryData); // Debug log
       const response = await createCategory(categoryData);
       message.success("Tạo danh mục thành công!");
-      fetchCategories(); // Refresh list
+      fetchCategories();
       return response;
     } catch (error) {
       console.error("Create category error:", error);
@@ -56,21 +102,27 @@ const useCategory = () => {
     }
   };
 
-  // Update category
+  // Update category (and move to top)
   const updateCategoryHandler = async (id, categoryData) => {
     try {
-      console.log("Updating category:", { id, categoryData }); // Debug log
-
-      // Đảm bảo ID là number hoặc string, không phải object
       const categoryId = typeof id === "object" ? id.categoryId || id.id : id;
-
-      if (!categoryId) {
-        throw new Error("Category ID is required for update");
-      }
+      if (!categoryId) throw new Error("Category ID required");
 
       const response = await updateCategory(categoryId, categoryData);
       message.success("Cập nhật danh mục thành công!");
-      fetchCategories(); // Refresh list
+      fetchCategories();
+
+      setCategories((prev) => {
+        const updatedCategory = prev.find(
+          (c) => (c.categoryId || c.id) === categoryId
+        );
+        if (!updatedCategory) return prev;
+        const others = prev.filter(
+          (c) => (c.categoryId || c.id) !== categoryId
+        );
+        return [updatedCategory, ...others];
+      });
+
       return response;
     } catch (error) {
       console.error("Update category error:", error);
@@ -82,18 +134,12 @@ const useCategory = () => {
   // Delete category
   const deleteCategoryHandler = async (id) => {
     try {
-      console.log("Deleting category:", id); // Debug log
-
-      // Đảm bảo ID là number hoặc string, không phải object
       const categoryId = typeof id === "object" ? id.categoryId || id.id : id;
-
-      if (!categoryId) {
-        throw new Error("Category ID is required for delete");
-      }
+      if (!categoryId) throw new Error("Category ID required");
 
       await deleteCategory(categoryId);
       message.success("Xóa danh mục thành công!");
-      fetchCategories(); // Refresh list
+      await fetchCategories();
     } catch (error) {
       console.error("Delete category error:", error);
       message.error("Lỗi khi xóa danh mục");
@@ -101,20 +147,18 @@ const useCategory = () => {
     }
   };
 
-  // Handle pagination change
+  // Handle table pagination
   const handleTableChange = (newPagination, filters, sorter) => {
     setPagination(newPagination);
-    const params = {
+    fetchCategories({
       page: newPagination.current,
       pageSize: newPagination.pageSize,
       ...filters,
       sortBy: sorter.field,
       sortOrder: sorter.order,
-    };
-    fetchCategories(params);
+    });
   };
 
-  // Initial load
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);

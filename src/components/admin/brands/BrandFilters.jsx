@@ -25,8 +25,16 @@ const BrandFilters = ({ onFilter, onReset, loading = false }) => {
   const [expanded, setExpanded] = useState(false);
 
   const handleFilter = (values) => {
+        // Lọc bỏ các giá trị "all" và undefined
+    const cleanedValues = Object.fromEntries(
+      Object.entries(values).filter(
+        ([key, value]) => value !== undefined && value !== "all" && value !== ""
+      )
+    );
+    
     const filters = {
       ...values,
+      ...cleanedValues,
       dateRange: values.dateRange
         ? {
             start: values.dateRange[0]?.format("YYYY-MM-DD"),
@@ -43,7 +51,12 @@ const BrandFilters = ({ onFilter, onReset, loading = false }) => {
   };
 
   const handleSearch = (value) => {
-    onFilter({ search: value });
+    console.log("Search value:", value); // Debug log
+    if (value && value.trim()) {
+      onFilter({ search: value.trim() });
+    } else {
+      onFilter({});
+    }
   };
 
   return (

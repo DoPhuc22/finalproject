@@ -14,8 +14,16 @@ const CategoryFilters = ({ onFilter, onReset, loading = false }) => {
   const [expanded, setExpanded] = useState(false);
 
   const handleFilter = (values) => {
+    // Lọc bỏ undefined, "all", "" ra khỏi filters
+    const cleanedValues = Object.fromEntries(
+      Object.entries(values).filter(
+        ([key, value]) => value !== undefined && value !== "all" && value !== ""
+      )
+    );
+
     const filters = {
       ...values,
+      ...cleanedValues,
       dateRange: values.dateRange
         ? {
             start: values.dateRange[0]?.format("YYYY-MM-DD"),
@@ -23,6 +31,7 @@ const CategoryFilters = ({ onFilter, onReset, loading = false }) => {
           }
         : null,
     };
+
     onFilter(filters);
   };
 
@@ -32,7 +41,11 @@ const CategoryFilters = ({ onFilter, onReset, loading = false }) => {
   };
 
   const handleSearch = (value) => {
-    onFilter({ search: value });
+    if (value && value.trim()) {
+      onFilter({ search: value.trim() });
+    } else {
+      onFilter({});
+    }
   };
 
   return (
@@ -50,7 +63,14 @@ const CategoryFilters = ({ onFilter, onReset, loading = false }) => {
       }
       className="mb-4"
     >
-      <Form form={form} layout="vertical" onFinish={handleFilter}>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleFilter}
+        initialValues={{
+          status: "all", // nếu sau này có trạng thái
+        }}
+      >
         <Row gutter={[16, 16]}>
           {/* Search */}
           <Col xs={24} sm={12} lg={12}>

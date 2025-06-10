@@ -25,11 +25,55 @@ const useBrand = () => {
       const data = response.data || response;
 
       // Add product count for each brand (mock data)
-      const brandsWithCount = data.map((brand) => ({
+      let brandsWithCount = data.map((brand) => ({
         ...brand,
         createdAt: brand.createdAt || new Date().toISOString(),
         status: brand.status || "active",
+        productCount: Math.floor(Math.random() * 50) + 1,
       }));
+
+      // Client-side filtering
+      if (params.search) {
+        const searchLower = params.search.toLowerCase();
+        const keywords = params.search
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .split(/\s+/);
+
+        brandsWithCount = brandsWithCount.filter((brand) => {
+          const name = brand.name
+            ?.toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") || "";
+          const description = brand.description?.toLowerCase() || "";
+          const status = brand.status?.toLowerCase() || "";
+
+          return keywords.every(
+            (word) =>
+              name.includes(word) ||
+              description.includes(word) ||
+              status.includes(word)
+          );
+        });
+      }
+
+      if (params.status && params.status !== "all") {
+        brandsWithCount = brandsWithCount.filter(
+          (brand) => brand.status === params.status
+        );
+      }
+
+      if (params.dateRange && params.dateRange.start && params.dateRange.end) {
+        brandsWithCount = brandsWithCount.filter((brand) => {
+          if (!brand.createdAt) return false;
+          const brandDate = new Date(brand.createdAt);
+          const startDate = new Date(params.dateRange.start);
+          const endDate = new Date(params.dateRange.end);
+          endDate.setHours(23,59,59,999);
+          return brandDate >= startDate && brandDate <= endDate;
+        });
+      }
 
       setBrands(brandsWithCount);
       setPagination((prev) => ({
@@ -44,13 +88,15 @@ const useBrand = () => {
     }
   }, []);
 
-  // Create brand
+  // Create brand - REFETCH AFTER SUCCESS
   const createBrandHandler = async (brandData) => {
     try {
-      console.log("Creating brand:", brandData); // Debug log
       const response = await createBrand(brandData);
       message.success("Tạo nhãn hàng thành công!");
-      fetchBrands(); // Refresh list
+      
+      // Refetch to ensure data consistency
+      await fetchBrands();
+      
       return response;
     } catch (error) {
       console.error("Create brand error:", error);
@@ -59,21 +105,37 @@ const useBrand = () => {
     }
   };
 
-  // Update brand
+  // Update brand - REFETCH AND MOVE TO TOP
   const updateBrandHandler = async (id, brandData) => {
     try {
-      console.log("Updating brand:", { id, brandData }); // Debug log
-
-      // Đảm bảo ID là number hoặc string, không phải object
+      // Ensure ID is number/string
       const brandId = typeof id === "object" ? id.brandId || id.id : id;
-
-      if (!brandId) {
-        throw new Error("Brand ID is required for update");
-      }
+      if (!brandId) throw new Error("Brand ID required");
 
       const response = await updateBrand(brandId, brandData);
       message.success("Cập nhật nhãn hàng thành công!");
-      fetchBrands(); // Refresh list
+
+      // Refetch data first to get latest changes
+      fetchBrands();
+      
+      // Then move updated item to top
+      setBrands(prev => {
+        // Find updated brand
+        const updatedBrand = prev.find(
+          b => (b.brandId || b.id) === brandId
+        );
+        
+        if (!updatedBrand) return prev;
+        
+        // Filter out the updated brand
+        const otherBrands = prev.filter(
+          b => (b.brandId || b.id) !== brandId
+        );
+        
+        // Place updated brand at top
+        return [updatedBrand, ...otherBrands];
+      });
+
       return response;
     } catch (error) {
       console.error("Update brand error:", error);
@@ -82,21 +144,17 @@ const useBrand = () => {
     }
   };
 
-  // Delete brand
+  // Delete brand - REFETCH AFTER SUCCESS
   const deleteBrandHandler = async (id) => {
     try {
-      console.log("Deleting brand:", id); // Debug log
-
-      // Đảm bảo ID là number hoặc string, không phải object
       const brandId = typeof id === "object" ? id.brandId || id.id : id;
-
-      if (!brandId) {
-        throw new Error("Brand ID is required for delete");
-      }
+      if (!brandId) throw new Error("Brand ID required");
 
       await deleteBrand(brandId);
       message.success("Xóa nhãn hàng thành công!");
-      fetchBrands(); // Refresh list
+      
+      // Refetch to ensure data consistency
+      await fetchBrands();
     } catch (error) {
       console.error("Delete brand error:", error);
       message.error("Lỗi khi xóa nhãn hàng");
@@ -107,14 +165,13 @@ const useBrand = () => {
   // Handle pagination change
   const handleTableChange = (newPagination, filters, sorter) => {
     setPagination(newPagination);
-    const params = {
+    fetchBrands({
       page: newPagination.current,
       pageSize: newPagination.pageSize,
       ...filters,
       sortBy: sorter.field,
       sortOrder: sorter.order,
-    };
-    fetchBrands(params);
+    });
   };
 
   // Initial load
