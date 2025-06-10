@@ -25,14 +25,63 @@ const useCustomer = () => {
       const data = response.data || response;
 
       // Filter only customers (not admin users) and add additional info
-      const customersOnly = data
+      let customersOnly = data
         .filter((user) => user.role !== "admin")
         .map((customer) => ({
           ...customer,
           joinDate: customer.createdAt || new Date().toISOString(),
-          orderCount: Math.floor(Math.random() * 20) + 1, // Mock order count
-          totalSpent: Math.floor(Math.random() * 10000000) + 500000, // Mock total spent
+          orderCount: Math.floor(Math.random() * 20) + 1,
+          totalSpent: Math.floor(Math.random() * 10000000) + 500000,
         }));
+
+      // Áp dụng bộ lọc phía client
+      if (params.search) {
+        const searchLower = params.search.toLowerCase();
+        const keywords = params.search
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .split(/\s+/);
+
+        customersOnly = customersOnly.filter((customer) => {
+          const name =
+            customer.name
+              ?.toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "") || "";
+          const email = customer.email?.toLowerCase() || "";
+          const phone = customer.phone || "";
+
+          return keywords.every(
+            (word) =>
+              name.includes(word) ||
+              email.includes(word) ||
+              phone.includes(word)
+          );
+        });
+      }
+
+      if (params.status && params.status !== "all") {
+        customersOnly = customersOnly.filter(
+          (customer) => customer.status === params.status
+        );
+      }
+
+      if (params.gender && params.gender !== "all") {
+        customersOnly = customersOnly.filter(
+          (customer) => customer.gender === params.gender
+        );
+      }
+
+      if (params.dateRange && params.dateRange.start && params.dateRange.end) {
+        customersOnly = customersOnly.filter((customer) => {
+          if (!customer.joinDate) return false;
+          const customerDate = new Date(customer.joinDate);
+          const startDate = new Date(params.dateRange.start);
+          const endDate = new Date(params.dateRange.end);
+          return customerDate >= startDate && customerDate <= endDate;
+        });
+      }
 
       setCustomers(customersOnly);
       setPagination((prev) => ({
@@ -83,7 +132,31 @@ const useCustomer = () => {
 
       const response = await updateUser(customerId, customerData);
       message.success("Cập nhật khách hàng thành công!");
-      fetchCustomers(); // Refresh list
+
+      // Cập nhật customer trong danh sách và đưa lên đầu
+      setCustomers((prevCustomers) => {
+        const updatedCustomers = prevCustomers.filter(
+          (customer) => (customer.userId || customer.id) !== customerId
+        );
+
+        // Tạo customer đã cập nhật với dữ liệu mới
+        const updatedCustomer = {
+          ...prevCustomers.find(
+            (customer) => (customer.userId || customer.id) === customerId
+          ),
+          ...customerData,
+          userId: customerId,
+          id: customerId,
+          joinDate:
+            prevCustomers.find(
+              (customer) => (customer.userId || customer.id) === customerId
+            )?.joinDate || new Date().toISOString(),
+        };
+
+        // Đưa customer đã cập nhật lên đầu danh sách
+        return [updatedCustomer, ...updatedCustomers];
+      });
+
       return response;
     } catch (error) {
       console.error("Update customer error:", error);

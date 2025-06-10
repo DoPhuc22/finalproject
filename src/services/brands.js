@@ -34,8 +34,7 @@ export const updateBrand = async (id, brandData) => {
       description: brandData.description,
       status: brandData.status || 'active',
     };
-
-    // Remove undefined values to avoid sending null/undefined to API
+    
     const cleanedData = Object.fromEntries(
       Object.entries(requestData).filter(([_, value]) => value !== undefined)
     );

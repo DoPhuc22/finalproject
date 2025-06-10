@@ -273,14 +273,14 @@ const CustomerForm = ({
                       </div>
                     </Col>
                   )}
-                  <Col span={8}>
+                  {/* <Col span={8}>
                     <div className="text-sm">
                       <span className="text-gray-500">Tổng đơn hàng:</span>
                       <span className="ml-2 font-medium text-green-600">
                         {customer.orderCount || 0} đơn
                       </span>
                     </div>
-                  </Col>
+                  </Col> */}
                 </Row>
               </div>
             </Col>

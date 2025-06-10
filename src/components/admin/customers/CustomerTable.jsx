@@ -59,19 +59,6 @@ const CustomerTable = ({
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return "success";
-      case "inactive":
-        return "default";
-      case "blocked":
-        return "error";
-      default:
-        return "default";
-    }
-  };
-
   const getStatusText = (status) => {
     switch (status) {
       case "active":
@@ -191,22 +178,22 @@ const CustomerTable = ({
         );
       },
     },
-    {
-      title: "Thống kê",
-      key: "stats",
-      width: 120,
-      align: "center",
-      render: (_, record) => (
-        <div className="text-center">
-          <Text strong className="text-green-600 block">
-            {record.orderCount || 0} đơn
-          </Text>
-          <Text className="text-xs text-gray-500">
-            {(record.totalSpent || 0).toLocaleString()} VNĐ
-          </Text>
-        </div>
-      ),
-    },
+    // {
+    //   title: "Thống kê",
+    //   key: "stats",
+    //   width: 120,
+    //   align: "center",
+    //   render: (_, record) => (
+    //     <div className="text-center">
+    //       <Text strong className="text-green-600 block">
+    //         {record.orderCount || 0} đơn
+    //       </Text>
+    //       <Text className="text-xs text-gray-500">
+    //         {(record.totalSpent || 0).toLocaleString()} VNĐ
+    //       </Text>
+    //     </div>
+    //   ),
+    // },
     {
       title: "Ngày tham gia",
       dataIndex: "joinDate",

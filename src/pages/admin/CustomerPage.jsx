@@ -146,7 +146,7 @@ const CustomerPage = () => {
                   </div>
                 </div>
 
-                <Row gutter={[16, 16]}>
+                {/* <Row gutter={[16, 16]}>
                   <Col span={8}>
                     <Statistic
                       title="ID khách hàng"
@@ -174,7 +174,7 @@ const CustomerPage = () => {
                       )}
                     />
                   </Col>
-                </Row>
+                </Row> */}
               </div>
             </Col>
           </Row>
@@ -367,7 +367,7 @@ const CustomerPage = () => {
                   />
                 </Card>
               </Col>
-              <Col xs={24} sm={12} lg={6}>
+              {/* <Col xs={24} sm={12} lg={6}>
                 <Card
                   size="small"
                   bordered={false}
@@ -381,7 +381,7 @@ const CustomerPage = () => {
                     valueStyle={{ color: "#722ed1" }}
                   />
                 </Card>
-              </Col>
+              </Col> */}
             </Row>
           </div>
 
