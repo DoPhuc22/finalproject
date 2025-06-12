@@ -28,18 +28,14 @@ const CategoryTable = ({
 }) => {
   const columns = [
     {
-      title: "Icon",
-      dataIndex: "icon",
-      key: "icon",
-      width: 60,
-      render: (icon, record) => (
-        <Avatar
-          icon={<AppstoreOutlined />}
-          style={{
-            backgroundColor: record.color || "#1890ff",
-            color: "#fff",
-          }}
-        />
+      title: "ID",
+      dataIndex: "categoryId",
+      key: "categoryId",
+      width: 80,
+      render: (id, record) => (
+        <Text code className="text-blue-600 text-lg">
+          #{record.categoryId || record.id}
+        </Text>
       ),
     },
     {
@@ -57,9 +53,6 @@ const CategoryTable = ({
           >
             {record.description || "Chưa có mô tả"}
           </Paragraph>
-          <Text type="secondary" className="text-xs">
-            ID: {record.categoryId || record.id}
-          </Text>
         </div>
       ),
     },

@@ -67,12 +67,21 @@ const CustomerTable = ({
         return "Ngừng hoạt động";
       case "blocked":
         return "Bị khóa";
-      default:
-        return "Không xác định";
     }
   };
 
   const columns = [
+    {
+      title: "ID",
+      dataIndex: "userId",
+      key: "userId",
+      width: 80,
+      render: (id, record) => (
+        <Text code className="text-blue-600 text-lg">
+          #{record.userId || record.id}
+        </Text>
+      ),
+    },
     {
       title: "Khách hàng",
       key: "customer",

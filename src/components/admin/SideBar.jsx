@@ -41,6 +41,11 @@ const Sidebar = ({ collapsed, onCollapse }) => {
       label: <Link to="/admin/brands">Nhãn hàng</Link>,
     },
     {
+      key: "/admin/attribute_types",
+      icon: <TagOutlined />,
+      label: <Link to="/admin/attribute_types">Loại thuộc tính</Link>,
+    },
+    {
       key: "/admin/orders",
       icon: <ShoppingCartOutlined />,
       label: <Link to="/admin/orders">Đơn hàng</Link>,

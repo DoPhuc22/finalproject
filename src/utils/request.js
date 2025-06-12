@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getToken } from "../utils/utils";
+import { message } from "antd";
 
 // Tạo instance mặc định
 const api = axios.create({
@@ -33,10 +34,13 @@ api.interceptors.response.use(
   (error) => {
     // Xử lý lỗi toàn cục
     if (error.response?.status === 401) {
-      // Token hết hạn hoặc không hợp lệ
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/auth";
+      const token = localStorage.getItem("token");
+      if (token) {
+        // Token hết hạn hoặc không hợp lệ
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/auth";
+      }
     }
 
     if (error.response?.status === 403) {

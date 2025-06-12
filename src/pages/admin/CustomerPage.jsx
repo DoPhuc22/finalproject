@@ -267,6 +267,7 @@ const CustomerPage = () => {
   // Calculate statistics
   const totalCustomers = customers.length;
   const activeCustomers = customers.filter((c) => c.status === "active").length;
+  const inactiveCustomers = customers.filter((c) => c.status === "inactive").length;
   const totalRevenue = customers.reduce(
     (sum, c) => sum + (c.totalSpent || 0),
     0
@@ -364,6 +365,20 @@ const CustomerPage = () => {
                     value={activeCustomers}
                     prefix={<CheckCircleOutlined />}
                     valueStyle={{ color: "#52c41a" }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={24} sm={12} lg={6}>
+                <Card
+                  size="small"
+                  bordered={false}
+                  className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+                >
+                  <Statistic
+                    title="Ngừng hoạt động"
+                    value={inactiveCustomers}
+                    prefix={<StopOutlined />}
+                    valueStyle={{ color: "#f5222d" }}
                   />
                 </Card>
               </Col>

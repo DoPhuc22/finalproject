@@ -21,6 +21,18 @@ const useCustomer = () => {
   const fetchCustomers = useCallback(async (params = {}) => {
     try {
       setLoading(true);
+      if (Object.keys(params).length === 0) {
+        const cached = localStorage.getItem("customers");
+        if (cached) {
+          setCustomers(JSON.parse(cached));
+          setPagination((prev) => ({
+            ...prev,
+            total: JSON.parse(cached).length,
+          }));
+          setLoading(false);
+          return;
+        }
+      }
       const response = await getAllUsers(params);
       const data = response.data || response;
 
@@ -79,6 +91,7 @@ const useCustomer = () => {
           const customerDate = new Date(customer.joinDate);
           const startDate = new Date(params.dateRange.start);
           const endDate = new Date(params.dateRange.end);
+          endDate.setHours(23, 59, 59, 999);
           return customerDate >= startDate && customerDate <= endDate;
         });
       }
@@ -88,6 +101,11 @@ const useCustomer = () => {
         ...prev,
         total: customersOnly.length,
       }));
+
+      // Lưu vào localStorage nếu không có filter
+      if (Object.keys(params).length === 0) {
+        localStorage.setItem("customers", JSON.stringify(customersOnly));
+      }
     } catch (error) {
       message.error("Lỗi khi tải danh sách khách hàng");
       console.error("Error fetching customers:", error);
@@ -154,7 +172,9 @@ const useCustomer = () => {
         };
 
         // Đưa customer đã cập nhật lên đầu danh sách
-        return [updatedCustomer, ...updatedCustomers];
+        const newList = [updatedCustomer, ...updatedCustomers];
+        localStorage.setItem("customers", JSON.stringify(newList));
+        return newList;
       });
 
       return response;

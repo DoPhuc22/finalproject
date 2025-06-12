@@ -1,26 +1,25 @@
 import React, { useState } from "react";
 import {
   Table,
-  Tag,
   Space,
   Button,
   Typography,
   Popconfirm,
   Tooltip,
-  Avatar,
+  Tag,
   Switch,
 } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
   EyeOutlined,
-  TrademarkOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
-const BrandTable = ({
-  brands = [],
+const AttributeTypeTable = ({
+  attributeTypes = [],
   loading = false,
   pagination = {},
   onEdit,
@@ -30,19 +29,18 @@ const BrandTable = ({
   onStatusChange,
 }) => {
   const [switchLoadingStates, setSwitchLoadingStates] = useState({});
-
-  const handleStatusChange = async (brandId, checked) => {
+  const handleStatusChange = async (attrTypeId, checked) => {
     try {
       // Set loading state for this specific switch
       setSwitchLoadingStates((prev) => ({
         ...prev,
-        [brandId]: true,
+        [attrTypeId]: true,
       }));
 
-      console.log("Table status change:", { brandId, checked }); // Debug log
+      console.log("Table status change:", { attrTypeId, checked }); // Debug log
 
       if (onStatusChange) {
-        await onStatusChange(brandId, checked);
+        await onStatusChange(attrTypeId, checked);
       }
     } catch (error) {
       console.error("Error changing status:", error);
@@ -50,38 +48,31 @@ const BrandTable = ({
       // Clear loading state for this specific switch
       setSwitchLoadingStates((prev) => ({
         ...prev,
-        [brandId]: false,
+        [attrTypeId]: false,
       }));
     }
   };
-
   const columns = [
     {
       title: "ID",
-      dataIndex: "brandId",
-      key: "brandId",
+      dataIndex: "attrTypeId",
+      key: "attrTypeId",
       width: 80,
       render: (id, record) => (
-        <Text code className="text-purple-600 text-lg">
-          #{record.brandId || record.id}
+        <Text code className="text-orange-600 text-lg">
+          #{record.attrTypeId || record.id}
         </Text>
       ),
     },
     {
-      title: "Thông tin nhãn hàng",
+      title: "Thông tin loại thuộc tính",
       key: "info",
       render: (_, record) => (
         <div>
-          <Text strong className="text-base mb-1">
+          <Text strong className="text-base mb-1 items-center">
+            <TagOutlined className="mr-2 text-orange-500" />
             {record.name}
           </Text>
-          <Paragraph
-            type="secondary"
-            className="mb-2 text-sm"
-            ellipsis={{ rows: 2, tooltip: record.description }}
-          >
-            {record.description || "Chưa có mô tả"}
-          </Paragraph>
         </div>
       ),
     },
@@ -93,8 +84,8 @@ const BrandTable = ({
       align: "center",
       render: (status, record) => {
         const isActive = status === "active";
-        const brandId = record.brandId || record.id;
-        const isLoading = switchLoadingStates[brandId] || false;
+        const attrTypeId = record.attrTypeId || record.id;
+        const isLoading = switchLoadingStates[attrTypeId] || false;
 
         return (
           <div className="text-center">
@@ -104,10 +95,10 @@ const BrandTable = ({
               }
               description={
                 isActive
-                  ? "Nhãn hàng sẽ được chuyển sang trạng thái ngừng hoạt động. Bạn có chắc chắn?"
-                  : "Nhãn hàng sẽ được kích hoạt lại. Bạn có chắc chắn?"
+                  ? "Loại thuộc tính sẽ được chuyển sang trạng thái ngừng hoạt động. Bạn có chắc chắn?"
+                  : "Loại trạng thái sẽ được kích hoạt lại. Bạn có chắc chắn?"
               }
-              onConfirm={() => handleStatusChange(brandId, !isActive)}
+              onConfirm={() => handleStatusChange(attrTypeId, !isActive)}
               okText={isActive ? "Ngừng hoạt động" : "Kích hoạt"}
               cancelText="Hủy"
               okType={isActive ? "danger" : "primary"}
@@ -168,8 +159,8 @@ const BrandTable = ({
           <Tooltip title="Xóa">
             <Popconfirm
               title="Xác nhận xóa"
-              description="Bạn có chắc chắn muốn xóa nhãn hàng này? Hành động này không thể hoàn tác."
-              onConfirm={() => onDelete(record.brandId || record.id)}
+              description="Bạn có chắc chắn muốn xóa loại thuộc tính này? Hành động này không thể hoàn tác."
+              onConfirm={() => onDelete(record.attrTypeId || record.id)}
               okText="Xóa"
               cancelText="Hủy"
               okType="danger"
@@ -187,28 +178,26 @@ const BrandTable = ({
   ];
 
   return (
-    <Table
-      columns={columns}
-      dataSource={brands}
-      loading={loading}
-      pagination={{
-        ...pagination,
-        showSizeChanger: true,
-        showQuickJumper: true,
-        showTotal: (total, range) =>
-          `${range[0]}-${range[1]} của ${total} nhãn hàng`,
-        pageSizeOptions: ["10", "20", "50", "100"],
-      }}
-      onChange={onTableChange}
-      rowKey={(record) => record.brandId || record.id}
-      scroll={{ x: 800 }}
-      size="middle"
-      className="custom-table"
-      rowClassName={(record, index) =>
-        index % 2 === 0 ? "table-row-light" : "table-row-dark"
-      }
-    />
+    <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+      <Table
+        columns={columns}
+        dataSource={attributeTypes}
+        loading={loading}
+        pagination={{
+          ...pagination,
+          className: "px-4 py-3 bg-slate-50",
+        }}
+        onChange={onTableChange}
+        rowKey={(record) => record.attrTypeId || record.id}
+        scroll={{ x: 800 }}
+        className="custom-table"
+        size="middle"
+        rowClassName={(record, index) =>
+          index % 2 === 0 ? "table-row-light" : "table-row-dark"
+        }
+      />
+    </div>
   );
 };
 
-export default BrandTable;
+export default AttributeTypeTable;

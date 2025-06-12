@@ -21,6 +21,19 @@ const useBrand = () => {
   const fetchBrands = useCallback(async (params = {}) => {
     try {
       setLoading(true);
+      if (Object.keys(params).length === 0) {
+        const cached = localStorage.getItem("brands");
+        if (cached) {
+          const cachedBrands = JSON.parse(cached);
+          setBrands(cachedBrands);
+          setPagination((prev) => ({
+            ...prev,
+            total: cachedBrands.length,
+          }));
+          setLoading(false);
+          return;
+        }
+      }
       const response = await getAllBrands(params);
       const data = response.data || response;
 
@@ -29,7 +42,6 @@ const useBrand = () => {
         ...brand,
         createdAt: brand.createdAt || new Date().toISOString(),
         status: brand.status || "active",
-        productCount: Math.floor(Math.random() * 50) + 1,
       }));
 
       // Client-side filtering
@@ -42,10 +54,11 @@ const useBrand = () => {
           .split(/\s+/);
 
         brandsWithCount = brandsWithCount.filter((brand) => {
-          const name = brand.name
-            ?.toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "") || "";
+          const name =
+            brand.name
+              ?.toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "") || "";
           const description = brand.description?.toLowerCase() || "";
           const status = brand.status?.toLowerCase() || "";
 
@@ -70,7 +83,7 @@ const useBrand = () => {
           const brandDate = new Date(brand.createdAt);
           const startDate = new Date(params.dateRange.start);
           const endDate = new Date(params.dateRange.end);
-          endDate.setHours(23,59,59,999);
+          endDate.setHours(23, 59, 59, 999);
           return brandDate >= startDate && brandDate <= endDate;
         });
       }
@@ -80,6 +93,10 @@ const useBrand = () => {
         ...prev,
         total: brandsWithCount.length,
       }));
+
+      if (Object.keys(params).length === 0) {
+        localStorage.setItem("brands", JSON.stringify(brandsWithCount));
+      }
     } catch (error) {
       message.error("Lỗi khi tải danh sách nhãn hàng");
       console.error("Error fetching brands:", error);
@@ -93,10 +110,11 @@ const useBrand = () => {
     try {
       const response = await createBrand(brandData);
       message.success("Tạo nhãn hàng thành công!");
-      
+
+      localStorage.removeItem("brands"); // Clear cache to refetch
       // Refetch to ensure data consistency
       await fetchBrands();
-      
+
       return response;
     } catch (error) {
       console.error("Create brand error:", error);
@@ -108,32 +126,42 @@ const useBrand = () => {
   // Update brand - REFETCH AND MOVE TO TOP
   const updateBrandHandler = async (id, brandData) => {
     try {
-      // Ensure ID is number/string
+      console.log("Updating brand:", { id, brandData }); // Debug log
+
+      // Đảm bảo ID là number hoặc string, không phải object
       const brandId = typeof id === "object" ? id.brandId || id.id : id;
-      if (!brandId) throw new Error("Brand ID required");
+
+      if (!brandId) {
+        throw new Error("Brand ID is required for update");
+      }
 
       const response = await updateBrand(brandId, brandData);
       message.success("Cập nhật nhãn hàng thành công!");
 
-      // Refetch data first to get latest changes
-      fetchBrands();
-      
-      // Then move updated item to top
-      setBrands(prev => {
-        // Find updated brand
-        const updatedBrand = prev.find(
-          b => (b.brandId || b.id) === brandId
+      // Cập nhật brand trong danh sách và đưa lên đầu
+      setBrands((prevBrands) => {
+        const updatedBrands = prevBrands.filter(
+          (brand) => (brand.brandId || brand.id) !== brandId
         );
-        
-        if (!updatedBrand) return prev;
-        
-        // Filter out the updated brand
-        const otherBrands = prev.filter(
-          b => (b.brandId || b.id) !== brandId
-        );
-        
-        // Place updated brand at top
-        return [updatedBrand, ...otherBrands];
+
+        // Tạo brand đã cập nhật với dữ liệu mới
+        const updatedBrand = {
+          ...prevBrands.find(
+            (brand) => (brand.brandId || brand.id) === brandId
+          ),
+          ...brandData,
+          brandId: brandId,
+          id: brandId,
+          joinDate:
+            prevBrands.find(
+              (brand) => (brand.brandId || brand.id) === brandId
+            )?.joinDate || new Date().toISOString(),
+        };
+
+        // Đưa brand đã cập nhật lên đầu danh sách
+        const newList = [updatedBrand, ...updatedBrands];
+        localStorage.setItem("brands", JSON.stringify(newList));
+        return newList;
       });
 
       return response;
@@ -152,7 +180,7 @@ const useBrand = () => {
 
       await deleteBrand(brandId);
       message.success("Xóa nhãn hàng thành công!");
-      
+
       // Refetch to ensure data consistency
       await fetchBrands();
     } catch (error) {

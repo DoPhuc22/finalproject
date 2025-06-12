@@ -26,7 +26,6 @@ const LoginForm = () => {
         email: values.email,
         password: values.password,
       });
-
       // Kiểm tra response có dữ liệu cần thiết không
       // if (!response || !response.user || !response.token) {
       //   throw new Error("Dữ liệu phản hồi từ server không hợp lệ");
@@ -53,7 +52,7 @@ const LoginForm = () => {
       console.error("Login error:", error);
 
       // Xử lý các loại lỗi khác nhau
-      let errorMessage = "Đăng nhập thất bại, vui lòng thử lại!";
+      let errorMessage = "Tài khoản của bạn chưa được kích hoạt hoặc đã bị khóa. Vui lòng liên hệ quản trị viên!";
 
       // Kiểm tra chi tiết lỗi từ response
       if (error?.response?.data?.message) {
@@ -68,6 +67,11 @@ const LoginForm = () => {
 
       // Hiển thị lỗi cụ thể cho người dùng
       if (
+        errorMessage.toLowerCase().includes("inactive")
+      ) {
+        errorMessage =
+          "Tài khoản của bạn chưa được kích hoạt hoặc đã bị khóa. Vui lòng liên hệ quản trị viên!";
+      } else if (
         errorMessage.includes("email") ||
         errorMessage.includes("password") ||
         errorMessage.includes("Invalid") ||

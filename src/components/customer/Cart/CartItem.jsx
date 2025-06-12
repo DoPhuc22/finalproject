@@ -72,7 +72,7 @@ const CartItem = ({ item }) => {
               type="text"
               danger
               icon={<DeleteOutlined />}
-              className="hover:bg-red-50"
+              className="hover:bg-red-50 text-2xl"
             />
           </Popconfirm>
         </Tooltip>

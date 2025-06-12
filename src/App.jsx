@@ -17,6 +17,7 @@ import ProductPage from "./pages/admin/ProductPage";
 import CategoryPage from "./pages/admin/CategoryPage";
 import BrandPage from "./pages/admin/BrandPage";
 import CustomerPage from "./pages/admin/CustomerPage";
+import AttributeTypePage from "./pages/admin/AttributeTypePage";
 
 function App() {
   // Customize Ant Design theme to match your brand colors
@@ -53,6 +54,7 @@ function App() {
           <Route path="/admin/categories" element={<CategoryPage />} />
           <Route path="/admin/brands" element={<BrandPage />} />
           <Route path="/admin/customers" element={<CustomerPage />} />
+          <Route path="/admin/attribute_types" element={<AttributeTypePage />} />
 
           {/* Customer Routes */}
           <Route element={<CustomerLayout />}>
