@@ -29,6 +29,7 @@ import {
   getBase64,
   uploadImage,
 } from "../../../utils/imageUpload";
+import axios from "axios";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -81,24 +82,32 @@ const ProductForm = ({
 
   const handleSubmit = async (values) => {
     try {
-      const formData = {
-        ...values,
-        images: images.map((img, index) => ({
-          imageUrl: img.url,
-          isPrimary: img.isPrimary || index === 0,
-          name: img.name,
-        })),
-      };
+      const fd = new FormData();
+      fd.append("name", values.name);
+      fd.append("sku", values.sku);
+      fd.append("description", values.description || "");
+      fd.append("price", values.price);
+      fd.append("brandId", values.brandId);
+      fd.append("categoryId", values.categoryId);
+      fd.append("primaryImageIndex", images.findIndex((img) => img.isPrimary));
 
-      if (isEdit) {
-        await onSubmit(product.productId || product.id, formData);
-      } else {
-        await onSubmit(formData);
-      }
+      images.forEach((img) => {
+        const file = img.originFileObj;
+        if (file) {
+          fd.append("images", file);
+        }
+      });
 
+      const res = await axios.post("http://localhost:8080/api/products", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      message.success("Thêm sản phẩm thành công");
+      onSubmit?.(res.data); // Nếu bạn có callback xử lý sau khi tạo
       handleCancel();
     } catch (error) {
       console.error("Submit error:", error);
+      message.error("Lỗi khi gửi dữ liệu");
     }
   };
 
@@ -131,6 +140,7 @@ const ProductForm = ({
         name: file.name,
         status: "done",
         url: result.url,
+        originFileObj: file, // Giữ lại file gốc ở đây
         isPrimary: images.length === 0, // First image is primary
       };
 
@@ -178,6 +188,35 @@ const ProductForm = ({
       <div style={{ marginTop: 8 }}>Tải ảnh</div>
     </div>
   );
+
+  const handleUploadAll = async () => {
+  if (images.length === 0) return;
+
+  const fd = new FormData();
+    images.forEach(img => {
+      // img.originFileObj là File gốc từ ant-upload
+      const file = img.originFileObj || img.file;
+      if (file) fd.append('images[]', file);
+    });
+
+    // Gửi metadata nếu cần
+    // fd.append('productName', form.getFieldValue('name'));
+
+    try {
+      console.log("Preparing to upload to backend:", fd);
+      const res = await axios.post('http://localhost:8080/api/products', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      message.success('Upload thành công');
+      // Xử lý response, ví dụ: lưu các imageUrl trả về
+      // setImages(res.data.images)
+      onSubmit(res.data);
+      handleCancel();
+    } catch (err) {
+      console.error(err);
+      message.error('Upload thất bại');
+    }
+  };
 
   return (
     <>
@@ -393,11 +432,25 @@ const ProductForm = ({
             {/* Images */}
             <Col span={24}>
               <Card title="Hình ảnh sản phẩm" size="small">
-                <Upload
-                  customRequest={handleUpload}
+               <Upload
                   listType="picture-card"
+                  fileList={images}
                   onPreview={handlePreview}
                   onRemove={handleRemoveImage}
+                  beforeUpload={file => {
+                    setImages(prev => [
+                      ...prev,
+                      {
+                        uid: file.uid,
+                        name: file.name,
+                        status: 'done',
+                        originFileObj: file,
+                        url: URL.createObjectURL(file),
+                        isPrimary: prev.length === 0,
+                      }
+                    ]);
+                    return false; // để Antd không auto upload
+                  }}
                   multiple
                   accept="image/*"
                   showUploadList={false}
