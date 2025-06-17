@@ -59,22 +59,28 @@ const ProductForm = ({
           ...product,
           categoryId: product.category?.categoryId || product.categoryId,
           brandId: product.brand?.brandId || product.brandId,
-          images: product.images || [],
+          status: product.status === "active",
+          active: product.active === true,
         });
 
-        // Set images
+        // Set images với logic ảnh chính đúng - SỬA CHÍNH Ở ĐÂY
         const productImages = product.images || [];
         setImages(
           productImages.map((img, index) => ({
-            uid: img.imageId || index,
+            uid: img.imageId || `existing-${index}`,
             name: img.name || `image-${index}`,
             status: "done",
             url: img.imageUrl || img.url,
-            isPrimary: img.isPrimary || index === 0,
+            isPrimary: img.isPrimary === true, // Chỉ dựa vào dữ liệu từ server
+            isExisting: true, // Đánh dấu là ảnh đã tồn tại
           }))
         );
       } else {
-        form.resetFields();
+        // Tạo mới - đặt giá trị mặc định
+        form.setFieldsValue({
+          active: false,
+          status: false,
+        });
         setImages([]);
       }
     }
@@ -82,28 +88,58 @@ const ProductForm = ({
 
   const handleSubmit = async (values) => {
     try {
-      const fd = new FormData();
-      fd.append("name", values.name);
-      fd.append("sku", values.sku);
-      fd.append("description", values.description || "");
-      fd.append("price", values.price);
-      fd.append("brandId", values.brandId);
-      fd.append("categoryId", values.categoryId);
-      fd.append("primaryImageIndex", images.findIndex((img) => img.isPrimary));
+      // Kiểm tra nếu đang ở chế độ chỉnh sửa
+      if (isEdit) {
+        // Chuẩn bị dữ liệu cho chế độ sửa (không sử dụng FormData)
+        const productData = {
+          name: values.name,
+          sku: values.sku,
+          description: values.description || "",
+          remainQuantity: values.remainQuantity || 0,
+          active: values.active === true, // Sửa logic active
+          status: values.status ? "active" : "inactive",
+          price: values.price,
+          brandId: values.brandId,
+          categoryId: values.categoryId,
+        };
 
-      images.forEach((img) => {
-        const file = img.originFileObj;
-        if (file) {
-          fd.append("images", file);
-        }
-      });
+        const productId = product.productId || product.id;
+        await onSubmit(productData, productId);
+      } else {
+        // Chế độ tạo mới - sử dụng FormData
+        const fd = new FormData();
+        fd.append("name", values.name);
+        fd.append("sku", values.sku);
+        fd.append("description", values.description || "");
+        fd.append("remainQuantity", values.remainQuantity || 0);
+        fd.append("active", values.active === true ? "true" : "false"); // Sửa logic active
+        fd.append("status", values.status ? "active" : "inactive");
+        fd.append("price", values.price);
+        fd.append("brandId", values.brandId);
+        fd.append("categoryId", values.categoryId);
 
-      const res = await axios.post("http://localhost:8080/api/products", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+        // Tìm index của ảnh chính (chỉ có 1 ảnh isPrimary = true)
+        const primaryImageIndex = images.findIndex((img) => img.isPrimary);
+        fd.append(
+          "primaryImageIndex",
+          primaryImageIndex >= 0 ? primaryImageIndex : 0
+        );
 
-      message.success("Thêm sản phẩm thành công");
-      onSubmit?.(res.data); // Nếu bạn có callback xử lý sau khi tạo
+        // Đảm bảo chỉ có 1 ảnh chính
+        let hasPrimary = false;
+        images.forEach((img, index) => {
+          const file = img.originFileObj;
+          if (file) {
+            fd.append("images", file);
+            // Chỉ đặt ảnh đầu tiên làm primary nếu không có ảnh nào được đặt làm primary
+            if (img.isPrimary && !hasPrimary) {
+              hasPrimary = true;
+            }
+          }
+        });
+
+        await onSubmit(fd);
+      }
       handleCancel();
     } catch (error) {
       console.error("Submit error:", error);
@@ -120,48 +156,61 @@ const ProductForm = ({
   };
 
   // Image upload handlers
-  const handleUpload = async ({ file, onSuccess, onError }) => {
-    try {
-      if (!validateImageFile(file)) {
-        onError("Invalid file");
-        return;
-      }
+  // const handleUpload = async ({ file, onSuccess, onError }) => {
+  //   try {
+  //     if (!validateImageFile(file)) {
+  //       onError("Invalid file");
+  //       return;
+  //     }
 
-      setUploading(true);
+  //     setUploading(true);
 
-      // Convert to base64 for preview
-      const base64 = await getBase64(file);
+  //     // Convert to base64 for preview
+  //     const base64 = await getBase64(file);
 
-      // Simulate upload
-      const result = await uploadImage(file);
+  //     // Simulate upload
+  //     const result = await uploadImage(file);
 
-      const newImage = {
-        uid: file.uid,
-        name: file.name,
-        status: "done",
-        url: result.url,
-        originFileObj: file, // Giữ lại file gốc ở đây
-        isPrimary: images.length === 0, // First image is primary
-      };
+  //     const newImage = {
+  //       uid: file.uid,
+  //       name: file.name,
+  //       status: "done",
+  //       url: result.url,
+  //       originFileObj: file, // Giữ lại file gốc ở đây
+  //       isPrimary: images.length === 0, // First image is primary
+  //     };
 
-      setImages((prev) => [...prev, newImage]);
-      onSuccess(result, file);
-    } catch (error) {
-      message.error("Upload failed");
-      onError(error);
-    } finally {
-      setUploading(false);
-    }
-  };
+  //     setImages((prev) => [...prev, newImage]);
+  //     onSuccess(result, file);
+  //   } catch (error) {
+  //     message.error("Upload failed");
+  //     onError(error);
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
 
   const handleRemoveImage = (file) => {
     setImages((prev) => {
       const newImages = prev.filter((img) => img.uid !== file.uid);
-      // If removed image was primary, make first image primary
+
+      // Nếu ảnh bị xóa là ảnh chính và còn ảnh khác, đặt ảnh đầu tiên làm chính
       if (file.isPrimary && newImages.length > 0) {
         newImages[0].isPrimary = true;
       }
-      return newImages;
+
+      // Đảm bảo chỉ có 1 ảnh chính
+      let primaryFound = false;
+      const correctedImages = newImages.map((img) => {
+        if (img.isPrimary && !primaryFound) {
+          primaryFound = true;
+          return img;
+        } else {
+          return { ...img, isPrimary: false };
+        }
+      });
+
+      return correctedImages;
     });
   };
 
@@ -189,34 +238,34 @@ const ProductForm = ({
     </div>
   );
 
-  const handleUploadAll = async () => {
-  if (images.length === 0) return;
+  // const handleUploadAll = async () => {
+  // if (images.length === 0) return;
 
-  const fd = new FormData();
-    images.forEach(img => {
-      // img.originFileObj là File gốc từ ant-upload
-      const file = img.originFileObj || img.file;
-      if (file) fd.append('images[]', file);
-    });
+  // const fd = new FormData();
+  //   images.forEach(img => {
+  //     // img.originFileObj là File gốc từ ant-upload
+  //     const file = img.originFileObj || img.file;
+  //     if (file) fd.append('images[]', file);
+  //   });
 
-    // Gửi metadata nếu cần
-    // fd.append('productName', form.getFieldValue('name'));
+  //   // Gửi metadata nếu cần
+  //   // fd.append('productName', form.getFieldValue('name'));
 
-    try {
-      console.log("Preparing to upload to backend:", fd);
-      const res = await axios.post('http://localhost:8080/api/products', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      message.success('Upload thành công');
-      // Xử lý response, ví dụ: lưu các imageUrl trả về
-      // setImages(res.data.images)
-      onSubmit(res.data);
-      handleCancel();
-    } catch (err) {
-      console.error(err);
-      message.error('Upload thất bại');
-    }
-  };
+  //   try {
+  //     console.log("Preparing to upload to backend:", fd);
+  //     const res = await axios.post('http://localhost:8080/api/products', fd, {
+  //       headers: { 'Content-Type': 'multipart/form-data' },
+  //     });
+  //     message.success('Upload thành công');
+  //     // Xử lý response, ví dụ: lưu các imageUrl trả về
+  //     // setImages(res.data.images)
+  //     onSubmit(res.data);
+  //     handleCancel();
+  //   } catch (err) {
+  //     console.error(err);
+  //     message.error('Upload thất bại');
+  //   }
+  // };
 
   return (
     <>
@@ -306,8 +355,8 @@ const ProductForm = ({
                       <Select placeholder="Chọn danh mục">
                         {categories.map((category) => (
                           <Option
-                            key={category.categoryId}
-                            value={category.categoryId}
+                            key={category.categoryId || category.id}
+                            value={category.categoryId || category.id}
                           >
                             {category.name}
                           </Option>
@@ -329,7 +378,10 @@ const ProductForm = ({
                     >
                       <Select placeholder="Chọn thương hiệu">
                         {brands.map((brand) => (
-                          <Option key={brand.brandId} value={brand.brandId}>
+                          <Option
+                            key={brand.brandId || brand.id}
+                            value={brand.brandId || brand.id}
+                          >
                             {brand.name}
                           </Option>
                         ))}
@@ -369,7 +421,7 @@ const ProductForm = ({
                     </Form.Item>
                   </Col>
 
-                  <Col xs={24} md={8}>
+                  {/* <Col xs={24} md={8}>
                     <Form.Item label="Giá so sánh" name="comparePrice">
                       <InputNumber
                         style={{ width: "100%" }}
@@ -381,12 +433,12 @@ const ProductForm = ({
                         addonAfter="₫"
                       />
                     </Form.Item>
-                  </Col>
+                  </Col> */}
 
                   <Col xs={24} md={8}>
                     <Form.Item
                       label="Số lượng tồn kho"
-                      name="stockQuantity"
+                      name="remainQuantity"
                       rules={[
                         { required: true, message: "Vui lòng nhập số lượng" },
                         {
@@ -403,7 +455,7 @@ const ProductForm = ({
                   <Col xs={24} md={12}>
                     <Form.Item
                       label="Trạng thái"
-                      name="inStock"
+                      name="status"
                       valuePropName="checked"
                     >
                       <Switch
@@ -416,7 +468,7 @@ const ProductForm = ({
                   <Col xs={24} md={12}>
                     <Form.Item
                       label="Kích hoạt"
-                      name="isActive"
+                      name="active"
                       valuePropName="checked"
                     >
                       <Switch
@@ -432,23 +484,23 @@ const ProductForm = ({
             {/* Images */}
             <Col span={24}>
               <Card title="Hình ảnh sản phẩm" size="small">
-               <Upload
+                <Upload
                   listType="picture-card"
                   fileList={images}
                   onPreview={handlePreview}
                   onRemove={handleRemoveImage}
-                  beforeUpload={file => {
-                    setImages(prev => [
-                      ...prev,
-                      {
+                  beforeUpload={(file) => {
+                    setImages((prev) => {
+                      const newImage = {
                         uid: file.uid,
                         name: file.name,
-                        status: 'done',
+                        status: "done",
                         originFileObj: file,
                         url: URL.createObjectURL(file),
-                        isPrimary: prev.length === 0,
-                      }
-                    ]);
+                        isPrimary: prev.length === 0, // Chỉ ảnh đầu tiên mới là primary
+                      };
+                      return [...prev, newImage];
+                    });
                     return false; // để Antd không auto upload
                   }}
                   multiple

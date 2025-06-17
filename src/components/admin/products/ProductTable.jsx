@@ -30,25 +30,64 @@ const ProductTable = ({
   onDelete,
   onView,
   onTableChange,
-  onStatusChange,
+  onActiveChange,
 }) => {
+  const [switchLoadingStates, setSwitchLoadingStates] = useState({});
   const [previewImage, setPreviewImage] = useState("");
   const [previewVisible, setPreviewVisible] = useState(false);
 
-  const handleStatusChange = async (productId, checked) => {
+  const handleActiveChange = async (productId, checked) => {
     try {
-      await onStatusChange(productId, checked);
+      // Set loading state for this specific switch
+      setSwitchLoadingStates((prev) => ({
+        ...prev,
+        [productId]: true,
+      }));
+
+      console.log("Table active change:", { productId, checked }); // Debug log
+
+      if (onActiveChange) {
+        await onActiveChange(productId, checked);
+      }
     } catch (error) {
-      console.error("Error changing status:", error);
+      console.error("Error changing active:", error);
+    } finally {
+      // Clear loading state for this specific switch
+      setSwitchLoadingStates((prev) => ({
+        ...prev,
+        [productId]: false,
+      }));
     }
   };
 
   const columns = [
     {
+      title: "ID",
+      dataIndex: "productId",
+      key: "productId",
+      width: 80,
+      render: (id, record) => (
+        <Text code className="text-blue-600 text-lg">
+          #{record.productId || record.id}
+        </Text>
+      ),
+    },
+    {
+      title: "Mã SKU",
+      dataIndex: "sku",
+      key: "sku",
+      width: 100,
+      align: "center",
+      render: (sku, record) => (
+        <Text type="secondary">{sku || `WS-${record.productId || record.id}`}</Text>
+      ),
+    },
+    {
       title: "Hình ảnh",
       dataIndex: "imageUrl",
       key: "imageUrl",
       width: 80,
+      align: "center",
       render: (imageUrl, record) => (
         <Image
           width={60}
@@ -60,7 +99,9 @@ const ProductTable = ({
           preview={{
             onVisibleChange: (visible) => {
               if (visible) {
-                setPreviewImage(imageUrl);
+                setPreviewImage(
+                  imageUrl || "/assets/images/products/default.jpg"
+                );
                 setPreviewVisible(true);
               }
             },
@@ -77,19 +118,9 @@ const ProductTable = ({
           <Text strong className="text-base mb-1 block">
             {record.name}
           </Text>
-          <Paragraph
-            type="secondary"
-            className="mb-2 text-sm"
-            ellipsis={{ rows: 2, tooltip: record.description }}
-          >
-            {record.description}
-          </Paragraph>
           <Space size="small" wrap>
             <Tag color="blue">{record.brand?.name || record.brand}</Tag>
             <Tag color="green">{record.category?.name || record.category}</Tag>
-            <Text type="secondary" className="text-xs">
-              SKU: {record.sku || `WS-${record.productId || record.id}`}
-            </Text>
           </Space>
         </div>
       ),
@@ -99,7 +130,7 @@ const ProductTable = ({
       dataIndex: "price",
       key: "price",
       width: 120,
-      sorter: true,
+      align: "center",
       render: (price, record) => (
         <div className="text-center">
           <Text strong className="text-lg text-green-600">
@@ -119,63 +150,87 @@ const ProductTable = ({
       title: "Kho",
       key: "inventory",
       width: 100,
+      align: "center",
       render: (_, record) => (
         <div className="text-center">
           <div className="text-base font-medium">
-            {record.stockQuantity || record.quantity || 0}
+            {record.remainQuantity || record.quantity || 0}
           </div>
-          <Tag color={record.inStock ? "success" : "error"} className="text-xs">
-            {record.inStock ? "Còn hàng" : "Hết hàng"}
+          <Tag
+            color={record.remainQuantity ? "success" : "error"}
+            className="text-xs"
+          >
+            {record.remainQuantity ? "Còn hàng" : "Hết hàng"}
           </Tag>
         </div>
       ),
     },
-    {
-      title: "Đánh giá",
-      key: "rating",
-      width: 120,
-      render: (_, record) => (
-        <div className="text-center">
-          <Rate
-            disabled
-            allowHalf
-            value={record.rating || 0}
-            className="text-sm"
-          />
-          <div className="text-xs text-gray-500 mt-1">
-            ({record.reviewCount || record.reviews || 0} đánh giá)
-          </div>
-        </div>
-      ),
-    },
+    // {
+    //   title: "Đánh giá",
+    //   key: "rating",
+    //   width: 120,
+    //   render: (_, record) => (
+    //     <div className="text-center">
+    //       <Rate
+    //         disabled
+    //         allowHalf
+    //         value={record.rating || 0}
+    //         className="text-sm"
+    //       />
+    //       <div className="text-xs text-gray-500 mt-1">
+    //         ({record.reviewCount || record.reviews || 0} đánh giá)
+    //       </div>
+    //     </div>
+    //   ),
+    // },
     {
       title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      width: 100,
-      render: (status, record) => (
-        <div className="text-center">
-          <Switch
-            checked={status === "active" || record.isActive}
-            onChange={(checked) =>
-              handleStatusChange(record.productId || record.id, checked)
-            }
-            checkedChildren="Bán"
-            unCheckedChildren="Dừng"
-            size="small"
-          />
-          <div className="text-xs text-gray-500 mt-1">
-            {status === "active" || record.isActive ? "Đang bán" : "Ngừng bán"}
+      dataIndex: "active",
+      key: "active",
+      width: 120,
+      align: "center",
+      render: (active, record) => {
+        const isActive = active === true || record.isActive === true;
+        const productId = record.productId || record.id;
+        const isLoading = switchLoadingStates[productId] || false;
+
+        return (
+          <div className="text-center">
+            <Popconfirm
+              title={
+                isActive ? "Xác nhận ngừng hoạt động" : "Xác nhận kích hoạt"
+              }
+              description={
+                isActive
+                  ? "Sản phẩm sẽ được chuyển sang trạng thái ngừng hoạt động. Bạn có chắc chắn?"
+                  : "Sản phẩm sẽ được kích hoạt lại. Bạn có chắc chắn?"
+              }
+              onConfirm={() => handleActiveChange(productId, !isActive)}
+              okText={isActive ? "Ngừng hoạt động" : "Kích hoạt"}
+              cancelText="Hủy"
+              okType={isActive ? "danger" : "primary"}
+            >
+              <Switch
+                checked={isActive}
+                checkedChildren="Hoạt động"
+                unCheckedChildren="Ngừng"
+                size="small"
+                loading={isLoading}
+              />
+            </Popconfirm>
+            <div className="text-xs text-gray-500 mt-1">
+              {isActive ? "Đang hoạt động" : "Ngừng hoạt động"}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
       width: 120,
-      sorter: true,
+      align: "center",
       render: (date) => (
         <div className="text-center text-sm">
           {date ? new Date(date).toLocaleDateString("vi-VN") : "-"}
@@ -187,6 +242,7 @@ const ProductTable = ({
       key: "actions",
       width: 150,
       fixed: "right",
+      align: "center",
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Xem chi tiết">
@@ -253,7 +309,7 @@ const ProductTable = ({
       />
 
       {/* Image Preview Modal */}
-      <Modal
+      {/* <Modal
         open={previewVisible}
         title="Xem ảnh sản phẩm"
         footer={null}
@@ -266,7 +322,7 @@ const ProductTable = ({
           alt="Product preview"
           style={{ width: "100%" }}
         />
-      </Modal>
+      </Modal> */}
     </>
   );
 };

@@ -199,6 +199,7 @@ const useCustomer = () => {
 
       await deleteUser(customerId);
       message.success("Xóa khách hàng thành công!");
+      localStorage.removeItem("customers"); 
       fetchCustomers(); // Refresh list
     } catch (error) {
       console.error("Delete customer error:", error);

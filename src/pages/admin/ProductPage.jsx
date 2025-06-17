@@ -147,14 +147,28 @@ const ProductPage = () => {
 
   const handleFormSubmit = async (productData, productId = null) => {
     try {
+      console.log("Form submit with:", {
+        productId,
+        isFormData: productData instanceof FormData,
+      });
+
       if (productId) {
+        // Chế độ chỉnh sửa - luôn sử dụng FormData
         await updateProduct(productId, productData);
+        message.success("Cập nhật sản phẩm thành công!");
       } else {
+        // Chế độ tạo mới
         await createProduct(productData);
+        message.success("Tạo sản phẩm thành công!");
       }
+
       setShowForm(false);
+      setEditingProduct(null);
+      // Đảm bảo load lại dữ liệu sau khi cập nhật
+      fetchProducts();
     } catch (error) {
-      message.error("Có lỗi xảy ra khi lưu sản phẩm");
+      console.error("Error submitting form:", error);
+      message.error("Có lỗi xảy ra khi lưu sản phẩm: " + (error.message || ""));
     }
   };
 
@@ -190,10 +204,10 @@ const ProductPage = () => {
   // Calculate statistics
   const totalProducts = products.length;
   const activeProducts = products.filter(
-    (p) => p.isActive || p.status === "active"
+    (p) => p.active || p.active === "false"
   ).length;
   const outOfStockProducts = products.filter(
-    (p) => !p.inStock || p.stockQuantity === 0
+    (p) => !p.remainQuantity || p.remainQuantity === 0
   ).length;
   const totalValue = products.reduce(
     (sum, p) => sum + p.price * (p.stockQuantity || 0),
@@ -288,7 +302,7 @@ const ProductPage = () => {
                   className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                 >
                   <Statistic
-                    title="Đang bán"
+                    title="Đang hoạt động"
                     value={activeProducts}
                     prefix={<InboxOutlined />}
                     valueStyle={{ color: "#52c41a" }}
