@@ -65,8 +65,6 @@ const CustomerTable = ({
         return "Hoạt động";
       case "inactive":
         return "Ngừng hoạt động";
-      case "blocked":
-        return "Bị khóa";
     }
   };
 

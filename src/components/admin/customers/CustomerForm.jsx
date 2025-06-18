@@ -40,6 +40,7 @@ const CustomerForm = ({
           phone: customer.phone,
           role: customer.role || "customer",
           gender: customer.gender,
+          address: customer.address || "",
           status: customer.status || "active",
         });
       } else {
@@ -129,7 +130,6 @@ const CustomerForm = ({
               <Input placeholder="Nhập họ và tên" size="large" />
             </Form.Item>
           </Col>
-
           {/* Email */}
           <Col span={12}>
             <Form.Item
@@ -148,7 +148,6 @@ const CustomerForm = ({
               <Input placeholder="Nhập email" size="large" />
             </Form.Item>
           </Col>
-
           {/* Phone */}
           <Col span={12}>
             <Form.Item
@@ -169,32 +168,41 @@ const CustomerForm = ({
               <Input placeholder="Nhập số điện thoại" size="large" />
             </Form.Item>
           </Col>
-
-          {/* Password */}
+          {/* Address */}
           <Col span={12}>
             <Form.Item
               label={
                 <Space>
-                  <LockOutlined />
-                  <span>
-                    Mật khẩu {isEdit && <small>(để trống nếu không đổi)</small>}
-                  </span>
+                  <MailOutlined />
+                  <span>Địa chỉ</span>
                 </Space>
               }
-              name="password"
-              rules={
-                isEdit
-                  ? []
-                  : [
-                      { required: true, message: "Vui lòng nhập mật khẩu" },
-                      { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
-                    ]
-              }
+              name="address"
+              rules={[{ type: "address", message: "Địa chỉ không hợp lệ" }]}
             >
-              <Input.Password placeholder="Nhập mật khẩu" size="large" />
+              <Input placeholder="Nhập địa chỉ" size="large" />
             </Form.Item>
           </Col>
-
+          {/* Password */}
+          {!isEdit && (
+            <Col span={12}>
+              <Form.Item
+                label={
+                  <Space>
+                    <LockOutlined />
+                    <span>Mật khẩu</span>
+                  </Space>
+                }
+                name="password"
+                rules={[
+                  { required: true, message: "Vui lòng nhập mật khẩu" },
+                  { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+                ]}
+              >
+                <Input.Password placeholder="Nhập mật khẩu" size="large" />
+              </Form.Item>
+            </Col>
+          )}
           {/* Gender */}
           <Col span={12}>
             <Form.Item
@@ -212,7 +220,6 @@ const CustomerForm = ({
               </Radio.Group>
             </Form.Item>
           </Col>
-
           {/* Status */}
           <Col span={24}>
             <Form.Item
@@ -238,16 +245,9 @@ const CustomerForm = ({
                     Ngừng hoạt động
                   </Space>
                 </Radio>
-                <Radio value="blocked">
-                  <Space>
-                    <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
-                    Bị khóa
-                  </Space>
-                </Radio>
               </Radio.Group>
             </Form.Item>
           </Col>
-
           {/* Additional Info */}
           {isEdit && (
             <Col span={24}>

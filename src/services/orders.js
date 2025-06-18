@@ -4,12 +4,23 @@ import api from '../utils/request';
 const ORDER_ENDPOINTS = {
   BASE: '/orders',
   BY_ID: (id) => `/orders/${id}`,
+  USER_ORDERS: (userId) => `/users/${userId}/orders`,
 };
 
 // Lấy danh sách tất cả orders
 export const getAllOrders = async () => {
   try {
     const response = await api.get(ORDER_ENDPOINTS.BASE);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Lấy danh sách đơn hàng của user
+export const getUserOrders = async (userId) => {
+  try {
+    const response = await api.get(ORDER_ENDPOINTS.USER_ORDERS(userId));
     return response;
   } catch (error) {
     throw error;

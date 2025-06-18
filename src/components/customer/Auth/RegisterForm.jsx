@@ -7,6 +7,7 @@ import {
   GoogleOutlined,
   FacebookOutlined,
   PhoneOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../../../services/auth";
@@ -18,43 +19,48 @@ const RegisterForm = () => {
   const onFinish = async (values) => {
     try {
       setLoading(true);
-      
+
       // Loại bỏ confirmPassword và agreement khỏi dữ liệu gửi lên API
       const { confirmPassword, agreement, ...userData } = values;
-      
+
       // Gọi API đăng ký (không lưu token vào localStorage trong service)
       const response = await register(userData);
-      
+
       message.success("Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.");
-      
+
       // Chỉ chuyển hướng về trang đăng nhập, không tự động đăng nhập
-      navigate('/auth');
-      
+      navigate("/auth");
     } catch (error) {
-      console.error('Register error:', error);
-      let errorMessage = 'Đăng ký thất bại, vui lòng thử lại!';
-      
+      console.error("Register error:", error);
+      let errorMessage = "Đăng ký thất bại, vui lòng thử lại!";
+
       if (error?.message) {
         errorMessage = error.message;
-      } else if (typeof error === 'string') {
+      } else if (typeof error === "string") {
         errorMessage = error;
       } else if (error?.data?.message) {
         errorMessage = error.data.message;
       }
-      
+
       // Hiển thị lỗi cụ thể cho người dùng
-      if (errorMessage.includes('email')) {
-        errorMessage = 'Email đã được sử dụng!';
-      } else if (errorMessage.includes('phone')) {
-        errorMessage = 'Số điện thoại đã được sử dụng!';
-      } else if (errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
-        errorMessage = 'Thông tin đăng ký không hợp lệ!';
-      } else if (errorMessage.includes('409') || errorMessage.includes('Conflict')) {
-        errorMessage = 'Tài khoản đã tồn tại!';
-      } else if (errorMessage.includes('500')) {
-        errorMessage = 'Lỗi hệ thống, vui lòng thử lại sau!';
+      if (errorMessage.includes("email")) {
+        errorMessage = "Email đã được sử dụng!";
+      } else if (errorMessage.includes("phone")) {
+        errorMessage = "Số điện thoại đã được sử dụng!";
+      } else if (
+        errorMessage.includes("400") ||
+        errorMessage.includes("Bad Request")
+      ) {
+        errorMessage = "Thông tin đăng ký không hợp lệ!";
+      } else if (
+        errorMessage.includes("409") ||
+        errorMessage.includes("Conflict")
+      ) {
+        errorMessage = "Tài khoản đã tồn tại!";
+      } else if (errorMessage.includes("500")) {
+        errorMessage = "Lỗi hệ thống, vui lòng thử lại sau!";
       }
-      
+
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -64,7 +70,7 @@ const RegisterForm = () => {
   return (
     <Form
       name="register"
-      initialValues={{ agreement: true, role: 'customer' }}
+      initialValues={{ agreement: true, role: "customer" }}
       onFinish={onFinish}
       layout="vertical"
       requiredMark={false}
@@ -74,7 +80,7 @@ const RegisterForm = () => {
         name="name"
         rules={[
           { required: true, message: "Vui lòng nhập tên của bạn!" },
-          { min: 2, message: "Tên phải có ít nhất 2 ký tự!" }
+          { min: 2, message: "Tên phải có ít nhất 2 ký tự!" },
         ]}
       >
         <Input
@@ -114,6 +120,20 @@ const RegisterForm = () => {
           placeholder="Số điện thoại"
           size="large"
           maxLength={11}
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="address"
+        rules={[
+          { required: true, message: "Vui lòng nhập địa chỉ!" },
+          { type: "address", message: "Address không hợp lệ!" },
+        ]}
+      >
+        <Input
+          prefix={<EnvironmentOutlined className="site-form-item-icon" />}
+          placeholder="Địa chỉ"
+          size="large"
         />
       </Form.Item>
 

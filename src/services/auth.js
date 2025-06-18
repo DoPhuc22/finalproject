@@ -9,7 +9,8 @@ export const register = async (userData) => {
       phone: userData.phone,
       password: userData.password,
       gender: userData.gender,
-      role: userData.role || 'customer'
+      address: userData.address,
+      role: userData.role || "customer"
     });
     
     // Lưu token và user info vào localStorage

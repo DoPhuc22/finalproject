@@ -127,6 +127,7 @@ const useCustomer = () => {
 
       const response = await createUser(dataWithRole);
       message.success("Tạo khách hàng thành công!");
+      localStorage.removeItem("customers"); 
       fetchCustomers(); // Refresh list
       return response;
     } catch (error) {

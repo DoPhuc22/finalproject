@@ -4,6 +4,7 @@ import api from "../utils/request";
 const USER_ENDPOINTS = {
   BASE: "/users",
   BY_ID: (id) => `/users/${id}`,
+  CHANGE_PASSWORD: (id) => `/users/${id}/change-password`,
 };
 
 // Lấy thông tin user theo ID
@@ -25,6 +26,7 @@ export const updateUser = async (id, userData) => {
       email: userData.email,
       phone: userData.phone,
       password: userData.password,
+      address: userData.address,
       role: userData.role || 'customer', // Mặc định là 'customer' nếu không có role
       status: userData.status || 'active',
       gender: userData.gender,
@@ -67,7 +69,21 @@ export const createUser = async (userData) => {
       password: userData.password,
       role: userData.role,
       gender: userData.gender,
+      address: userData.address,
+      status: userData.status || 'active',
       resetToken: userData.resetToken,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const changePassword = async (id, passwordData) => {
+  try {
+    const response = await api.post(USER_ENDPOINTS.CHANGE_PASSWORD(id), {
+      currentPassword: passwordData.currentPassword,
+      newPassword: passwordData.newPassword
     });
     return response;
   } catch (error) {

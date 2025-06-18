@@ -252,7 +252,7 @@ const Header = () => {
           icon: <UserOutlined />,
           label: (
             <Link to="/profile" className="hover:no-underline">
-              Tài khoản
+              Quản lý tài khoản
             </Link>
           ),
         },
@@ -573,7 +573,7 @@ const Header = () => {
                 onClick={() => setVisible(false)}
               >
                 <Link to="/profile" className="hover:no-underline">
-                  Tài khoản
+                  Quản lý tài khoản
                 </Link>
               </Menu.Item>
               <Menu.Item

@@ -1,5 +1,19 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ConfigProvider } from "antd";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { restoreAuthState } from "./store/slices/authSlice";
+
+// ADMIN PAGES
+import AdminLoginPage from "./pages/admin/LoginPage";
+import AdminDashboardPage from "./pages/admin/DashboardPage";
+import ProductPage from "./pages/admin/ProductPage";
+import CategoryPage from "./pages/admin/CategoryPage";
+import BrandPage from "./pages/admin/BrandPage";
+import CustomerPage from "./pages/admin/CustomerPage";
+import AttributeTypePage from "./pages/admin/AttributeTypePage";
+
+// CUSTOMER PAGES
 import CustomerLayout from "./layouts/CustomerLayout";
 import HomePage from "./pages/customer/HomePage";
 import ProductsPage from "./pages/customer/ProductsPage";
@@ -8,16 +22,9 @@ import CartPage from "./pages/customer/CartPage";
 import AuthPage from "./pages/customer/AuthPage";
 import ContactPage from "./pages/customer/ContactPage";
 import CheckoutForm from "./components/customer/Cart/CheckoutForm";
-import AdminLoginPage from "./pages/admin/LoginPage";
-import AdminDashboardPage from "./pages/admin/DashboardPage";
-import { useDispatch } from "react-redux";
-import { useEffect } from "react";
-import { restoreAuthState } from "./store/slices/authSlice";
-import ProductPage from "./pages/admin/ProductPage";
-import CategoryPage from "./pages/admin/CategoryPage";
-import BrandPage from "./pages/admin/BrandPage";
-import CustomerPage from "./pages/admin/CustomerPage";
-import AttributeTypePage from "./pages/admin/AttributeTypePage";
+import ProfilePage from "./pages/customer/ProfilePage";
+import OrderHistory from "./components/customer/Profile/OrderHistory";
+import AccountInfo from "./components/customer/Profile/AccountInfo";
 
 function App() {
   // Customize Ant Design theme to match your brand colors
@@ -54,7 +61,10 @@ function App() {
           <Route path="/admin/categories" element={<CategoryPage />} />
           <Route path="/admin/brands" element={<BrandPage />} />
           <Route path="/admin/customers" element={<CustomerPage />} />
-          <Route path="/admin/attribute_types" element={<AttributeTypePage />} />
+          <Route
+            path="/admin/attribute_types"
+            element={<AttributeTypePage />}
+          />
 
           {/* Customer Routes */}
           <Route element={<CustomerLayout />}>
@@ -65,6 +75,9 @@ function App() {
             <Route path="/checkout" element={<CheckoutForm />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="profile/password" element={<ProfilePage />} />
+            <Route path="profile/orders" element={<ProfilePage />} />
           </Route>
         </Routes>
       </Router>
