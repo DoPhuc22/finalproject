@@ -10,6 +10,7 @@ import {
   ShoppingCartOutlined,
   AppstoreAddOutlined,
   TrademarkOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { Link, useLocation } from "react-router-dom";
 
@@ -44,6 +45,11 @@ const Sidebar = ({ collapsed, onCollapse }) => {
       key: "/admin/attribute_types",
       icon: <TagOutlined />,
       label: <Link to="/admin/attribute_types">Loại thuộc tính</Link>,
+    },
+      {
+      key: "/admin/attribute_values",
+      icon: <FileTextOutlined />,
+      label: <Link to="/admin/attribute_values">Giá trị thuộc tính</Link>,
     },
     {
       key: "/admin/orders",

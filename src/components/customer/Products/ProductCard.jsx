@@ -1,33 +1,44 @@
+// components/customer/Products/ProductCard.jsx
 import React from "react";
 import { Card, Badge, Rate, Button, Tag, Tooltip, message } from "antd";
 import { ShoppingCartOutlined, EyeOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
+import { useDispatch } from "react-redux";
 import { addToCart } from "../../../store/slices/cartSlice";
 
 const { Meta } = Card;
 
 const ProductCard = ({ product }) => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const dispatch = useDispatch();
 
   const handleAddToCart = () => {
-    dispatch(
-      addToCart({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.imageUrl || product.image,
-        brand: product.brand,
-        quantity: 1,
-      })
-    );
+    if (!isAuthenticated) {
+      message.warning("Đăng nhập để tiếp tục mua hàng");
+      navigate("/auth");
+      return;
+    }
+
+    // Add to cart using Redux
+    dispatch(addToCart({
+      id: product.id || product.productId,
+      name: product.name,
+      price: product.price,
+      image: product.imageUrl || "/assets/images/products/watch.jpg",
+      brand: product.brand?.name || product.brand,
+      quantity: 1,
+    }));
+
     message.success(
-      <span className="text-2xl">Đã thêm "{product.name}" vào giỏ hàng</span>
+      <span>Đã thêm "{product.name}" vào giỏ hàng</span>
     );
   };
 
   const getStockStatus = () => {
-    if (product.inStock) {
+    const inStock = product.remainQuantity > 0;
+    if (inStock) {
       return <Tag color="success">Còn hàng</Tag>;
     }
     return <Tag color="error">Hết hàng</Tag>;
@@ -42,14 +53,16 @@ const ProductCard = ({ product }) => {
       Rolex: "gold",
     };
 
+    const brandName = product.brand?.name || product.brand;
+    
     return (
-      <Tag color={brandColors[product.brand] || "default"}>{product.brand}</Tag>
+      <Tag color={brandColors[brandName] || "default"}>{brandName}</Tag>
     );
   };
 
   const cardActions = [
     <Tooltip title="Xem chi tiết">
-      <Link to={`/products/${product.id}`} className="hover:no-underline">
+      <Link to={`/products/${product.id || product.productId}`} className="hover:no-underline">
         <EyeOutlined key="view" />
       </Link>
     </Tooltip>,
@@ -58,11 +71,15 @@ const ProductCard = ({ product }) => {
     </Tooltip>,
   ];
 
+  // Calculate sale price if discount exists
+  const discountPercent = product.discount || 0;
+  const hasDiscount = discountPercent > 0;
+
   return (
     <Badge.Ribbon
-      text={product.discount ? `Giảm ${product.discount}%` : null}
+      text={hasDiscount ? `Giảm ${discountPercent}%` : null}
       color="red"
-      style={{ display: product.discount ? "block" : "none" }}
+      style={{ display: hasDiscount ? "block" : "none" }}
     >
       <Card
         hoverable
@@ -92,7 +109,7 @@ const ProductCard = ({ product }) => {
         <Meta
           title={
             <Link
-              to={`/products/${product.id}`}
+              to={`/products/${product.id || product.productId}`}
               className="text-lg font-medium hover:text-verdigris-500 hover:no-underline"
             >
               {product.name}
@@ -116,13 +133,13 @@ const ProductCard = ({ product }) => {
               </p>
               <div className="flex justify-between items-center mt-3">
                 <span className="text-lg font-bold text-verdigris-600">
-                  {product.price?.toLocaleString("de-DE") || 0} VNĐ
+                  {product.price?.toLocaleString("vi-VN") || 0} VNĐ
                 </span>
                 <Button
                   type="primary"
                   shape="round"
                   onClick={handleAddToCart}
-                  disabled={!product.inStock}
+                  disabled={!(product.remainQuantity > 0)}
                 >
                   Mua ngay
                 </Button>

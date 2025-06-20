@@ -1,34 +1,105 @@
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { logout as logoutAction } from "../store/slices/authSlice";
-import { logout as logoutAPI } from "../services/auth";
+import { useState, useEffect, useCallback } from "react";
+import { message } from "antd";
+import { login, logout, register } from "../services/auth";
 
 export const useAuth = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { user, token, isAuthenticated, loading, error } = useSelector(
-    (state) => state.auth
-  );
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Check if user is authenticated on initial load
   useEffect(() => {
-    // Khôi phục auth state khi component mount
-    dispatch(restoreAuthState());
-  }, [dispatch]);
+    const checkAuth = () => {
+      try {
+        const token = localStorage.getItem("token");
+        const userData = localStorage.getItem("user");
+        
+        if (token && userData) {
+          setCurrentUser(JSON.parse(userData));
+          setIsAuthenticated(true);
+        } else {
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  // Login function
+  const handleLogin = async (credentials) => {
+    try {
+      setLoading(true);
+      const response = await login(credentials);
+      
+      // Update auth state
+      setCurrentUser(response.user || response);
+      setIsAuthenticated(true);
+      
+      message.success("Đăng nhập thành công!");
+      return response;
+    } catch (error) {
+      console.error("Login error:", error);
+      message.error("Đăng nhập thất bại");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Logout function
   const handleLogout = async () => {
     try {
-      await logoutAPI();
+      setLoading(true);
+      await logout();
+      
+      // Update auth state
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      
+      message.success("Đăng xuất thành công!");
     } catch (error) {
       console.error("Logout error:", error);
+      
+      // Even if API fails, clear local state
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      
+      message.info("Đã đăng xuất");
     } finally {
-      dispatch(logout());
+      setLoading(false);
+    }
+  };
+
+  // Register function
+  const handleRegister = async (userData) => {
+    try {
+      setLoading(true);
+      const response = await register(userData);
+      message.success("Đăng ký thành công!");
+      return response;
+    } catch (error) {
+      console.error("Register error:", error);
+      message.error("Đăng ký thất bại");
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
-    user,
-    token,
+    currentUser,
     isAuthenticated,
     loading,
-    error,
+    login: handleLogin,
     logout: handleLogout,
+    register: handleRegister,
   };
 };

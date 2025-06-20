@@ -26,11 +26,7 @@ import {
   LogoutOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
-import {
-  restoreAuthState,
-  logout as logoutAction,
-} from "../../../store/slices/authSlice";
-import { logout as logoutAPI } from "../../../services/auth";
+import { logout as logoutAPI, getCurrentUser, isAuthenticated } from "../../../services/auth";
 
 const { Header: AntHeader } = Layout;
 const { Search } = Input;
@@ -41,13 +37,29 @@ const Header = () => {
   const [searchVisible, setSearchVisible] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items);
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const user = useSelector((state) => state.auth.user);
   const searchInputRef = useRef(null);
+
+  // Kiểm tra trạng thái đăng nhập khi component mount và khi location thay đổi
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const isAuth = isAuthenticated();
+      setAuthenticated(isAuth);
+      if (isAuth) {
+        const user = getCurrentUser();
+        setCurrentUser(user);
+      } else {
+        setCurrentUser(null);
+      }
+    };
+    
+    checkAuthStatus();
+  }, [location]);
 
   // Handle logout
   const handleLogout = async () => {
@@ -55,8 +67,9 @@ const Header = () => {
       setLogoutLoading(true);
       // Gọi API logout
       await logoutAPI();
-      // Dispatch action để cập nhật Redux state
-      dispatch(logoutAction());
+      // Xóa thông tin user từ state
+      setCurrentUser(null);
+      setAuthenticated(false);
       // Hiển thị thông báo thành công
       message.success("Đăng xuất thành công!");
       // Đóng mobile drawer nếu đang mở
@@ -66,7 +79,8 @@ const Header = () => {
     } catch (error) {
       console.error("Logout error:", error);
       // Dù có lỗi API vẫn logout local state
-      dispatch(logoutAction());
+      setCurrentUser(null);
+      setAuthenticated(false);
       message.info("Đã đăng xuất");
       setVisible(false);
       navigate("/");
@@ -245,7 +259,7 @@ const Header = () => {
   };
 
   // User dropdown items
-  const userMenuItems = isAuthenticated
+  const userMenuItems = authenticated
     ? [
         {
           key: "profile",
@@ -260,7 +274,7 @@ const Header = () => {
           key: "orders",
           icon: <ShoppingCartOutlined />,
           label: (
-            <Link to="/orders" className="hover:no-underline">
+            <Link to="/profile/orders" className="hover:no-underline">
               Đơn hàng
             </Link>
           ),
@@ -303,20 +317,22 @@ const Header = () => {
     }
   };
 
-  // Thêm useEffect để theo dõi localStorage changes
+  // Lắng nghe sự kiện localStorage thay đổi
   useEffect(() => {
     const handleStorageChange = () => {
-      // Dispatch action để cập nhật Redux state khi localStorage thay đổi
-      dispatch(restoreAuthState());
+      const isAuth = isAuthenticated();
+      setAuthenticated(isAuth);
+      if (isAuth) {
+        const user = getCurrentUser();
+        setCurrentUser(user);
+      } else {
+        setCurrentUser(null);
+      }
     };
 
-    // Lắng nghe sự kiện storage change (khi có tab khác đăng nhập/xuất)
     window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [dispatch]);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   return (
     <>
@@ -414,20 +430,26 @@ const Header = () => {
             }}
             placement="bottomRight"
           >
-            <Button
-              type="text"
-              icon={
-                isAuthenticated ? (
-                  <Avatar size="small" src={user?.avatar}>
-                    {user?.name?.charAt(0) || "U"}
-                  </Avatar>
-                ) : (
-                  <UserOutlined />
-                )
-              }
-              className={`flex items-center justify-center ${scrolled ? "text-gray-800" : "text-white"}`}
-              style={{ color: scrolled ? "#1f2937" : "#ffffff" }}
-            />
+            {authenticated ? (
+              <div className="flex items-center cursor-pointer">
+                <Avatar 
+                  size="small" 
+                  className="bg-verdigris-500 flex items-center justify-center"
+                >
+                  {currentUser?.name?.charAt(0)?.toUpperCase() || <UserOutlined />}
+                </Avatar>
+                <span className="ml-2 hidden md:inline text-sm text-white">
+                  {currentUser?.name?.split(' ').pop() || 'Người dùng'}
+                </span>
+              </div>
+            ) : (
+              <Button
+                type="text"
+                icon={<UserOutlined />}
+                className={`flex items-center justify-center ${scrolled ? "text-gray-800" : "text-white"}`}
+                style={{ color: scrolled ? "#1f2937" : "#ffffff" }}
+              />
+            )}
           </Dropdown>
 
           {/* Cart */}
@@ -531,7 +553,7 @@ const Header = () => {
 
           <Divider />
 
-          {!isAuthenticated ? (
+          {!authenticated ? (
             <>
               <Menu.Item
                 key="login"
@@ -556,13 +578,13 @@ const Header = () => {
             <>
               <div className="p-4 mb-2 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
-                  <Avatar size="large" src={user?.avatar}>
-                    {user?.name?.charAt(0) || "U"}
+                  <Avatar size="large" className="bg-verdigris-500">
+                    {currentUser?.name?.charAt(0)?.toUpperCase() || <UserOutlined />}
                   </Avatar>
                   <div className="ml-3">
-                    <Text strong>{user?.name || "Người dùng"}</Text>
+                    <Text strong>{currentUser?.name || "Người dùng"}</Text>
                     <Text type="secondary" className="block">
-                      {user?.email}
+                      {currentUser?.email}
                     </Text>
                   </div>
                 </div>
@@ -581,7 +603,7 @@ const Header = () => {
                 icon={<ShoppingCartOutlined />}
                 onClick={() => setVisible(false)}
               >
-                <Link to="/orders" className="hover:no-underline">
+                <Link to="/profile/orders" className="hover:no-underline">
                   Đơn hàng
                 </Link>
               </Menu.Item>
@@ -589,7 +611,7 @@ const Header = () => {
                 key="logout"
                 icon={<LogoutOutlined />}
                 danger
-                loading={logoutLoading}
+                onClick={handleLogout}
                 disabled={logoutLoading}
               >
                 {logoutLoading ? "Đang đăng xuất..." : "Đăng xuất"}

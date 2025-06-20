@@ -1,8 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ConfigProvider } from "antd";
-import { useDispatch } from "react-redux";
 import { useEffect } from "react";
-import { restoreAuthState } from "./store/slices/authSlice";
+import { getCurrentUser } from "./services/auth";
 
 // ADMIN PAGES
 import AdminLoginPage from "./pages/admin/LoginPage";
@@ -14,20 +13,21 @@ import CustomerPage from "./pages/admin/CustomerPage";
 import AttributeTypePage from "./pages/admin/AttributeTypePage";
 
 // CUSTOMER PAGES
-import CustomerLayout from "./layouts/CustomerLayout";
 import HomePage from "./pages/customer/HomePage";
 import ProductsPage from "./pages/customer/ProductsPage";
 import ProductDetailPage from "./pages/customer/ProductDetailPage";
 import CartPage from "./pages/customer/CartPage";
+import CheckoutForm from "./components/customer/Cart/CheckoutForm";
 import AuthPage from "./pages/customer/AuthPage";
 import ContactPage from "./pages/customer/ContactPage";
-import CheckoutForm from "./components/customer/Cart/CheckoutForm";
 import ProfilePage from "./pages/customer/ProfilePage";
-import OrderHistory from "./components/customer/Profile/OrderHistory";
-import AccountInfo from "./components/customer/Profile/AccountInfo";
+
+// LAYOUTS
+import CustomerLayout from "./layouts/CustomerLayout";
+import AttributeValuePage from "./pages/admin/AttributeValuePage";
 
 function App() {
-  // Customize Ant Design theme to match your brand colors
+  // Customize Ant Design theme
   const theme = {
     token: {
       colorPrimary: "#3AA1A0", // Verdigris brand color
@@ -37,7 +37,7 @@ function App() {
     components: {
       Button: {
         colorPrimary: "#3AA1A0",
-        algorithm: true, // Enable algorithm
+        algorithm: true,
       },
       Card: {
         colorBgContainer: "#ffffff",
@@ -46,10 +46,11 @@ function App() {
     },
   };
 
-  const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(restoreAuthState());
-  }, [dispatch]);
+    // Check authentication on app load
+    getCurrentUser();
+  }, []);
+
   return (
     <ConfigProvider theme={theme}>
       <Router>
@@ -61,10 +62,8 @@ function App() {
           <Route path="/admin/categories" element={<CategoryPage />} />
           <Route path="/admin/brands" element={<BrandPage />} />
           <Route path="/admin/customers" element={<CustomerPage />} />
-          <Route
-            path="/admin/attribute_types"
-            element={<AttributeTypePage />}
-          />
+          <Route path="/admin/attribute_types" element={<AttributeTypePage />} />
+          <Route path="/admin/attribute_values" element={<AttributeValuePage />} />
 
           {/* Customer Routes */}
           <Route element={<CustomerLayout />}>
@@ -75,9 +74,7 @@ function App() {
             <Route path="/checkout" element={<CheckoutForm />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/contact" element={<ContactPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="profile/password" element={<ProfilePage />} />
-            <Route path="profile/orders" element={<ProfilePage />} />
+            <Route path="/profile/*" element={<ProfilePage />} />
           </Route>
         </Routes>
       </Router>

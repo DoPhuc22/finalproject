@@ -13,12 +13,6 @@ export const register = async (userData) => {
       role: userData.role || "customer"
     });
     
-    // Lưu token và user info vào localStorage
-    // if (response.token) {
-    //   localStorage.setItem('token', response.token);
-    //   localStorage.setItem('user', JSON.stringify(response.user));
-    // }
-    
     return response;
   } catch (error) {
     throw error;
@@ -32,13 +26,49 @@ export const login = async (credentials) => {
       email: credentials.email,
       password: credentials.password
     });
-    console.log('Login response:', response);
+    
+    console.log('API Login response:', response);
+    
     // Lưu token và user info vào localStorage
-    if (response.token) {
+    if (response && response.token) {
       localStorage.setItem('token', response.token);
-      const { token, ...user } = response;
-      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Xử lý dữ liệu người dùng
+      let userData = {};
+      
+      // Kiểm tra có dữ liệu user không
+      if (response.user) {
+        userData = {...response.user};
+      } else if (response.data && response.data.user) {
+        userData = {...response.data.user};
+      } else {
+        // Trường hợp response chứa thông tin user trực tiếp
+        userData = {...response};
+        delete userData.token; // Không lưu token vào đối tượng user
+      }
+      
+      // Đảm bảo dữ liệu người dùng chứa id
+      if (!userData.id) {
+        if (userData.userId) userData.id = userData.userId;
+        else if (userData._id) userData.id = userData._id;
+        else if (response.userId) userData.id = response.userId;
+        else if (response._id) userData.id = response._id;
+        else userData.id = Date.now().toString(); // Tạo ID tạm thời nếu không có
+      }
+      
+      // Đảm bảo có các thông tin cơ bản
+      if (!userData.email && credentials.email) {
+        userData.email = credentials.email;
+      }
+      
+      // Lưu thông tin user vào localStorage
+      console.log('Saving user data to localStorage:', userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+    } else {
+      console.error('Login response is missing token or invalid:', response);
+      throw new Error('Invalid response format from server');
     }
+    
     return response;
   } catch (error) {
     throw error;
@@ -87,9 +117,36 @@ export const resetPassword = async (token, newPassword) => {
 export const getCurrentUser = () => {
   try {
     const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    if (!userStr) {
+      console.log('No user data found in localStorage');
+      return null;
+    }
+    
+    let user;
+    try {
+      user = JSON.parse(userStr);
+    } catch (e) {
+      console.error('Failed to parse user JSON:', e);
+      return null;
+    }
+    
+    console.log('Retrieved user data from localStorage:', user);
+    
+    // Đảm bảo dữ liệu người dùng chứa id
+    if (!user.id && (user.userId || user._id)) {
+      user.id = user.userId || user._id;
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+    
+    // Nếu vẫn không có ID, tạo ID tạm thời
+    if (!user.id) {
+      user.id = Date.now().toString();
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+    
+    return user;
   } catch (error) {
-    console.error('Error parsing user data:', error);
+    console.error('Error getting user data:', error);
     return null;
   }
 };

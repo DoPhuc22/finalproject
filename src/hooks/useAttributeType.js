@@ -111,6 +111,7 @@ const useAttributeType = () => {
       console.log("Creating attribute type:", attributeTypeData);
       const response = await createAttributeTypeAPI(attributeTypeData);
       message.success("Tạo loại thuộc tính thành công!");
+      localStorage.removeItem("attributeTypes"); 
       fetchAttributeTypes(); // Refresh list
       return response;
     } catch (error) {

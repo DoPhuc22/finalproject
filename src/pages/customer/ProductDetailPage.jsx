@@ -8,7 +8,6 @@ import ProductImages from '../../components/customer/Products/Detail/ProductImag
 import ProductInfo from '../../components/customer/Products/Detail/ProductInfo';
 import ProductParameters from '../../components/customer/Products/Detail/ProductParameters';
 import ProductDescription from '../../components/customer/Products/Detail/ProductDescription';
-import RelatedProducts from '../../components/customer/Products/Detail/RelatedProducts';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -110,15 +109,6 @@ const ProductDetailPage = () => {
           className="product-detail-tabs"
         />
       </div>
-
-      {/* Related Products */}
-      {/* <div className="mt-16">
-        <RelatedProducts 
-          currentProductId={id}
-          category={product.category} 
-          brand={product.brand} 
-        />
-      </div> */}
     </div>
   );
 };

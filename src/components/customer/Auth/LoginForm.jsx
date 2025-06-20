@@ -6,16 +6,17 @@ import {
   GoogleOutlined,
   FacebookOutlined,
 } from "@ant-design/icons";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "../../../services/auth";
 import { loginSuccess } from "../../../store/slices/authSlice";
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm(); // Thêm form instance
+  const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const onFinish = async (values) => {
     try {
@@ -26,15 +27,44 @@ const LoginForm = () => {
         email: values.email,
         password: values.password,
       });
+
       // Kiểm tra response có dữ liệu cần thiết không
-      // if (!response || !response.user || !response.token) {
-      //   throw new Error("Dữ liệu phản hồi từ server không hợp lệ");
-      // }
+      if (!response || !response.token) {
+        throw new Error("Dữ liệu phản hồi từ server không hợp lệ");
+      }
+
+      // Xác định thông tin user từ response
+      let userData = {};
+
+      if (response.user) {
+        userData = { ...response.user };
+      } else if (response.data && response.data.user) {
+        userData = { ...response.data.user };
+      } else {
+        // Trường hợp response chứa thông tin user trực tiếp
+        userData = { ...response };
+        delete userData.token; // Không lưu token vào đối tượng user
+      }
+
+      // Đảm bảo user có trường id và email
+      if (!userData.id) {
+        if (userData.userId) userData.id = userData.userId;
+        else if (userData._id) userData.id = userData._id;
+        else if (response.userId) userData.id = response.userId;
+        else if (response._id) userData.id = response._id;
+        else userData.id = Date.now().toString(); // Tạo ID tạm thời nếu không có
+      }
+
+      if (!userData.email && values.email) {
+        userData.email = values.email;
+      }
+
+      console.log("User data to save:", userData);
 
       // Dispatch action để update Redux store
       dispatch(
         loginSuccess({
-          user: response.user,
+          user: userData,
           token: response.token,
         })
       );
@@ -42,17 +72,22 @@ const LoginForm = () => {
       message.success("Đăng nhập thành công!");
 
       // Chuyển hướng dựa vào role của user (với kiểm tra an toàn)
-      const userRole = response.user?.role;
+      const userRole = userData?.role;
+
+      // Chuyển hướng về trang trước đó nếu có
+      const { from } = location.state || { from: { pathname: "/" } };
+
       if (userRole === "admin") {
         navigate("/admin/dashboard");
       } else {
-        navigate("/"); // Về homepage
+        navigate(from.pathname || "/");
       }
     } catch (error) {
       console.error("Login error:", error);
 
       // Xử lý các loại lỗi khác nhau
-      let errorMessage = "Tài khoản của bạn chưa được kích hoạt hoặc đã bị khóa. Vui lòng liên hệ quản trị viên!";
+      let errorMessage =
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.";
 
       // Kiểm tra chi tiết lỗi từ response
       if (error?.response?.data?.message) {
@@ -65,38 +100,14 @@ const LoginForm = () => {
         errorMessage = error;
       }
 
-      // Hiển thị lỗi cụ thể cho người dùng
-      if (
-        errorMessage.toLowerCase().includes("inactive")
-      ) {
-        errorMessage =
-          "Tài khoản của bạn chưa được kích hoạt hoặc đã bị khóa. Vui lòng liên hệ quản trị viên!";
-      } else if (
-        errorMessage.includes("email") ||
-        errorMessage.includes("password") ||
-        errorMessage.includes("Invalid") ||
-        errorMessage.includes("incorrect")
-      ) {
-        errorMessage = "Email hoặc mật khẩu không chính xác!";
-      } else if (
-        errorMessage.includes("401") ||
-        errorMessage.includes("Unauthorized")
-      ) {
-        errorMessage = "Thông tin đăng nhập không chính xác!";
-      } else if (errorMessage.includes("404")) {
-        errorMessage = "Tài khoản không tồn tại!";
-      } else if (errorMessage.includes("500")) {
-        errorMessage = "Lỗi hệ thống, vui lòng thử lại sau!";
-      }
-
       // Hiển thị thông báo lỗi
       message.error(errorMessage);
 
       // Giữ lại email, xóa password
       const currentEmail = form.getFieldValue("email");
       form.setFieldsValue({
-        email: currentEmail, // Giữ lại email
-        password: "", // Xóa password
+        email: currentEmail,
+        password: "",
       });
     } finally {
       setLoading(false);
@@ -105,7 +116,7 @@ const LoginForm = () => {
 
   return (
     <Form
-      form={form} // Thêm form instance
+      form={form}
       name="login"
       initialValues={{ remember: true }}
       onFinish={onFinish}

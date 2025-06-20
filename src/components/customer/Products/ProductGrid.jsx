@@ -1,8 +1,18 @@
+// components/customer/Products/ProductGrid.jsx
 import React from 'react';
 import { Row, Col, Spin, Empty, Pagination } from 'antd';
 import ProductCard from './ProductCard';
 
-const ProductGrid = ({ products, loading = false, pagination = false }) => {
+const ProductGrid = ({ 
+  products, 
+  loading = false, 
+  pagination = {
+    current: 1,
+    pageSize: 12,
+    total: 0
+  },
+  onPageChange = () => {}
+}) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -19,21 +29,22 @@ const ProductGrid = ({ products, loading = false, pagination = false }) => {
     <div className="product-grid">
       <Row gutter={[24, 32]}>
         {products.map(product => (
-          <Col xs={24} sm={12} md={8} key={product.id} className="product-grid-item">
+          <Col xs={24} sm={12} md={8} key={product.id || product.productId} className="product-grid-item">
             <ProductCard product={product} />
           </Col>
         ))}
       </Row>
       
-      {pagination && products.length > 0 && (
+      {pagination && pagination.total > 0 && (
         <div className="flex justify-center mt-8">
           <Pagination
-            defaultCurrent={1}
-            total={products.length}
-            defaultPageSize={9}
+            current={pagination.current}
+            total={pagination.total}
+            pageSize={pagination.pageSize}
             pageSizeOptions={[9, 18, 27, 36]}
             showSizeChanger
             showTotal={(total) => `Tổng cộng ${total} sản phẩm`}
+            onChange={(page, pageSize) => onPageChange(page, pageSize)}
           />
         </div>
       )}

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+// pages/customer/ProductsPage.jsx
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Row, Col, Card, Input, Slider, Divider, 
   Typography, Select, Checkbox, Radio, Space, 
@@ -11,17 +11,22 @@ import {
   ReloadOutlined, SearchOutlined
 } from '@ant-design/icons';
 import ProductGrid from '../../components/customer/Products/ProductGrid';
-import { selectAllProducts, selectFilteredProducts } from '../../store/slices/productSlice';
 import { Link } from 'react-router-dom';
+import useProductsData from '../../hooks/useProductsData';
+import { getAllCategories } from '../../services/categories';
+import { getAllBrands } from '../../services/brands';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 
 const ProductsPage = () => {
-  const dispatch = useDispatch();
-  const allProducts = useSelector(selectAllProducts);
-  const productStatus = useSelector(state => state.products.status);
+  // States for category and brand data
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [brandsLoading, setBrandsLoading] = useState(false);
   
+  // UI states
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState([0, 5000000]);
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -30,46 +35,97 @@ const ProductsPage = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [viewMode, setViewMode] = useState('grid');
   
-  // Get unique categories and brands for filters
-  const categories = [...new Set(allProducts.map(p => p.category))];
-  const brands = [...new Set(allProducts.map(p => p.brand))];
+  // Get products from custom hook
+  const { 
+    products, 
+    loading, 
+    pagination, 
+    fetchProducts,
+    updateFilters, 
+    handlePaginationChange 
+  } = useProductsData();
+
+  // Fetch categories and brands
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        setCategoriesLoading(true);
+        setBrandsLoading(true);
+        
+        const [categoriesRes, brandsRes] = await Promise.all([
+          getAllCategories(),
+          getAllBrands()
+        ]);
+        
+        setCategories(categoriesRes.data || categoriesRes || []);
+        setBrands(brandsRes.data || brandsRes || []);
+      } catch (error) {
+        console.error("Error fetching metadata:", error);
+      } finally {
+        setCategoriesLoading(false);
+        setBrandsLoading(false);
+      }
+    };
+    
+    fetchMetadata();
+  }, []);
   
-  // Filter products based on selected criteria
-  const filteredProducts = useSelector(state => 
-    selectFilteredProducts(state, {
-      category: selectedCategories.length > 0 ? selectedCategories : null,
-      priceRange: priceRange,
-      brand: selectedBrands.length > 0 ? selectedBrands : null,
-      inStock: inStockOnly ? true : undefined
-    })
-  );
-  
-  // Search within filtered products
-  const searchedProducts = searchTerm 
-    ? filteredProducts.filter(p => 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        p.description.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : filteredProducts;
+  // Filter products based on search term
+  const searchedProducts = useMemo(() => {
+    if (!searchTerm) return products;
+    
+    return products.filter(product => 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [products, searchTerm]);
   
   // Sort products
-  const sortedProducts = [...searchedProducts].sort((a, b) => {
-    switch(sortBy) {
-      case 'priceAsc':
-        return a.price - b.price;
-      case 'priceDesc':
-        return b.price - a.price;
-      case 'nameAsc':
-        return a.name.localeCompare(b.name);
-      case 'nameDesc':
-        return b.name.localeCompare(a.name);
-      case 'rating':
-        return b.rating - a.rating;
-      default:
-        return 0;
-    }
-  });
+  const sortedProducts = useMemo(() => {
+    return [...searchedProducts].sort((a, b) => {
+      switch(sortBy) {
+        case 'priceAsc':
+          return a.price - b.price;
+        case 'priceDesc':
+          return b.price - a.price;
+        case 'nameAsc':
+          return a.name.localeCompare(b.name);
+        case 'nameDesc':
+          return b.name.localeCompare(a.name);
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [searchedProducts, sortBy]);
   
+  // Apply filters to API
+  const applyFilters = () => {
+    const apiFilters = {};
+    
+    if (selectedCategories.length > 0) {
+      apiFilters.categoryIds = selectedCategories;
+    }
+    
+    if (selectedBrands.length > 0) {
+      apiFilters.brandIds = selectedBrands;
+    }
+    
+    if (inStockOnly) {
+      apiFilters.inStock = true;
+    }
+    
+    if (priceRange[0] > 0 || priceRange[1] < 5000000) {
+      apiFilters.minPrice = priceRange[0];
+      apiFilters.maxPrice = priceRange[1];
+    }
+    
+    updateFilters(apiFilters);
+    fetchProducts(apiFilters);
+  };
+  
+  // Reset all filters
   const resetFilters = () => {
     setSearchTerm('');
     setPriceRange([0, 5000000]);
@@ -77,6 +133,9 @@ const ProductsPage = () => {
     setSelectedBrands([]);
     setInStockOnly(false);
     setSortBy('featured');
+    
+    updateFilters({});
+    fetchProducts();
   };
 
   return (
@@ -145,12 +204,13 @@ const ProductsPage = () => {
               <div className="mt-2">
                 <Checkbox.Group 
                   options={categories.map(c => ({
-                    label: c.charAt(0).toUpperCase() + c.slice(1),
-                    value: c
+                    label: c.name || c,
+                    value: c.categoryId || c.id || c
                   }))}
                   value={selectedCategories}
                   onChange={setSelectedCategories}
                   className="flex flex-col gap-2"
+                  loading={categoriesLoading}
                 />
               </div>
             </div>
@@ -161,10 +221,14 @@ const ProductsPage = () => {
               <Text strong>Thương hiệu</Text>
               <div className="mt-2">
                 <Checkbox.Group 
-                  options={brands}
+                  options={brands.map(b => ({
+                    label: b.name || b,
+                    value: b.brandId || b.id || b
+                  }))}
                   value={selectedBrands}
                   onChange={setSelectedBrands}
                   className="flex flex-col gap-2"
+                  loading={brandsLoading}
                 />
               </div>
             </div>
@@ -177,6 +241,15 @@ const ProductsPage = () => {
             >
               Chỉ hiện sản phẩm còn hàng
             </Checkbox>
+            
+            <Button 
+              type="primary" 
+              block 
+              className="mt-4"
+              onClick={applyFilters}
+            >
+              Áp dụng bộ lọc
+            </Button>
           </Card>
         </Col>
         
@@ -188,17 +261,22 @@ const ProductsPage = () => {
                 <Text className="mr-2">Hiển thị {sortedProducts.length} sản phẩm</Text>
                 {selectedCategories.length > 0 && (
                   <Space size={[0, 8]} wrap className="mt-2">
-                    {selectedCategories.map(cat => (
-                      <Tag 
-                        key={cat} 
-                        closable 
-                        onClose={() => setSelectedCategories(
-                          selectedCategories.filter(c => c !== cat)
-                        )}
-                      >
-                        {cat}
-                      </Tag>
-                    ))}
+                    {selectedCategories.map(cat => {
+                      const categoryName = categories.find(c => 
+                        (c.categoryId || c.id) === cat)?.name || cat;
+                      
+                      return (
+                        <Tag 
+                          key={cat} 
+                          closable 
+                          onClose={() => setSelectedCategories(
+                            selectedCategories.filter(c => c !== cat)
+                          )}
+                        >
+                          {categoryName}
+                        </Tag>
+                      );
+                    })}
                   </Space>
                 )}
               </div>
@@ -235,8 +313,9 @@ const ProductsPage = () => {
           
           <ProductGrid 
             products={sortedProducts}
-            loading={productStatus === 'loading'}
-            pagination={true}
+            loading={loading}
+            pagination={pagination}
+            onPageChange={handlePaginationChange}
           />
         </Col>
       </Row>

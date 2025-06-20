@@ -110,6 +110,7 @@ const useCategory = () => {
     try {
       const response = await createCategory(categoryData);
       message.success("Tạo danh mục thành công!");
+      localStorage.removeItem("categories");
       fetchCategories();
       return response;
     } catch (error) {

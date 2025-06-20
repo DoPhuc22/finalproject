@@ -11,8 +11,7 @@ import {
   Descriptions, 
   Divider, 
   Steps,
-  message,
-  Card
+  message
 } from "antd";
 import { 
   ShoppingOutlined, 
@@ -21,58 +20,99 @@ import {
   ClockCircleOutlined, 
   TruckOutlined, 
   EnvironmentOutlined, 
-  DollarOutlined,
   EyeOutlined,
   FilePdfOutlined
 } from "@ant-design/icons";
-import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { getUserOrders, getOrderById } from "../../../services/orders";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Step } = Steps;
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const { user } = useSelector((state) => state.auth);
   
   useEffect(() => {
     fetchOrders();
   }, []);
   
   const fetchOrders = async () => {
-    if (!user?.id) return;
-    
+    // Simulate fetching orders - replace with actual API call
     setLoading(true);
     try {
-      const response = await getUserOrders(user.id);
-      setOrders(response || []);
+      // This is a placeholder for the API call
+      // const user = JSON.parse(localStorage.getItem('user') || '{}');
+      // if (!user.id) throw new Error("User not found");
+      // const response = await getUserOrders(user.id);
+      
+      // For now, using sample data
+      setTimeout(() => {
+        const sampleOrders = [
+          {
+            orderId: "ORD12345",
+            orderDate: "2023-06-10T08:30:00Z",
+            total: 1250000,
+            status: "delivered",
+            receiverName: "Nguyễn Văn A",
+            receiverPhone: "0987654321",
+            shippingAddress: "123 Đường ABC, Phường XYZ, Quận 1, TP.HCM",
+            paymentMethod: "cod",
+            subtotal: 1300000,
+            discountAmount: 50000,
+            details: [
+              {
+                name: "Áo thun nam cổ tròn",
+                quantity: 2,
+                price: 250000,
+                image: "https://via.placeholder.com/80"
+              },
+              {
+                name: "Quần jeans nam slim fit",
+                quantity: 1,
+                price: 750000,
+                image: "https://via.placeholder.com/80"
+              }
+            ]
+          },
+          {
+            orderId: "ORD12346",
+            orderDate: "2023-06-15T10:15:00Z",
+            total: 890000,
+            status: "shipping",
+            receiverName: "Nguyễn Văn A",
+            receiverPhone: "0987654321",
+            shippingAddress: "123 Đường ABC, Phường XYZ, Quận 1, TP.HCM",
+            paymentMethod: "banking",
+            subtotal: 890000,
+            discountAmount: 0,
+            details: [
+              {
+                name: "Áo khoác nữ dáng dài",
+                quantity: 1,
+                price: 890000,
+                image: "https://via.placeholder.com/80"
+              }
+            ]
+          }
+        ];
+        
+        setOrders(sampleOrders);
+        setLoading(false);
+      }, 1000);
+      
     } catch (error) {
       console.error("Error fetching orders:", error);
       message.error("Không thể tải lịch sử đơn hàng");
-    } finally {
       setLoading(false);
     }
   };
   
-  const showOrderDetail = async (orderId) => {
-    setDetailLoading(true);
+  const showOrderDetail = (order) => {
+    setSelectedOrder(order);
     setDetailVisible(true);
-    
-    try {
-      const response = await getOrderById(orderId);
-      setSelectedOrder(response);
-    } catch (error) {
-      console.error("Error fetching order details:", error);
-      message.error("Không thể tải chi tiết đơn hàng");
-      setDetailVisible(false);
-    } finally {
-      setDetailLoading(false);
-    }
   };
   
   const getStatusTag = (status) => {
@@ -146,7 +186,7 @@ const OrderHistory = () => {
           <Button
             type="text"
             icon={<EyeOutlined />}
-            onClick={() => showOrderDetail(record.orderId)}
+            onClick={() => showOrderDetail(record)}
             className="text-blue-500 hover:text-blue-700"
           >
             Chi tiết
@@ -160,39 +200,33 @@ const OrderHistory = () => {
     <div>
       <Title level={4} className="mb-6">Đơn hàng của tôi</Title>
       
-      <Card>
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <Spin size="large" />
-          </div>
-        ) : orders.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <div className="text-center">
-                <p className="text-gray-500 mb-4">Bạn chưa có đơn hàng nào</p>
-                <Link to="/products">
-                  <Button type="primary" icon={<ShoppingOutlined />} className="bg-verdigris-500 hover:bg-verdigris-600">
-                    Mua sắm ngay
-                  </Button>
-                </Link>
-              </div>
-            }
-          />
-        ) : (
-          <Table
-            columns={columns}
-            dataSource={orders}
-            rowKey="orderId"
-            pagination={{ 
-              pageSize: 10,
-              showSizeChanger: false,
-              hideOnSinglePage: true
-            }}
-            className="border-0"
-          />
-        )}
-      </Card>
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <Spin size="large" />
+        </div>
+      ) : orders.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={
+            <div className="text-center">
+              <p className="text-gray-500 mb-4">Bạn chưa có đơn hàng nào</p>
+              <Link to="/products">
+                <Button type="primary" icon={<ShoppingOutlined />} className="bg-verdigris-500 hover:bg-verdigris-600">
+                  Mua sắm ngay
+                </Button>
+              </Link>
+            </div>
+          }
+        />
+      ) : (
+        <Table
+          columns={columns}
+          dataSource={orders}
+          rowKey="orderId"
+          pagination={{ pageSize: 10 }}
+          className="border border-gray-200 rounded-lg"
+        />
+      )}
       
       <Modal
         title={<div className="text-lg">Chi tiết đơn hàng {selectedOrder?.orderId && `#${selectedOrder.orderId}`}</div>}
