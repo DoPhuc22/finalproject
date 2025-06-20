@@ -7,7 +7,7 @@ const api = axios.create({
   baseURL:
     typeof window !== "undefined" && window.REACT_APP_API_URL
       ? window.REACT_APP_API_URL
-      : "http://localhost:8080/api",
+      : "https://watch-deployment.onrender.com/api",
   timeout: 20000,
   withCredentials: true,
   headers: {
