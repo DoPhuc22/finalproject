@@ -6,13 +6,10 @@ import {
   ShoppingOutlined,
   LockOutlined,
 } from "@ant-design/icons";
-import { getCurrentUser } from "../../../services/auth";
 
 const { Title } = Typography;
 
-const ProfileSidebar = ({ location }) => {
-  const user = getCurrentUser();
-
+const ProfileSidebar = ({ user, location }) => {
   // Calculate current selected menu item
   const getSelectedKey = () => {
     const path = location.pathname;
@@ -25,8 +22,8 @@ const ProfileSidebar = ({ location }) => {
     <div className="w-full md:w-64 md:mr-6 mb-6 md:mb-0">
       <div className="bg-white p-4 shadow-sm rounded-lg mb-4">
         <div className="flex items-center space-x-3">
-          <Avatar
-            size={64}
+          <Avatar 
+            size={64} 
             className="bg-verdigris-500 flex items-center justify-center"
           >
             {user?.name?.charAt(0)?.toUpperCase() || <UserOutlined />}
@@ -41,7 +38,7 @@ const ProfileSidebar = ({ location }) => {
           </div>
         </div>
       </div>
-
+      
       <Menu
         mode="vertical"
         selectedKeys={[getSelectedKey()]}
@@ -50,21 +47,21 @@ const ProfileSidebar = ({ location }) => {
           {
             key: "account",
             icon: <UserOutlined />,
-            label: <Link to="/profile">Thông tin tài khoản</Link>,
+            label: <Link to="/profile">Thông tin tài khoản</Link>
           },
           {
             key: "password",
             icon: <LockOutlined />,
-            label: <Link to="/profile/password">Đổi mật khẩu</Link>,
+            label: <Link to="/profile/password">Đổi mật khẩu</Link>
           },
           {
             key: "orders",
             icon: <ShoppingOutlined />,
-            label: <Link to="/profile/orders">Đơn hàng của tôi</Link>,
-          },
+            label: <Link to="/profile/orders">Đơn hàng của tôi</Link>
+          }
         ]}
       />
-
+      
       {/* Mobile version */}
       <div className="md:hidden mt-4">
         <Menu
@@ -75,18 +72,18 @@ const ProfileSidebar = ({ location }) => {
             {
               key: "account",
               icon: <UserOutlined />,
-              label: <Link to="/profile">Tài khoản</Link>,
+              label: <Link to="/profile">Tài khoản</Link>
             },
             {
               key: "password",
               icon: <LockOutlined />,
-              label: <Link to="/profile/password">Mật khẩu</Link>,
+              label: <Link to="/profile/password">Mật khẩu</Link>
             },
             {
               key: "orders",
               icon: <ShoppingOutlined />,
-              label: <Link to="/profile/orders">Đơn hàng</Link>,
-            },
+              label: <Link to="/profile/orders">Đơn hàng</Link>
+            }
           ]}
         />
       </div>

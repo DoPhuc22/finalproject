@@ -26,7 +26,11 @@ import {
   LogoutOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
-import { logout as logoutAPI, getCurrentUser, isAuthenticated } from "../../../services/auth";
+import {
+  logout as logoutAPI,
+  getCurrentUser,
+  isAuthenticated,
+} from "../../../services/auth";
 
 const { Header: AntHeader } = Layout;
 const { Search } = Input;
@@ -47,17 +51,25 @@ const Header = () => {
 
   // Kiểm tra trạng thái đăng nhập khi component mount và khi location thay đổi
   useEffect(() => {
-    const checkAuthStatus = () => {
-      const isAuth = isAuthenticated();
-      setAuthenticated(isAuth);
-      if (isAuth) {
-        const user = getCurrentUser();
-        setCurrentUser(user);
-      } else {
+    const checkAuthStatus = async () => {
+      try {
+        // Sử dụng phiên bản async của isAuthenticated
+        const isAuth = await isAuthenticated();
+        setAuthenticated(isAuth);
+
+        if (isAuth) {
+          const user = await getCurrentUser();
+          setCurrentUser(user);
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (error) {
+        console.error("Error checking auth status:", error);
+        setAuthenticated(false);
         setCurrentUser(null);
       }
     };
-    
+
     checkAuthStatus();
   }, [location]);
 
@@ -67,15 +79,23 @@ const Header = () => {
       setLogoutLoading(true);
       // Gọi API logout
       await logoutAPI();
+
       // Xóa thông tin user từ state
       setCurrentUser(null);
       setAuthenticated(false);
+
       // Hiển thị thông báo thành công
       message.success("Đăng xuất thành công!");
+
       // Đóng mobile drawer nếu đang mở
       setVisible(false);
+
       // Chuyển hướng về trang chủ
       navigate("/");
+
+      // Tạo sự kiện tùy chỉnh để thông báo đăng xuất
+      const event = new Event("userLoggedOut");
+      window.dispatchEvent(event);
     } catch (error) {
       console.error("Logout error:", error);
       // Dù có lỗi API vẫn logout local state
@@ -84,6 +104,10 @@ const Header = () => {
       message.info("Đã đăng xuất");
       setVisible(false);
       navigate("/");
+
+      // Vẫn tạo sự kiện tùy chỉnh dù có lỗi
+      const event = new Event("userLoggedOut");
+      window.dispatchEvent(event);
     } finally {
       setLogoutLoading(false);
     }
@@ -133,74 +157,14 @@ const Header = () => {
       ),
     },
     {
-      key: "watches",
+      key: "/products",
       label: (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: "mechanical",
-                label: (
-                  <Link
-                    to="/products?category=mechanical"
-                    className="hover:no-underline"
-                  >
-                    Đồng hồ cơ
-                  </Link>
-                ),
-              },
-              {
-                key: "sport",
-                label: (
-                  <Link
-                    to="/products?category=sport"
-                    className="hover:no-underline"
-                  >
-                    Đồng hồ thể thao
-                  </Link>
-                ),
-              },
-              {
-                key: "smart",
-                label: (
-                  <Link
-                    to="/products?category=smart"
-                    className="hover:no-underline"
-                  >
-                    Đồng hồ thông minh
-                  </Link>
-                ),
-              },
-              {
-                key: "classic",
-                label: (
-                  <Link
-                    to="/products?category=classic"
-                    className="hover:no-underline"
-                  >
-                    Đồng hồ cổ điển
-                  </Link>
-                ),
-              },
-              { type: "divider" },
-              {
-                key: "all",
-                label: (
-                  <Link to="/products" className="hover:no-underline">
-                    Tất cả sản phẩm
-                  </Link>
-                ),
-              },
-            ],
-          }}
+        <Link
+          to="/products"
+          className={` hover:no-underline ${scrolled ? "text-gray-800" : "text-white"}`}
         >
-          <Space
-            className={`hover:no-underline ${scrolled ? "text-gray-800" : "text-white"}`}
-          >
-            Đồng hồ
-            <DownOutlined />
-          </Space>
-        </Dropdown>
+          Đồng hồ
+        </Link>
       ),
     },
     {
@@ -258,9 +222,10 @@ const Header = () => {
     return pathname;
   };
 
-  // User dropdown items
-  const userMenuItems = authenticated
-    ? [
+  // User dropdown items - Tính toán lại mỗi khi trạng thái xác thực thay đổi
+  const getUserMenuItems = () => {
+    if (authenticated) {
+      return [
         {
           key: "profile",
           icon: <UserOutlined />,
@@ -286,8 +251,9 @@ const Header = () => {
           label: logoutLoading ? "Đang đăng xuất..." : "Đăng xuất",
           disabled: logoutLoading,
         },
-      ]
-    : [
+      ];
+    } else {
+      return [
         {
           key: "login",
           icon: <LoginOutlined />,
@@ -307,6 +273,8 @@ const Header = () => {
           ),
         },
       ];
+    }
+  };
 
   // Handle search
   const handleSearch = (value) => {
@@ -317,21 +285,47 @@ const Header = () => {
     }
   };
 
-  // Lắng nghe sự kiện localStorage thay đổi
+  // Lắng nghe sự kiện localStorage thay đổi và sự kiện đăng xuất
   useEffect(() => {
-    const handleStorageChange = () => {
-      const isAuth = isAuthenticated();
-      setAuthenticated(isAuth);
-      if (isAuth) {
-        const user = getCurrentUser();
-        setCurrentUser(user);
-      } else {
+    const handleStorageChange = async () => {
+      try {
+        const isAuth = await isAuthenticated();
+        setAuthenticated(isAuth);
+
+        if (isAuth) {
+          const user = await getCurrentUser();
+          setCurrentUser(user);
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (error) {
+        console.error("Error handling storage change:", error);
+        setAuthenticated(false);
         setCurrentUser(null);
       }
     };
 
+    const handleUserLoggedOut = () => {
+      setAuthenticated(false);
+      setCurrentUser(null);
+    };
+
+    const handleUserUpdated = (event) => {
+      // Cập nhật trực tiếp từ sự kiện để đảm bảo UI cập nhật ngay lập tức
+      if (event.detail) {
+        setCurrentUser(event.detail);
+      }
+    };
+
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener("userLoggedOut", handleUserLoggedOut);
+    window.addEventListener("userUpdated", handleUserUpdated);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("userLoggedOut", handleUserLoggedOut);
+      window.removeEventListener("userUpdated", handleUserUpdated);
+    };
   }, []);
 
   return (
@@ -425,22 +419,21 @@ const Header = () => {
           {/* User dropdown or auth links */}
           <Dropdown
             menu={{
-              items: userMenuItems,
+              items: getUserMenuItems(),
               onClick: handleMenuClick,
             }}
             placement="bottomRight"
           >
             {authenticated ? (
               <div className="flex items-center cursor-pointer">
-                <Avatar 
-                  size="small" 
+                <Avatar
+                  size="small"
                   className="bg-verdigris-500 flex items-center justify-center"
                 >
-                  {currentUser?.name?.charAt(0)?.toUpperCase() || <UserOutlined />}
+                  {currentUser?.name?.charAt(0)?.toUpperCase() || (
+                    <UserOutlined />
+                  )}
                 </Avatar>
-                <span className="ml-2 hidden md:inline text-sm text-white">
-                  {currentUser?.name?.split(' ').pop() || 'Người dùng'}
-                </span>
               </div>
             ) : (
               <Button
@@ -579,7 +572,9 @@ const Header = () => {
               <div className="p-4 mb-2 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   <Avatar size="large" className="bg-verdigris-500">
-                    {currentUser?.name?.charAt(0)?.toUpperCase() || <UserOutlined />}
+                    {currentUser?.name?.charAt(0)?.toUpperCase() || (
+                      <UserOutlined />
+                    )}
                   </Avatar>
                   <div className="ml-3">
                     <Text strong>{currentUser?.name || "Người dùng"}</Text>

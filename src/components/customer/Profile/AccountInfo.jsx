@@ -16,7 +16,8 @@ import {
   PhoneOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
-import { getUserById, updateUser } from "../../../services/users";
+import { updateUser } from "../../../services/users";
+import useCustomer from "../../../hooks/useCustomer";
 
 const { Title } = Typography;
 
@@ -24,10 +25,10 @@ const AccountInfo = ({ user }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [userData, setUserData] = useState(null);
+  const { updateCustomer } = useCustomer();
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const initializeForm = async () => {
       try {
         console.log("User prop received:", user);
 
@@ -36,52 +37,23 @@ const AccountInfo = ({ user }) => {
           return;
         }
 
-        // Đảm bảo có user.id
-        const userId = user.id || user.userId || user._id;
+        // Khởi tạo form với thông tin người dùng đã được truyền từ component cha
+        form.setFieldsValue({
+          name: user.name || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          gender: user.gender || "M",
+        });
 
-        if (!userId) {
-          console.error("User object without ID:", user);
-          message.error("Không tìm thấy ID người dùng");
-          return;
-        }
-
-        try {
-          // Thử lấy thông tin chi tiết từ API
-          console.log("Fetching user data for ID:", userId);
-          const response = await getUserById(userId);
-          console.log("API response:", response);
-          setUserData(response);
-
-          form.setFieldsValue({
-            name: response.name,
-            email: response.email,
-            phone: response.phone || "",
-            gender: response.gender || "M",
-          });
-        } catch (apiError) {
-          console.error("Error fetching user data from API:", apiError);
-
-          // Fallback: sử dụng dữ liệu từ localStorage nếu API lỗi
-          form.setFieldsValue({
-            name: user.name || "",
-            email: user.email || "",
-            phone: user.phone || "",
-            gender: user.gender || "M",
-          });
-
-          message.warning(
-            "Không thể kết nối đến server, đang hiển thị thông tin đã lưu"
-          );
-        }
+        setLoading(false);
       } catch (error) {
-        console.error("Error in fetchUserData:", error);
+        console.error("Error initializing form:", error);
         message.error("Không thể tải thông tin người dùng");
-      } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
+    initializeForm();
   }, [form, user]);
 
   const handleUpdate = async (values) => {
@@ -100,14 +72,21 @@ const AccountInfo = ({ user }) => {
         message.error("Không tìm thấy ID người dùng");
         return;
       }
+
+      // Chuẩn bị dữ liệu để cập nhật
       const formattedValues = { ...values };
-      // Remove email as it shouldn't be updated
+      // Không cập nhật email
       delete formattedValues.email;
 
       try {
-        await updateUser(userId, formattedValues);
+        // Thử sử dụng updateCustomer từ hook useCustomer
+        console.log("Updating user with updateCustomer hook:", {
+          userId,
+          formattedValues,
+        });
+        await updateCustomer(userId, formattedValues);
 
-        // Update localStorage with new info
+        // Cập nhật localStorage với thông tin mới
         const updatedUser = {
           ...user,
           name: values.name,
@@ -115,23 +94,62 @@ const AccountInfo = ({ user }) => {
           gender: values.gender,
         };
         localStorage.setItem("user", JSON.stringify(updatedUser));
+
+        // Tạo sự kiện tùy chỉnh để thông báo thông tin người dùng đã thay đổi
+        const userUpdatedEvent = new CustomEvent("userUpdated", {
+          detail: updatedUser,
+        });
+        window.dispatchEvent(userUpdatedEvent);
 
         message.success("Cập nhật thông tin thành công");
-      } catch (apiError) {
-        console.error("API error when updating user:", apiError);
-
-        // Fallback: Chỉ cập nhật localStorage nếu API lỗi
-        const updatedUser = {
-          ...user,
-          name: values.name,
-          phone: values.phone,
-          gender: values.gender,
-        };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-
-        message.warning(
-          "Không thể kết nối đến server, đã lưu thông tin cục bộ"
+      } catch (hookError) {
+        console.error(
+          "Hook updateCustomer failed, trying direct API:",
+          hookError
         );
+
+        // Fallback: Thử sử dụng API updateUser trực tiếp
+        try {
+          await updateUser(userId, formattedValues);
+
+          // Cập nhật localStorage với thông tin mới
+          const updatedUser = {
+            ...user,
+            name: values.name,
+            phone: values.phone,
+            gender: values.gender,
+          };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+
+          // Tạo sự kiện tùy chỉnh để thông báo thông tin người dùng đã thay đổi
+          const userUpdatedEvent = new CustomEvent("userUpdated", {
+            detail: updatedUser,
+          });
+          window.dispatchEvent(userUpdatedEvent);
+
+          message.success("Cập nhật thông tin thành công");
+        } catch (apiError) {
+          console.error("API error when updating user:", apiError);
+
+          // Fallback: Chỉ cập nhật localStorage nếu cả hai cách đều thất bại
+          const updatedUser = {
+            ...user,
+            name: values.name,
+            phone: values.phone,
+            gender: values.gender,
+          };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+
+          // Vẫn tạo sự kiện để cập nhật UI
+          const userUpdatedEvent = new CustomEvent("userUpdated", {
+            detail: updatedUser,
+          });
+          window.dispatchEvent(userUpdatedEvent);
+
+          message.warning(
+            "Không thể kết nối đến server, đã lưu thông tin cục bộ"
+          );
+        }
       }
     } catch (error) {
       console.error("Error updating user:", error);

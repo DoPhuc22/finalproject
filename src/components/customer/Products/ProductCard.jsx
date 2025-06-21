@@ -22,18 +22,18 @@ const ProductCard = ({ product }) => {
     }
 
     // Add to cart using Redux
-    dispatch(addToCart({
-      id: product.id || product.productId,
-      name: product.name,
-      price: product.price,
-      image: product.imageUrl || "/assets/images/products/watch.jpg",
-      brand: product.brand?.name || product.brand,
-      quantity: 1,
-    }));
-
-    message.success(
-      <span>Đã thêm "{product.name}" vào giỏ hàng</span>
+    dispatch(
+      addToCart({
+        id: product.id || product.productId,
+        name: product.name,
+        price: product.price,
+        image: product.imageUrl || "/assets/images/products/watch.jpg",
+        brand: product.brand?.name || product.brand,
+        quantity: 1,
+      })
     );
+
+    message.success(<span>Đã thêm "{product.name}" vào giỏ hàng</span>);
   };
 
   const getStockStatus = () => {
@@ -54,15 +54,16 @@ const ProductCard = ({ product }) => {
     };
 
     const brandName = product.brand?.name || product.brand;
-    
-    return (
-      <Tag color={brandColors[brandName] || "default"}>{brandName}</Tag>
-    );
+
+    return <Tag color={brandColors[brandName] || "default"}>{brandName}</Tag>;
   };
 
   const cardActions = [
     <Tooltip title="Xem chi tiết">
-      <Link to={`/products/${product.id || product.productId}`} className="hover:no-underline">
+      <Link
+        to={`/products/${product.id || product.productId}`}
+        className="hover:no-underline"
+      >
         <EyeOutlined key="view" />
       </Link>
     </Tooltip>,
@@ -84,7 +85,7 @@ const ProductCard = ({ product }) => {
       <Card
         hoverable
         cover={
-          <div className="relative h-90 overflow-hidden">
+          <div className="relative h-60 overflow-hidden">
             <img
               alt={product.name}
               src={
@@ -92,12 +93,12 @@ const ProductCard = ({ product }) => {
                 product.image ||
                 "/assets/images/products/watch.jpg"
               }
-              className="w-full h-full object-cover transition-transform hover:scale-110 duration-300"
-              onError={(e) =>
-                (e.target.src = "/assets/images/products/watch.jpg")
-              }
+              className="w-full h-full object-cover object-center transition-transform duration-300 hover:scale-110"
+              onError={(e) => {
+                e.target.src = "/assets/images/products/watch.jpg";
+              }}
             />
-            <div className="absolute top-2 left-2 flex gap-1">
+            <div className="absolute top-2 left-2 flex gap-1 z-10">
               {getStockStatus()}
               {getBrandTag()}
             </div>

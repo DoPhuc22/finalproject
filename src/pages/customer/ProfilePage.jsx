@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Layout, Typography, message, Breadcrumb, Spin } from "antd";
-import {
-  Link,
-  Routes,
-  Route,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
+import { Link, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { HomeOutlined } from "@ant-design/icons";
-import { isAuthenticated, getCurrentUser } from "../../services/auth";
+import { isAuthenticated, getCurrentUser, getProfile } from "../../services/auth";
 import ProfileSidebar from "../../components/customer/Profile/ProfileSidebar";
 import AccountInfo from "../../components/customer/Profile/AccountInfo";
 import OrderHistory from "../../components/customer/Profile/OrderHistory";
@@ -22,63 +16,95 @@ const ProfilePage = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
-
+  
+  // Tải dữ liệu người dùng một cách tích cực hơn
   useEffect(() => {
-    const checkAuth = () => {
-      console.log("Checking authentication");
-
-      // Check if user is authenticated
-      const isAuth = isAuthenticated();
-      console.log("Is authenticated:", isAuth);
-
-      if (!isAuth) {
-        message.warning("Vui lòng đăng nhập để truy cập trang này");
+    const checkAuth = async () => {
+      try {
+        console.log("Checking authentication");
+        setLoading(true);
+        
+        // Kiểm tra token trước
+        const token = localStorage.getItem('token');
+        if (!token) {
+          message.warning("Vui lòng đăng nhập để truy cập trang này");
+          navigate("/auth", { state: { from: location } });
+          return false;
+        }
+        
+        // Tải profile trực tiếp từ API để đảm bảo dữ liệu mới nhất
+        try {
+          const profileData = await getProfile(true); // Force refresh để lấy dữ liệu mới nhất
+          
+          if (!profileData || !Object.keys(profileData).length) {
+            throw new Error("Không tìm thấy thông tin người dùng");
+          }
+          
+          // Chuẩn hóa dữ liệu
+          const userData = { ...profileData };
+          
+          // Đảm bảo có ID
+          if (!userData.id) {
+            userData.id = userData.userId || userData._id || Date.now().toString();
+          }
+          
+          // Lưu vào state và localStorage
+          setCurrentUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+          setLoading(false);
+          return true;
+        } catch (profileError) {
+          console.error("Error fetching profile:", profileError);
+          
+          // Thử lấy từ getCurrentUser như fallback
+          const user = await getCurrentUser({ forceRefresh: true });
+          
+          if (!user) {
+            message.error("Không tìm thấy thông tin người dùng, vui lòng đăng nhập lại");
+            navigate("/auth", { state: { from: location } });
+            return false;
+          }
+          
+          setCurrentUser(user);
+          setLoading(false);
+          return true;
+        }
+      } catch (error) {
+        console.error("Authentication check error:", error);
+        message.error("Lỗi xác thực, vui lòng đăng nhập lại");
         navigate("/auth", { state: { from: location } });
         return false;
       }
-
-      // Lấy thông tin người dùng
-      const user = getCurrentUser();
-      console.log("Current user from localStorage:", user);
-
-      if (!user) {
-        message.error(
-          "Không tìm thấy thông tin người dùng, vui lòng đăng nhập lại"
-        );
-        navigate("/auth", { state: { from: location } });
-        return false;
-      }
-
-      // Kiểm tra user.id
-      if (!user.id && !user.userId && !user._id) {
-        // Nếu không có ID, tạo ID tạm thời
-        user.id = Date.now().toString();
-        localStorage.setItem("user", JSON.stringify(user));
-        console.log("Created temporary ID for user:", user);
-      }
-
-      // Đảm bảo user có ID
-      if (!user.id) {
-        if (user.userId) user.id = user.userId;
-        else if (user._id) user.id = user._id;
-
-        // Cập nhật localStorage với id đã được khôi phục
-        localStorage.setItem("user", JSON.stringify(user));
-      }
-
-      setCurrentUser(user);
-      return true;
     };
-
-    if (checkAuth()) {
-      setLoading(false);
-    }
+    
+    checkAuth();
   }, [navigate, location]);
-
+  
+  // Khi có sự thay đổi localStorage, cập nhật lại currentUser
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+          setCurrentUser(userData);
+        } catch (e) {
+          console.error("Failed to parse user data from localStorage:", e);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
-        <Spin size="large" />
+        <Spin size="large" tip="Đang tải thông tin..." />
       </div>
     );
   }
@@ -94,27 +120,19 @@ const ProfilePage = () => {
         </Breadcrumb.Item>
         <Breadcrumb.Item>Tài khoản của tôi</Breadcrumb.Item>
       </Breadcrumb>
-
+      
       <div className="container mx-auto px-4 py-6">
-        <Title level={3} className="mb-6">
-          Tài khoản của tôi
-        </Title>
-
+        <Title level={3} className="mb-6">Tài khoản của tôi</Title>
+        
         <Layout className="bg-transparent">
           <div className="flex flex-col md:flex-row">
-            <ProfileSidebar location={location} />
-
+            <ProfileSidebar user={currentUser} location={location} />
+            
             <Content className="bg-white shadow-sm rounded-lg p-6 w-full">
               <Routes>
                 <Route path="/" element={<AccountInfo user={currentUser} />} />
-                <Route
-                  path="/password"
-                  element={<PasswordChange user={currentUser} />}
-                />
-                <Route
-                  path="/orders"
-                  element={<OrderHistory user={currentUser} />}
-                />
+                <Route path="/password" element={<PasswordChange user={currentUser} />} />
+                <Route path="/orders" element={<OrderHistory user={currentUser} />} />
               </Routes>
             </Content>
           </div>

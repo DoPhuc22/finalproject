@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Form, Input, Button, Checkbox, Divider, message } from "antd";
+import { Form, Input, Button, Checkbox, Divider, message, Alert } from "antd";
 import {
   UserOutlined,
   LockOutlined,
   GoogleOutlined,
   FacebookOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -13,6 +14,7 @@ import { loginSuccess } from "../../../store/slices/authSlice";
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -20,6 +22,8 @@ const LoginForm = () => {
 
   const onFinish = async (values) => {
     try {
+      // Xóa thông báo lỗi cũ khi thử đăng nhập lại
+      setErrorMessage("");
       setLoading(true);
 
       // Gọi API đăng nhập
@@ -59,6 +63,11 @@ const LoginForm = () => {
         userData.email = values.email;
       }
 
+      // Kiểm tra trạng thái tài khoản
+      if (userData.status === "inactive" || userData.status === "blocked") {
+        throw new Error("ACCOUNT_INACTIVE");
+      }
+
       console.log("User data to save:", userData);
 
       // Dispatch action để update Redux store
@@ -86,22 +95,46 @@ const LoginForm = () => {
       console.error("Login error:", error);
 
       // Xử lý các loại lỗi khác nhau
-      let errorMessage =
-        "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.";
+      let errorMsg = "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.";
 
-      // Kiểm tra chi tiết lỗi từ response
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error?.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      } else if (typeof error === "string") {
-        errorMessage = error;
+      // Phân tích lỗi để hiển thị thông báo phù hợp
+      const errorData = error?.response?.data;
+      const errorStatus = error?.response?.status;
+      const errorString = error?.message || "";
+
+      // Kiểm tra mã lỗi HTTP
+      if (errorStatus === 401) {
+        errorMsg = "Email hoặc mật khẩu không chính xác. Vui lòng thử lại.";
+      } else if (errorStatus === 403) {
+        errorMsg = "Tài khoản không có quyền truy cập. Vui lòng liên hệ quản trị viên.";
+      } else if (errorStatus === 404) {
+        errorMsg = "Tài khoản không tồn tại. Vui lòng kiểm tra lại email.";
+      } else if (errorStatus === 429) {
+        errorMsg = "Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau.";
+      } else if (errorStatus >= 500) {
+        errorMsg = "Hệ thống đang gặp sự cố. Vui lòng thử lại sau.";
+      }
+
+      // Kiểm tra nội dung lỗi
+      if (errorString === "ACCOUNT_INACTIVE" || 
+          errorString.includes("inactive") || 
+          errorString.includes("blocked") ||
+          (errorData && (errorData.includes("inactive") || errorData.includes("blocked")))) {
+        errorMsg = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+      } else if (errorString.includes("password") || 
+                (errorData && errorData.includes("password"))) {
+        errorMsg = "Mật khẩu không chính xác. Vui lòng thử lại.";
+      } else if (errorString.includes("email") || 
+                (errorData && errorData.includes("email"))) {
+        errorMsg = "Email không chính xác hoặc không tồn tại.";
+      } else if (errorString.includes("network") || 
+                errorString.includes("timeout") ||
+                errorString.includes("Network Error")) {
+        errorMsg = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.";
       }
 
       // Hiển thị thông báo lỗi
-      message.error(errorMessage);
+      setErrorMessage(errorMsg);
 
       // Giữ lại email, xóa password
       const currentEmail = form.getFieldValue("email");
@@ -124,6 +157,21 @@ const LoginForm = () => {
       requiredMark={false}
       className="login-form"
     >
+      {errorMessage && (
+        <Form.Item>
+          <Alert
+            message="Lỗi đăng nhập"
+            description={errorMessage}
+            type="error"
+            showIcon
+            icon={<ExclamationCircleOutlined />}
+            closable
+            onClose={() => setErrorMessage("")}
+            className="mb-4"
+          />
+        </Form.Item>
+      )}
+
       <Form.Item
         name="email"
         rules={[

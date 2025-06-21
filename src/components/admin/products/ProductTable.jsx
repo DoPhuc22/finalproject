@@ -112,7 +112,7 @@ const ProductTable = ({
     {
       title: "Thông tin sản phẩm",
       key: "info",
-      width: 300,
+      width: 200,
       render: (_, record) => (
         <div>
           <Text strong className="text-base mb-1 block">

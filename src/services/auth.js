@@ -1,5 +1,10 @@
 import api from '../utils/request';
 
+// Cache biến để tránh gọi API nhiều lần
+let profileCache = null;
+let profileFetchedAt = null;
+const PROFILE_CACHE_TIME = 5 * 60 * 1000; // 5 phút
+
 // API đăng ký
 export const register = async (userData) => {
   try {
@@ -28,6 +33,10 @@ export const login = async (credentials) => {
     });
     
     console.log('API Login response:', response);
+    
+    // Reset cache khi đăng nhập
+    profileCache = null;
+    profileFetchedAt = null;
     
     // Lưu token và user info vào localStorage
     if (response && response.token) {
@@ -64,6 +73,10 @@ export const login = async (credentials) => {
       // Lưu thông tin user vào localStorage
       console.log('Saving user data to localStorage:', userData);
       localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Cập nhật cache
+      profileCache = userData;
+      profileFetchedAt = Date.now();
     } else {
       console.error('Login response is missing token or invalid:', response);
       throw new Error('Invalid response format from server');
@@ -85,6 +98,10 @@ export const logout = async () => {
     // Xóa token và user info khỏi localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    
+    // Reset cache
+    profileCache = null;
+    profileFetchedAt = null;
   }
 };
 
@@ -107,15 +124,84 @@ export const resetPassword = async (token, newPassword) => {
       token: token,
       newPassword: newPassword
     });
+    
+    // Reset cache sau khi đổi mật khẩu thành công
+    profileCache = null;
+    profileFetchedAt = null;
+    
     return response;
   } catch (error) {
     throw error;
   }
 };
 
-// Lấy thông tin user hiện tại từ localStorage
-export const getCurrentUser = () => {
+// API lấy thông tin profile qua token
+export const getProfile = async (forceRefresh = false) => {
   try {
+    // Kiểm tra cache còn hạn sử dụng không
+    const now = Date.now();
+    const isCacheValid = profileCache && profileFetchedAt && 
+                         (now - profileFetchedAt < PROFILE_CACHE_TIME);
+    
+    // Nếu cache còn hạn và không yêu cầu refresh, trả về cache
+    if (isCacheValid && !forceRefresh) {
+      console.log('Returning cached profile data');
+      return profileCache;
+    }
+    
+    // Không có cache hoặc cache hết hạn, gọi API
+    console.log('Fetching fresh profile data from API');
+    const response = await api.get('/auth/profile');
+    
+    // Cập nhật cache
+    profileCache = response;
+    profileFetchedAt = now;
+    
+    return response;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
+};
+
+// Lấy thông tin user hiện tại (từ API hoặc localStorage)
+export const getCurrentUser = async (options = { forceRefresh: false }) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('No token found, skipping profile fetch');
+      return null;
+    }
+    
+    // Thử lấy từ API trước nếu cần refresh hoặc chưa có cache
+    if (options.forceRefresh || !profileCache) {
+      try {
+        const profileData = await getProfile(options.forceRefresh);
+        console.log('Profile data from API:', profileData);
+        
+        // Kiểm tra và chuẩn hóa dữ liệu
+        if (profileData && typeof profileData === 'object') {
+          const userData = { ...profileData };
+          
+          // Đảm bảo dữ liệu người dùng chứa id
+          if (!userData.id) {
+            if (userData.userId) userData.id = userData.userId;
+            else if (userData._id) userData.id = userData._id;
+          }
+          
+          // Cập nhật localStorage với dữ liệu mới nhất từ API
+          localStorage.setItem('user', JSON.stringify(userData));
+          return userData;
+        }
+      } catch (apiError) {
+        console.error('Could not fetch profile from API, falling back to localStorage:', apiError);
+      }
+    } else {
+      console.log('Using cached profile data');
+      return profileCache;
+    }
+    
+    // Fallback: Lấy từ localStorage nếu API không thành công
     const userStr = localStorage.getItem('user');
     if (!userStr) {
       console.log('No user data found in localStorage');
@@ -144,6 +230,12 @@ export const getCurrentUser = () => {
       localStorage.setItem('user', JSON.stringify(user));
     }
     
+    // Cập nhật cache từ localStorage nếu chưa có
+    if (!profileCache) {
+      profileCache = user;
+      profileFetchedAt = Date.now();
+    }
+    
     return user;
   } catch (error) {
     console.error('Error getting user data:', error);
@@ -152,10 +244,19 @@ export const getCurrentUser = () => {
 };
 
 // Kiểm tra xem user có đăng nhập hay không
-export const isAuthenticated = () => {
+export const isAuthenticated = async () => {
   const token = localStorage.getItem('token');
-  const user = getCurrentUser();
-  return !!(token && user);
+  if (!token) return false;
+  
+  try {
+    // Kiểm tra token có hợp lệ không bằng cách lấy thông tin người dùng
+    // Sử dụng cache nếu có, không gọi API mới
+    const user = await getCurrentUser({ forceRefresh: false });
+    return !!user;
+  } catch (error) {
+    console.error('Authentication check failed:', error);
+    return false;
+  }
 };
 
 // Lấy token từ localStorage
