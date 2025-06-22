@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Form, Input, Button, Typography, Divider, message, Alert } from "antd";
 import { LockOutlined, SafetyOutlined } from "@ant-design/icons";
-import { resetPassword } from "../../../services/auth";
+import { changePassword } from "../../../services/auth";
 
 const { Title, Text } = Typography;
 
@@ -18,22 +18,12 @@ const PasswordChange = ({ user }) => {
       return;
     }
 
-    // Đảm bảo có user.id
-    const userId = user.id || user.userId || user._id;
-
-    if (!userId) {
-      console.error("User object without ID:", user);
-      message.error("Không tìm thấy ID người dùng");
-      return;
-    }
-
     setLoading(true);
     setSuccess(false);
 
     try {
-      console.log("Changing password for user ID:", userId);
-      const tempToken = `${userId}_${values.currentPassword}`;
-      await resetPassword(tempToken, values.newPassword);
+      // Sử dụng API changePassword mới
+      await changePassword(values.currentPassword, values.newPassword);
 
       setSuccess(true);
       form.resetFields();
@@ -47,6 +37,8 @@ const PasswordChange = ({ user }) => {
         error.response.data.message
       ) {
         message.error(error.response.data.message);
+      } else if (error.message) {
+        message.error(error.message);
       } else {
         message.error("Đổi mật khẩu thất bại. Vui lòng thử lại.");
       }
@@ -80,7 +72,7 @@ const PasswordChange = ({ user }) => {
       </div>
 
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        {/* <Form.Item
+        <Form.Item
           name="currentPassword"
           label="Mật khẩu hiện tại"
           rules={[
@@ -92,7 +84,7 @@ const PasswordChange = ({ user }) => {
             placeholder="Nhập mật khẩu hiện tại"
             className="rounded-lg"
           />
-        </Form.Item> */}
+        </Form.Item>
 
         <Form.Item
           name="newPassword"

@@ -15,9 +15,9 @@ export const register = async (userData) => {
       password: userData.password,
       gender: userData.gender,
       address: userData.address,
+      status: userData.status || "active",
       role: userData.role || "customer"
     });
-    
     return response;
   } catch (error) {
     throw error;
@@ -117,7 +117,7 @@ export const forgotPassword = async (email) => {
   }
 };
 
-// API reset mật khẩu
+// API reset mật khẩu (dùng cho quên mật khẩu)
 export const resetPassword = async (token, newPassword) => {
   try {
     const response = await api.post('/auth/reset-password', {
@@ -131,6 +131,25 @@ export const resetPassword = async (token, newPassword) => {
     
     return response;
   } catch (error) {
+    throw error;
+  }
+};
+
+// API đổi mật khẩu (khi đã đăng nhập)
+export const changePassword = async (currentPassword, newPassword) => {
+  try {
+    const response = await api.post('/auth/change-password', {
+      currentPassword: currentPassword,
+      newPassword: newPassword
+    });
+    
+    // Reset cache sau khi đổi mật khẩu thành công
+    profileCache = null;
+    profileFetchedAt = null;
+    
+    return response;
+  } catch (error) {
+    console.error('Error changing password:', error);
     throw error;
   }
 };
