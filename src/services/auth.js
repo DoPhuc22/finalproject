@@ -136,10 +136,10 @@ export const resetPassword = async (token, newPassword) => {
 };
 
 // API đổi mật khẩu (khi đã đăng nhập)
-export const changePassword = async (currentPassword, newPassword) => {
+export const changePassword = async (oldPassword, newPassword) => {
   try {
     const response = await api.post('/auth/change-password', {
-      currentPassword: currentPassword,
+      oldPassword: oldPassword,
       newPassword: newPassword
     });
     

@@ -2,37 +2,13 @@
 import React from "react";
 import { Card, Badge, Rate, Button, Tag, Tooltip, message } from "antd";
 import { ShoppingCartOutlined, EyeOutlined } from "@ant-design/icons";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../../hooks/useAuth";
-import { useDispatch } from "react-redux";
-import { addToCart } from "../../../store/slices/cartSlice";
+import { Link } from "react-router-dom";
 
 const { Meta } = Card;
 
 const ProductCard = ({ product }) => {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const dispatch = useDispatch();
-
   const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      message.warning("Đăng nhập để tiếp tục mua hàng");
-      navigate("/auth");
-      return;
-    }
-
-    // Add to cart using Redux
-    dispatch(
-      addToCart({
-        id: product.id || product.productId,
-        name: product.name,
-        price: product.price,
-        image: product.imageUrl || "/assets/images/products/watch.jpg",
-        brand: product.brand?.name || product.brand,
-        quantity: 1,
-      })
-    );
-
+    // Logic thêm vào giỏ hàng sẽ được thêm sau
     message.success(<span>Đã thêm "{product.name}" vào giỏ hàng</span>);
   };
 
@@ -53,55 +29,59 @@ const ProductCard = ({ product }) => {
       Rolex: "gold",
     };
 
-    const brandName = product.brand?.name || product.brand;
+    const brandName = typeof product.brand === 'object' 
+      ? product.brand.name 
+      : product.brand;
 
     return <Tag color={brandColors[brandName] || "default"}>{brandName}</Tag>;
   };
 
+  const productId = product.id || product.productId;
+  const imageUrl = product.imageUrl || '/assets/images/products/default.jpg';
+  const discount = product.discount || 0;
+  const price = product.price || 0;
+  const discountedPrice = discount > 0 ? price - (price * discount / 100) : null;
+
   const cardActions = [
     <Tooltip title="Xem chi tiết">
-      <Link
-        to={`/products/${product.id || product.productId}`}
-        className="hover:no-underline"
-      >
-        <EyeOutlined key="view" />
+      <Link to={`/products/${productId}`}>
+        <Button
+          type="text"
+          icon={<EyeOutlined />}
+          className="text-blue-500"
+        />
       </Link>
     </Tooltip>,
     <Tooltip title="Thêm vào giỏ hàng">
-      <ShoppingCartOutlined key="cart" onClick={handleAddToCart} />
+      <Button
+        type="text"
+        icon={<ShoppingCartOutlined />}
+        onClick={handleAddToCart}
+        className="text-green-500"
+        disabled={product.remainQuantity <= 0}
+      />
     </Tooltip>,
   ];
 
-  // Calculate sale price if discount exists
-  const discountPercent = product.discount || 0;
-  const hasDiscount = discountPercent > 0;
-
   return (
     <Badge.Ribbon
-      text={hasDiscount ? `Giảm ${discountPercent}%` : null}
+      text={discount > 0 ? `Giảm ${discount}%` : null}
       color="red"
-      style={{ display: hasDiscount ? "block" : "none" }}
+      style={{ display: discount > 0 ? "block" : "none" }}
     >
       <Card
         hoverable
         cover={
-          <div className="relative h-60 overflow-hidden">
+          <div className="h-64 overflow-hidden bg-gray-100 flex items-center justify-center">
             <img
               alt={product.name}
-              src={
-                product.imageUrl ||
-                product.image ||
-                "/assets/images/products/watch.jpg"
-              }
-              className="w-full h-full object-cover object-center transition-transform duration-300 hover:scale-110"
+              src={imageUrl}
+              className="object-contain h-full transition-transform duration-300 hover:scale-105"
               onError={(e) => {
-                e.target.src = "/assets/images/products/watch.jpg";
+                e.target.onerror = null;
+                e.target.src = "/assets/images/products/default.jpg";
               }}
             />
-            <div className="absolute top-2 left-2 flex gap-1 z-10">
-              {getStockStatus()}
-              {getBrandTag()}
-            </div>
           </div>
         }
         actions={cardActions}
@@ -110,40 +90,41 @@ const ProductCard = ({ product }) => {
         <Meta
           title={
             <Link
-              to={`/products/${product.id || product.productId}`}
-              className="text-lg font-medium hover:text-verdigris-500 hover:no-underline"
+              to={`/products/${productId}`}
+              className="text-gray-800 hover:text-blue-600 hover:no-underline line-clamp-2 h-12"
             >
               {product.name}
             </Link>
           }
           description={
-            <div>
-              <div className="mb-2">
-                <Rate
-                  allowHalf
-                  disabled
-                  defaultValue={product.rating || 4.5}
-                  className="text-sm"
-                />
-                <span className="text-xs ml-1 text-gray-500">
-                  ({product.reviews || 0} đánh giá)
+            <div className="mt-2">
+              <div className="flex justify-between items-center mb-2">
+                {getBrandTag()}
+                {getStockStatus()}
+              </div>
+              
+              <div className="flex items-center text-sm mb-2">
+                <Rate disabled defaultValue={product.rating || 4} allowHalf className="text-xs" />
+                <span className="ml-1 text-gray-500">
+                  ({product.reviewCount || 0})
                 </span>
               </div>
-              <p className="text-gray-500 mb-2 text-sm line-clamp-2">
-                {product.description}
-              </p>
-              <div className="flex justify-between items-center mt-3">
-                <span className="text-lg font-bold text-verdigris-600">
-                  {product.price?.toLocaleString("vi-VN") || 0} VNĐ
-                </span>
-                <Button
-                  type="primary"
-                  shape="round"
-                  onClick={handleAddToCart}
-                  disabled={!(product.remainQuantity > 0)}
-                >
-                  Mua ngay
-                </Button>
+              
+              <div className="price-section">
+                {discountedPrice ? (
+                  <div className="flex items-center">
+                    <span className="text-gray-500 line-through mr-2">
+                      {price.toLocaleString()} VNĐ
+                    </span>
+                    <span className="font-bold text-red-500">
+                      {discountedPrice.toLocaleString()} VNĐ
+                    </span>
+                  </div>
+                ) : (
+                  <span className="font-bold text-gray-800">
+                    {price.toLocaleString()} VNĐ
+                  </span>
+                )}
               </div>
             </div>
           }

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import Header from '../components/customer/Header/Header';
-import Footer from '../components/customer/Footer/Footer';
+import React from "react";
+import { Outlet } from "react-router-dom";
+import Header from "../components/customer/Header/Header";
+import Footer from "../components/customer/Footer/Footer";
 
 const CustomerLayout = () => {
   return (

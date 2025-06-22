@@ -187,6 +187,9 @@ const RegisterForm = () => {
       <Form.Item name="role" style={{ display: 'none' }} initialValue={'customer'}>
         <Input type="hidden" />
       </Form.Item>
+      <Form.Item name="status" style={{ display: 'none' }} initialValue={'active'}>
+        <Input type="hidden" />
+      </Form.Item>
 
       <Form.Item
         name="agreement"

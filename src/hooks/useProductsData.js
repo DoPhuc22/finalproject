@@ -1,33 +1,30 @@
 // hooks/useProductsData.js
-import { useState, useEffect, useCallback } from "react";
-import { message } from "antd";
-import { getAllProducts, getProductImages } from "../services/products";
+import { useState, useEffect, useCallback } from 'react';
+import { message } from 'antd';
+import { getAllProducts, getProductImages } from '../services/products';
 
-const useProductsData = (initialFilters = {}) => {
+const useProductsData = () => {
   const [products, setProducts] = useState([]);
-  const [allProducts, setAllProducts] = useState([]); // Store all products for client-side pagination
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [filters, setFilters] = useState(initialFilters);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({});
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 6,
-    total: 0,
+    total: 0
   });
 
+  // Fetch products with filters
   const fetchProducts = useCallback(async (params = {}) => {
     try {
       setLoading(true);
-      setError(null);
       
-      const response = await getAllProducts({
-        ...filters,
-        ...params,
-      });
+      // Combine current filters with new params
+      const combinedParams = { ...filters, ...params };
       
-      const productsData = response.data || response || [];
+      const response = await getAllProducts(combinedParams);
+      const productsData = response.data || response;
 
-      // Get images for each product
+      // Lấy ảnh cho từng sản phẩm
       const productsWithImages = await Promise.all(
         productsData.map(async (product) => {
           try {
@@ -35,79 +32,54 @@ const useProductsData = (initialFilters = {}) => {
             const imagesResponse = await getProductImages(productId);
             const images = imagesResponse.data || imagesResponse || [];
 
-            // Find primary image or use first image
-            const primaryImage = 
-              images.find((img) => img.isPrimary) || images[0];
+            // Tìm ảnh chính (isPrimary = true) hoặc lấy ảnh đầu tiên
+            const primaryImage = images.find(img => img.isPrimary) || images[0];
 
             return {
               ...product,
-              imageUrl: primaryImage?.imageUrl || null,
-              images: images,
+              imageUrl: primaryImage?.imageUrl || '/assets/images/products/default.jpg',
+              images: images
             };
           } catch (error) {
             console.error(`Error fetching images for product ${product.id}:`, error);
-            return product;
+            return {
+              ...product,
+              imageUrl: '/assets/images/products/default.jpg'
+            };
           }
         })
       );
 
-      // Filter active products
-      const activeProducts = productsWithImages.filter(
-        (product) => product.active === true || product.active === "true" || product.isActive === true
-      );
-      
-      // Store all active products
-      setAllProducts(activeProducts);
-      
-      // Set total count for pagination
+      setProducts(productsWithImages);
       setPagination(prev => ({
         ...prev,
-        total: activeProducts.length,
+        total: response.total || productsWithImages.length
       }));
-      
-      // Apply pagination on the client side
-      const { current, pageSize } = pagination;
-      const startIndex = (current - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      
-      // Set the paginated products
-      setProducts(activeProducts.slice(startIndex, endIndex));
-      
     } catch (error) {
-      console.error("Error fetching products:", error);
-      setError(error);
-      message.error("Không thể tải danh sách sản phẩm");
+      console.error('Error fetching products:', error);
+      message.error('Lỗi khi tải danh sách sản phẩm');
     } finally {
       setLoading(false);
     }
-  }, [filters, pagination.current, pagination.pageSize]);
+  }, [filters]);
 
+  // Update filters
   const updateFilters = (newFilters) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      ...newFilters
-    }));
-    
-    // Reset pagination when filters change
-    setPagination(prev => ({
-      ...prev,
-      current: 1
-    }));
+    setFilters(newFilters);
   };
 
+  // Handle pagination change
   const handlePaginationChange = (page, pageSize) => {
-    setPagination(prev => ({
-      ...prev,
+    setPagination({
+      ...pagination,
       current: page,
       pageSize: pageSize
-    }));
+    });
     
-    // If we already have all products, we can paginate without fetching again
-    if (allProducts.length > 0) {
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      setProducts(allProducts.slice(startIndex, endIndex));
-    }
+    fetchProducts({
+      page,
+      pageSize
+    });
   };
 
   // Initial load
@@ -118,9 +90,8 @@ const useProductsData = (initialFilters = {}) => {
   return {
     products,
     loading,
-    error,
-    filters,
     pagination,
+    filters,
     fetchProducts,
     updateFilters,
     handlePaginationChange

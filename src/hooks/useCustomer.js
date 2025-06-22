@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { message } from "antd";
 import {
   getAllUsers,
@@ -17,11 +17,18 @@ const useCustomer = () => {
     total: 0,
   });
 
+  const isFetchingAllRef = useRef(false);
+
   // Fetch all customers with filters
   const fetchCustomers = useCallback(async (params = {}) => {
     try {
       setLoading(true);
-      if (Object.keys(params).length === 0) {
+
+      // Kiểm tra params có rỗng hay không để xác định là getAllUsers
+      const isFetchingAll = Object.keys(params).length === 0;
+      isFetchingAllRef.current = isFetchingAll;
+
+      if (isFetchingAll) {
         const cached = localStorage.getItem("customers");
         if (cached) {
           setCustomers(JSON.parse(cached));
@@ -33,10 +40,11 @@ const useCustomer = () => {
           return;
         }
       }
+
       const response = await getAllUsers(params);
       const data = response.data || response;
 
-      // Filter only customers (not admin users) and add additional info
+      // Filter and map customers (giữ nguyên phần bạn có sẵn)
       let customersOnly = data
         .filter((user) => user.role !== "admin")
         .map((customer) => ({
@@ -46,9 +54,9 @@ const useCustomer = () => {
           totalSpent: Math.floor(Math.random() * 10000000) + 500000,
         }));
 
-      // Áp dụng bộ lọc phía client
+      // Áp dụng bộ lọc phía client (giữ nguyên)
+
       if (params.search) {
-        const searchLower = params.search.toLowerCase();
         const keywords = params.search
           .toLowerCase()
           .normalize("NFD")
@@ -103,7 +111,7 @@ const useCustomer = () => {
       }));
 
       // Lưu vào localStorage nếu không có filter
-      if (Object.keys(params).length === 0) {
+      if (isFetchingAll) {
         localStorage.setItem("customers", JSON.stringify(customersOnly));
       }
     } catch (error) {
@@ -112,6 +120,21 @@ const useCustomer = () => {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Thêm useEffect để lắng nghe sự kiện beforeunload khi fetchCustomers được gọi với params rỗng (getAllUsers)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isFetchingAllRef.current) {
+        localStorage.removeItem("customers");
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
   }, []);
 
   // Create customer
@@ -123,11 +146,12 @@ const useCustomer = () => {
       const dataWithRole = {
         ...customerData,
         role: customerData.role || "customer",
+        status: customerData.status || "active",
       };
 
       const response = await createUser(dataWithRole);
       message.success("Tạo khách hàng thành công!");
-      localStorage.removeItem("customers"); 
+      localStorage.removeItem("customers");
       fetchCustomers(); // Refresh list
       return response;
     } catch (error) {
@@ -200,7 +224,7 @@ const useCustomer = () => {
 
       await deleteUser(customerId);
       message.success("Xóa khách hàng thành công!");
-      localStorage.removeItem("customers"); 
+      localStorage.removeItem("customers");
       fetchCustomers(); // Refresh list
     } catch (error) {
       console.error("Delete customer error:", error);

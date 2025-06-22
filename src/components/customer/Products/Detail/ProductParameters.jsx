@@ -1,95 +1,73 @@
+// components/customer/Products/Detail/ProductParameters.jsx
 import React from 'react';
-import { Table, Typography } from 'antd';
+import { Typography, Table, Card } from 'antd';
 
 const { Title } = Typography;
 
-const ProductParameters = ({ product }) => {
-  // Tạo dữ liệu thông số kỹ thuật dựa trên loại đồng hồ
-  const getSpecificationsForProduct = () => {
-    const baseSpecifications = [
-      { parameter: 'Thương hiệu', value: product.brand },
-      { parameter: 'Model', value: `${product.brand}-${product.id}` },
-      { parameter: 'Xuất xứ', value: product.origin || 'Thụy Sĩ' },
-      { parameter: 'Mặt kính', value: 'Sapphire (Kính chống trầy)' },
-      { parameter: 'Chất liệu vỏ', value: 'Thép không gỉ 316L' },
-      { parameter: 'Chất liệu dây', value: 'Dây da cao cấp' },
-      { parameter: 'Đường kính mặt', value: '40mm' },
-      { parameter: 'Độ dày', value: '12mm' },
-      { parameter: 'Chống nước', value: '3 ATM' },
-      { parameter: 'Bảo hành', value: '12 tháng' },
-    ];
-    
-    // Thêm thông số kỹ thuật theo từng loại đồng hồ
-    switch (product.category) {
-      case 'mechanical':
-        return [
-          ...baseSpecifications,
-          { parameter: 'Loại máy', value: 'Cơ (Automatic)' },
-          { parameter: 'Năng lượng dự trữ', value: '40 giờ' },
-          { parameter: 'Số chân kính', value: '21 chân kính' },
-          { parameter: 'Chức năng', value: 'Hiển thị giờ, phút, giây, ngày' },
-          { parameter: 'Độ chính xác', value: '+/- 5 giây/ngày' },
-        ];
-      case 'smart':
-        return [
-          ...baseSpecifications,
-          { parameter: 'Hệ điều hành', value: 'watchOS / Wear OS' },
-          { parameter: 'Thời lượng pin', value: 'Lên đến 18 giờ' },
-          { parameter: 'Kết nối', value: 'Bluetooth 5.0, WiFi, GPS' },
-          { parameter: 'Bộ nhớ', value: '32GB' },
-          { parameter: 'Cảm biến', value: 'Nhịp tim, SpO2, Gia tốc kế, Con quay hồi chuyển' },
-          { parameter: 'Chức năng', value: 'Theo dõi sức khỏe, Thông báo, GPS, Thanh toán không tiếp xúc' },
-        ];
-      case 'sport':
-        return [
-          ...baseSpecifications,
-          { parameter: 'Loại máy', value: 'Quartz (Pin)' },
-          { parameter: 'Chất liệu dây', value: 'Cao su / Silicone' },
-          { parameter: 'Chống nước', value: '10 ATM (100m)' },
-          { parameter: 'Chức năng', value: 'Bấm giờ, Đồng hồ bấm giờ, Đèn nền' },
-          { parameter: 'Độ bền', value: 'Chống va đập, chống từ tính' },
-        ];
-      case 'classic':
-      default:
-        return [
-          ...baseSpecifications,
-          { parameter: 'Loại máy', value: 'Quartz (Pin)' },
-          { parameter: 'Thời lượng pin', value: '3 năm' },
-          { parameter: 'Chức năng', value: 'Hiển thị giờ, phút, giây, lịch ngày' },
-          { parameter: 'Phong cách', value: 'Cổ điển, thanh lịch' },
-        ];
-    }
-  };
+const ProductParameters = ({ product, attributes = [] }) => {
+  // Dữ liệu thuộc tính đã được sắp xếp
+  const formattedAttributes = attributes.map(attr => ({
+    key: attr.attr_value_id || attr.attrValueId,
+    name: attr.attributeName || attr.name || 'Không có tên',
+    value: attr.value || 'Không có giá trị'
+  }));
 
-  const specifications = getSpecificationsForProduct();
-  
+  // Bổ sung các thuộc tính cơ bản nếu không có trong danh sách thuộc tính
+  const basicAttributes = [
+    { 
+      key: 'brand', 
+      name: 'Thương hiệu', 
+      value: typeof product.brand === 'object' ? product.brand.name : product.brand || 'Không có'
+    },
+    { 
+      key: 'category', 
+      name: 'Danh mục', 
+      value: typeof product.category === 'object' ? product.category.name : product.category || 'Không có'
+    },
+    { 
+      key: 'sku', 
+      name: 'Mã sản phẩm', 
+      value: product.sku || 'Không có'
+    }
+  ];
+
+  // Kết hợp danh sách thuộc tính API và thuộc tính cơ bản
+  // Loại bỏ các thuộc tính trùng lặp
+  const allAttributes = [
+    ...basicAttributes,
+    ...formattedAttributes.filter(attr => 
+      !basicAttributes.some(basic => basic.name.toLowerCase() === attr.name.toLowerCase())
+    )
+  ];
+
   const columns = [
     {
       title: 'Thông số',
-      dataIndex: 'parameter',
-      key: 'parameter',
-      width: '40%',
+      dataIndex: 'name',
+      key: 'name',
+      width: '30%',
       render: text => <strong>{text}</strong>
     },
     {
-      title: 'Chi tiết',
+      title: 'Giá trị',
       dataIndex: 'value',
       key: 'value',
     }
   ];
 
   return (
-    <div className="product-parameters py-8">
-      <Title level={4} className="mb-6">Thông số kỹ thuật của {product.name}</Title>
-      <Table
-        dataSource={specifications}
-        columns={columns}
-        pagination={false}
-        rowKey="parameter"
-        bordered
-        size="middle"
-        className="specifications-table"
-      />
+    <div className="product-parameters py-6">
+      <Title level={4} className="mb-4">Thông số kỹ thuật</Title>
+      
+      <Card bordered={false} className="bg-gray-50">
+        <Table 
+          dataSource={allAttributes} 
+          columns={columns} 
+          pagination={false}
+          bordered
+          size="middle"
+        />
+      </Card>
     </div>
   );
 };

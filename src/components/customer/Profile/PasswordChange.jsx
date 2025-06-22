@@ -23,7 +23,7 @@ const PasswordChange = ({ user }) => {
 
     try {
       // Sử dụng API changePassword mới
-      await changePassword(values.currentPassword, values.newPassword);
+      await changePassword(values.oldPassword, values.newPassword);
 
       setSuccess(true);
       form.resetFields();
@@ -73,7 +73,7 @@ const PasswordChange = ({ user }) => {
 
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
-          name="currentPassword"
+          name="oldPassword"
           label="Mật khẩu hiện tại"
           rules={[
             { required: true, message: "Vui lòng nhập mật khẩu hiện tại" },
