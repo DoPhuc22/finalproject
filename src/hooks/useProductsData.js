@@ -1,4 +1,3 @@
-// hooks/useProductsData.js
 import { useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
 import { getAllProducts, getProductImages } from '../services/products';
@@ -9,7 +8,7 @@ const useProductsData = () => {
   const [filters, setFilters] = useState({});
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 6,
+    pageSize: 9,
     total: 0
   });
 
@@ -50,10 +49,15 @@ const useProductsData = () => {
         })
       );
 
-      setProducts(productsWithImages);
+      // Lọc sản phẩm active (chỉ hiển thị sản phẩm đang hoạt động)
+      const activeProducts = productsWithImages.filter(product => 
+        product.active === true || product.active === 'true' || product.isActive === true
+      );
+
+      setProducts(activeProducts);
       setPagination(prev => ({
         ...prev,
-        total: response.total || productsWithImages.length
+        total: activeProducts.length
       }));
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -66,21 +70,31 @@ const useProductsData = () => {
   // Update filters
   const updateFilters = (newFilters) => {
     setFilters(newFilters);
+    // Reset pagination khi thay đổi filter
+    setPagination(prev => ({
+      ...prev,
+      current: 1
+    }));
   };
 
   // Handle pagination change
   const handlePaginationChange = (page, pageSize) => {
-    setPagination({
-      ...pagination,
+    setPagination(prev => ({
+      ...prev,
       current: page,
       pageSize: pageSize
-    });
+    }));
     
-    fetchProducts({
-      page,
-      pageSize
-    });
+    // Không cần gọi fetchProducts lại vì chúng ta đã có tất cả data
+    // Pagination sẽ được xử lý ở component level
   };
+
+  // Get paginated products (xử lý phân trang ở client-side)
+  const getPaginatedProducts = useCallback(() => {
+    const startIndex = (pagination.current - 1) * pagination.pageSize;
+    const endIndex = startIndex + pagination.pageSize;
+    return products.slice(startIndex, endIndex);
+  }, [products, pagination.current, pagination.pageSize]);
 
   // Initial load
   useEffect(() => {
@@ -88,7 +102,8 @@ const useProductsData = () => {
   }, [fetchProducts]);
 
   return {
-    products,
+    products: getPaginatedProducts(), // Trả về products đã phân trang
+    allProducts: products, // Trả về tất cả products nếu cần
     loading,
     pagination,
     filters,

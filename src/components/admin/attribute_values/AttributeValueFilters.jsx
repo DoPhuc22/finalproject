@@ -8,6 +8,7 @@ import {
   Row,
   Col,
   Space,
+  DatePicker,
 } from "antd";
 import {
   SearchOutlined,
@@ -17,6 +18,7 @@ import {
 
 const { Search } = Input;
 const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 const AttributeValueFilters = ({
   products = [],
@@ -29,16 +31,59 @@ const AttributeValueFilters = ({
   const [expanded, setExpanded] = useState(false);
 
   const handleFilter = (values) => {
-    onFilter(values);
+    // Loại bỏ các giá trị empty và xử lý dateRange
+    const filteredValues = Object.keys(values).reduce((acc, key) => {
+      if (
+        values[key] !== undefined &&
+        values[key] !== null &&
+        values[key] !== "" &&
+        values[key] !== "all"
+      ) {
+        // Xử lý đặc biệt cho dateRange
+        if (
+          key === "dateRange" &&
+          Array.isArray(values[key]) &&
+          values[key].length === 2
+        ) {
+          acc[key] = values[key].map((date) => date.format("YYYY-MM-DD"));
+        } else {
+          acc[key] = values[key];
+        }
+      }
+      return acc;
+    }, {});
+
+    onFilter(filteredValues);
   };
 
   const handleReset = () => {
     form.resetFields();
+    form.setFieldsValue({
+      status: "all",
+    });
     onReset();
   };
 
   const handleSearch = (value) => {
-    onFilter({ search: value });
+    if (value) {
+      onFilter({ search: value });
+    } else {
+      // Nếu search rỗng, reset về tất cả
+      const currentValues = form.getFieldsValue();
+      delete currentValues.search;
+      onFilter(currentValues);
+    }
+  };
+
+  const handleQuickFilter = (filterType, filterValue) => {
+    const currentValues = form.getFieldsValue();
+    const newValues = {
+      ...currentValues,
+      [filterType]: filterValue,
+    };
+
+    form.setFieldsValue(newValues);
+    handleFilter(newValues);
   };
 
   return (
@@ -80,7 +125,7 @@ const AttributeValueFilters = ({
           {/* Status */}
           <Col xs={24} sm={12} lg={8}>
             <Form.Item label="Trạng thái" name="status">
-              <Select placeholder="Chọn trạng thái">
+              <Select placeholder="Chọn trạng thái" allowClear>
                 <Option value="all">Tất cả trạng thái</Option>
                 <Option value="active">Đang hoạt động</Option>
                 <Option value="inactive">Tạm ngưng</Option>
@@ -99,7 +144,9 @@ const AttributeValueFilters = ({
                     showSearch
                     optionFilterProp="children"
                     filterOption={(input, option) =>
-                      option.children.toLowerCase().includes(input.toLowerCase())
+                      option.children
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
                     }
                   >
                     {products.map((product) => (
@@ -119,11 +166,25 @@ const AttributeValueFilters = ({
                 <Form.Item label="Loại thuộc tính" name="attr_type_id">
                   <Select placeholder="Chọn loại thuộc tính" allowClear>
                     {attributeTypes.map((type) => (
-                      <Option key={type.attr_type_id} value={type.attr_type_id}>
+                      <Option
+                        key={type.attr_type_id || type.attrTypeId}
+                        value={type.attr_type_id || type.attrTypeId}
+                      >
                         {type.name}
                       </Option>
                     ))}
                   </Select>
+                </Form.Item>
+              </Col>
+
+              {/* Date Range */}
+              <Col xs={24} sm={12} lg={8}>
+                <Form.Item label="Ngày tạo" name="dateRange">
+                  <RangePicker
+                    style={{ width: "100%" }}
+                    format="DD/MM/YYYY"
+                    placeholder={["Từ ngày", "Đến ngày"]}
+                  />
                 </Form.Item>
               </Col>
             </>
@@ -142,8 +203,8 @@ const AttributeValueFilters = ({
               >
                 Tìm kiếm
               </Button>
-              <Button 
-                icon={<ReloadOutlined />} 
+              <Button
+                icon={<ReloadOutlined />}
                 onClick={handleReset}
                 className="border-slate-300 hover:border-blue-400"
               >
@@ -159,20 +220,14 @@ const AttributeValueFilters = ({
             <span className="text-sm text-gray-500 mr-2">Lọc nhanh:</span>
             <Button
               size="small"
-              onClick={() => {
-                form.setFieldsValue({ status: "active" });
-                handleFilter({ status: "active" });
-              }}
+              onClick={() => handleQuickFilter("status", "active")}
               className="text-xs border-green-300 text-green-600 hover:border-green-400 hover:text-green-700"
             >
               Đang hoạt động
             </Button>
             <Button
               size="small"
-              onClick={() => {
-                form.setFieldsValue({ status: "inactive" });
-                handleFilter({ status: "inactive" });
-              }}
+              onClick={() => handleQuickFilter("status", "inactive")}
               className="text-xs border-red-300 text-red-600 hover:border-red-400 hover:text-red-700"
             >
               Tạm ngưng

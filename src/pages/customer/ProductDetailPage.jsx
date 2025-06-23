@@ -63,16 +63,6 @@ const ProductDetailPage = () => {
       ),
       children: <ProductParameters product={product} attributes={attributes} />,
     },
-    {
-      key: 'reviews',
-      label: (
-        <span className="flex items-center">
-          <CommentOutlined className="mr-1" />
-          Đánh giá ({product.reviewCount || 0})
-        </span>
-      ),
-      children: <div className="py-8">Tính năng đánh giá đang được phát triển</div>,
-    },
   ];
 
   // Lấy tên danh mục

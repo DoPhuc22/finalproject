@@ -5,10 +5,13 @@ import { Typography, Table, Card } from 'antd';
 const { Title } = Typography;
 
 const ProductParameters = ({ product, attributes = [] }) => {
+  const activeAttributes = attributes.filter(attr =>
+    attr.status === 'active' || attr.status === undefined || attr.status === null
+  );
   // Dữ liệu thuộc tính đã được sắp xếp
-  const formattedAttributes = attributes.map(attr => ({
+  const formattedAttributes = activeAttributes.map(attr => ({
     key: attr.attr_value_id || attr.attrValueId,
-    name: attr.attributeName || attr.name || 'Không có tên',
+    name: attr.attributeType?.name || attr.name || attr.attributeName || 'Không có tên',
     value: attr.value || 'Không có giá trị'
   }));
 

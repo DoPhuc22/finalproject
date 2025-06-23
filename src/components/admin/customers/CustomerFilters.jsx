@@ -108,7 +108,6 @@ const CustomerFilters = ({ onFilter, onReset, loading = false }) => {
                 <Option value="all">Tất cả</Option>
                 <Option value="active">Hoạt động</Option>
                 <Option value="inactive">Ngừng hoạt động</Option>
-                <Option value="blocked">Bị khóa</Option>
               </Select>
             </Form.Item>
           </Col>

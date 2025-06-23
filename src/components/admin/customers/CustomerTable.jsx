@@ -203,17 +203,26 @@ const CustomerTable = ({
     // },
     {
       title: "Ngày tham gia",
-      dataIndex: "joinDate",
-      key: "joinDate",
+      dataIndex: "created_at",
+      key: "created_at",
       width: 120,
       sorter: true,
       align: "center",
-      render: (date) => (
+      render: (_, record) => (
         <div className="text-center text-sm">
-          {date ? new Date(date).toLocaleDateString("vi-VN") : "-"}
+          {record.created_at
+            ? new Date(record.created_at).toLocaleDateString("vi-VN")
+            : record.createdAt
+              ? new Date(record.createdAt).toLocaleDateString("vi-VN")
+              : "-"}
+              
         </div>
       ),
     },
+    //       {date ? new Date(date).toLocaleDateString("vi-VN") : "-"}
+    //     </div>
+    //   ),
+    // },
     {
       title: "Thao tác",
       key: "actions",

@@ -31,6 +31,27 @@ const PasswordChange = ({ user }) => {
     } catch (error) {
       console.error("Error changing password:", error);
 
+      // Kiểm tra lỗi mật khẩu cũ không đúng
+      if (error.response && error.response.status === 400) {
+        const errorMessage = error.response.data?.message || "";
+
+        // Kiểm tra các thông báo lỗi liên quan đến mật khẩu cũ
+        if (
+          errorMessage.includes("password") &&
+          (errorMessage.includes("incorrect") ||
+            errorMessage.includes("wrong") ||
+            errorMessage.includes("invalid") ||
+            errorMessage.includes("Old password is incorrect") ||
+            errorMessage.includes("không đúng"))
+        ) {
+          message.error("Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại.");
+          // Focus vào field mật khẩu cũ
+          form.getFieldInstance("oldPassword")?.focus();
+          return;
+        }
+      }
+
+      // Xử lý các lỗi khác
       if (
         error.response &&
         error.response.data &&
@@ -40,7 +61,7 @@ const PasswordChange = ({ user }) => {
       } else if (error.message) {
         message.error(error.message);
       } else {
-        message.error("Đổi mật khẩu thất bại. Vui lòng thử lại.");
+        message.error("Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại.");
       }
     } finally {
       setLoading(false);
@@ -89,9 +110,24 @@ const PasswordChange = ({ user }) => {
         <Form.Item
           name="newPassword"
           label="Mật khẩu mới"
+          dependencies={["oldPassword"]}
           rules={[
             { required: true, message: "Vui lòng nhập mật khẩu mới" },
             { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value) {
+                  return Promise.resolve();
+                }
+                const oldPassword = getFieldValue("oldPassword");
+                if (oldPassword && value === oldPassword) {
+                  return Promise.reject(
+                    new Error("Mật khẩu mới không được trùng với mật khẩu cũ")
+                  );
+                }
+                return Promise.resolve();
+              },
+            }),
           ]}
           hasFeedback
         >

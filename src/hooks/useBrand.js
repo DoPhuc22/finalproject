@@ -109,13 +109,32 @@ const useBrand = () => {
   const createBrandHandler = async (brandData) => {
     try {
       const response = await createBrand(brandData);
+
+      let createdBrand;
+      if (response && response.data) {
+        createdBrand = response.data;
+      } else {
+        createdBrand = response;
+      }
+
+      const normalizedBrand = {
+        ...createdBrand,
+        brandId: createdBrand.brandId || createdBrand.id,
+        id: createdBrand.brandId || createdBrand.id,
+        created_at: createdBrand.joinDate || new Date().toISOString(),
+      };
+
       message.success("Tạo nhãn hàng thành công!");
-
-      localStorage.removeItem("brands"); // Clear cache to refetch
-      // Refetch to ensure data consistency
-      await fetchBrands();
-
-      return response;
+      setBrands((prev) => {
+        const newList = [normalizedBrand, ...prev];
+        localStorage.setItem("brands", JSON.stringify(newList));
+        return newList;
+      });
+      setPagination((prev) => ({
+        ...prev,
+        total: prev.total + 1,
+      }));
+      return normalizedBrand;
     } catch (error) {
       console.error("Create brand error:", error);
       message.error("Lỗi khi tạo nhãn hàng");
@@ -153,9 +172,8 @@ const useBrand = () => {
           brandId: brandId,
           id: brandId,
           joinDate:
-            prevBrands.find(
-              (brand) => (brand.brandId || brand.id) === brandId
-            )?.joinDate || new Date().toISOString(),
+            prevBrands.find((brand) => (brand.brandId || brand.id) === brandId)
+              ?.joinDate || new Date().toISOString(),
         };
 
         // Đưa brand đã cập nhật lên đầu danh sách
@@ -180,9 +198,8 @@ const useBrand = () => {
 
       await deleteBrand(brandId);
       message.success("Xóa nhãn hàng thành công!");
-
-      // Refetch to ensure data consistency
-      await fetchBrands();
+      localStorage.removeItem("brands");
+      fetchBrands();
     } catch (error) {
       console.error("Delete brand error:", error);
       message.error("Lỗi khi xóa nhãn hàng");

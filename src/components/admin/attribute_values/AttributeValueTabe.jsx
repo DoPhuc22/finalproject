@@ -87,6 +87,17 @@ const AttributeValueTable = ({
 
   const columns = [
     {
+      title: "ID",
+      dataIndex: "attr_value_id", 
+      key: "attr_value_id",
+      width: 80,
+      render: (id, record) => (
+        <Text code className="text-blue-600 text-lg">
+          #{record.attr_value_id || record.attrValueId || record.id}
+        </Text>
+      ),
+    },
+    {
       title: "Giá trị",
       dataIndex: "value",
       key: "value",

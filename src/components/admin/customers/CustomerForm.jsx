@@ -180,7 +180,7 @@ const CustomerForm = ({
               name="address"
               rules={[{ type: "address", message: "Địa chỉ không hợp lệ" }]}
             >
-              <Input placeholder="Nhập địa chỉ" size="large" />
+              <Input.TextArea placeholder="Nhập địa chỉ" size="large" />
             </Form.Item>
           </Col>
           {/* Password */}

@@ -92,19 +92,12 @@ const ProductInfo = ({ product }) => {
         {product.name}
       </Title>
       
-      <div className="flex items-center gap-4 mb-4">
-        <Space>
-          <Rate disabled defaultValue={product.rating || 4.5} allowHalf />
-          <Text className="text-gray-500">
-            ({product.reviewCount || 0} đánh giá)
-          </Text>
-        </Space>
-        
-        <Tag color={getBrandColor()}>
+      <div className="flex items-center gap-4 mb-4">    
+        <Tag className="text-xl" color={getBrandColor()}>
           {getBrandName()}
         </Tag>
         
-        <Tag color={inStock ? 'success' : 'error'}>
+        <Tag className="text-xl" color={inStock ? 'success' : 'error'}>
           {inStock ? 'Còn hàng' : 'Hết hàng'}
         </Tag>
       </div>

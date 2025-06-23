@@ -62,11 +62,6 @@ const Sidebar = ({ collapsed, onCollapse }) => {
       label: <Link to="/admin/customers">Khách hàng</Link>,
     },
     {
-      key: "/admin/discounts",
-      icon: <TagOutlined />,
-      label: <Link to="/admin/discounts">Khuyến mãi</Link>,
-    },
-    {
       key: "/admin/settings",
       icon: <SettingOutlined />,
       label: <Link to="/admin/settings">Cài đặt</Link>,

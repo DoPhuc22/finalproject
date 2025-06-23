@@ -150,10 +150,42 @@ const useCustomer = () => {
       };
 
       const response = await createUser(dataWithRole);
+      let createdCustomer;
+      if (response && response.data) {
+        createdCustomer = response.data;
+      } else {
+        createdCustomer = response;
+      }
+
+      const normalizedCustomer = {
+        ...createdCustomer,
+        created_at:
+          createdCustomer.created_at ||
+          createdCustomer.createdAt ||
+          new Date().toISOString(),
+        updated_at:
+          createdCustomer.updated_at ||
+          createdCustomer.updatedAt ||
+          new Date().toISOString(),
+        name: createdCustomer.name || dataWithRole.name,
+        email: createdCustomer.email || dataWithRole.email,
+        phone: createdCustomer.phone || dataWithRole.phone,
+        address: createdCustomer.address || dataWithRole.address,
+        gender: createdCustomer.gender || dataWithRole.gender,
+        role: createdCustomer.role || dataWithRole.role,
+        status: createdCustomer.status || dataWithRole.status,
+      };
       message.success("Tạo khách hàng thành công!");
-      localStorage.removeItem("customers");
-      fetchCustomers(); // Refresh list
-      return response;
+      setCustomers((prev) => {
+        const newList = [normalizedCustomer, ...prev];
+        localStorage.setItem("customers", JSON.stringify(newList));
+        return newList;
+      });
+      setPagination((prev) => ({
+        ...prev,
+        total: prev.total + 1,
+      }));
+      return normalizedCustomer;
     } catch (error) {
       console.error("Create customer error:", error);
       message.error("Lỗi khi tạo khách hàng");

@@ -233,20 +233,6 @@ const AttributeValuePage = () => {
                   />
                 </Card>
               </Col>
-              <Col xs={24} sm={12} lg={6}>
-                <Card
-                  size="small"
-                  bordered={false}
-                  className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
-                >
-                  <Statistic
-                    title="Sản phẩm liên quan"
-                    value={uniqueProducts}
-                    prefix={<AppstoreOutlined />}
-                    valueStyle={{ color: "#722ed1" }}
-                  />
-                </Card>
-              </Col>
             </Row>
           </div>
 

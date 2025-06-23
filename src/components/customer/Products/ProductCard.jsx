@@ -98,16 +98,9 @@ const ProductCard = ({ product }) => {
           }
           description={
             <div className="mt-2">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center mb-2">
                 {getBrandTag()}
                 {getStockStatus()}
-              </div>
-              
-              <div className="flex items-center text-sm mb-2">
-                <Rate disabled defaultValue={product.rating || 4} allowHalf className="text-xs" />
-                <span className="ml-1 text-gray-500">
-                  ({product.reviewCount || 0})
-                </span>
               </div>
               
               <div className="price-section">
@@ -121,7 +114,7 @@ const ProductCard = ({ product }) => {
                     </span>
                   </div>
                 ) : (
-                  <span className="font-bold text-gray-800">
+                  <span className="font-bold text-gray-800 text-xl">
                     {price.toLocaleString()} VNĐ
                   </span>
                 )}

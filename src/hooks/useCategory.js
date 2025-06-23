@@ -120,53 +120,53 @@ const useCategory = () => {
     }
   };
 
-  // Update category (and move to top)
+  // Update category
   const updateCategoryHandler = async (id, categoryData) => {
     try {
-          console.log("Updating category:", { id, categoryData }); // Debug log
-    
-          // Đảm bảo ID là number hoặc string, không phải object
-          const categoryId = typeof id === "object" ? id.categoryId || id.id : id;
-    
-          if (!categoryId) {
-            throw new Error("Category ID is required for update");
-          }
-    
-          const response = await updateCategory(categoryId, categoryData);
-          message.success("Cập nhật danh mục thành công!");
-    
-          // Cập nhật category trong danh sách và đưa lên đầu
-          setCategories((prevCategories) => {
-            const updatedCategories = prevCategories.filter(
-              (category) => (category.categoryId || category.id) !== categoryId
-            );
-    
-            // Tạo category đã cập nhật với dữ liệu mới
-            const updatedcategory = {
-              ...prevCategories.find(
-                (category) => (category.categoryId || category.id) === categoryId
-              ),
-              ...categoryData,
-              categoryId: categoryId,
-              id: categoryId,
-              joinDate:
-                prevCategories.find(
-                  (category) => (category.categoryId || category.id) === categoryId
-                )?.joinDate || new Date().toISOString(),
-            };
-    
-            // Đưa category đã cập nhật lên đầu danh sách
-            const newList = [updatedcategory, ...updatedCategories];
-            localStorage.setItem("categories", JSON.stringify(newList));
-            return newList;
-          });
-    
-          return response;
-        } catch (error) {
-          console.error("Update category error:", error);
-          message.error("Lỗi khi cập nhật danh mục");
-          throw error;
-        }
+      console.log("Updating category:", { id, categoryData }); // Debug log
+
+      // Đảm bảo ID là number hoặc string, không phải object
+      const categoryId = typeof id === "object" ? id.categoryId || id.id : id;
+
+      if (!categoryId) {
+        throw new Error("Category ID is required for update");
+      }
+
+      const response = await updateCategory(categoryId, categoryData);
+      message.success("Cập nhật danh mục thành công!");
+
+      // Cập nhật category trong danh sách và đưa lên đầu
+      setCategories((prevCategories) => {
+        const updatedCategories = prevCategories.filter(
+          (category) => (category.categoryId || category.id) !== categoryId
+        );
+
+        // Tạo category đã cập nhật với dữ liệu mới
+        const updatedcategory = {
+          ...prevCategories.find(
+            (category) => (category.categoryId || category.id) === categoryId
+          ),
+          ...categoryData,
+          categoryId: categoryId,
+          id: categoryId,
+          joinDate:
+            prevCategories.find(
+              (category) => (category.categoryId || category.id) === categoryId
+            )?.joinDate || new Date().toISOString(),
+        };
+
+        // Đưa category đã cập nhật lên đầu danh sách
+        const newList = [updatedcategory, ...updatedCategories];
+        localStorage.setItem("categories", JSON.stringify(newList));
+        return newList;
+      });
+
+      return response;
+    } catch (error) {
+      console.error("Update category error:", error);
+      message.error("Lỗi khi cập nhật danh mục");
+      throw error;
+    }
   };
 
   // Delete category
@@ -177,7 +177,8 @@ const useCategory = () => {
 
       await deleteCategory(categoryId);
       message.success("Xóa danh mục thành công!");
-      await fetchCategories();
+      localStorage.removeItem("categories");
+      fetchCategories();
     } catch (error) {
       console.error("Delete category error:", error);
       message.error("Lỗi khi xóa danh mục");
