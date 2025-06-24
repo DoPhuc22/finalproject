@@ -29,7 +29,7 @@ import useProducts from "../../hooks/useProducts";
 import getNotificationItems from "../../components/admin/NotificationItems";
 import AdminHeader from "../../components/admin/Header";
 import Sidebar from "../../components/admin/SideBar";
-
+import axios from "axios";
 const { Content } = Layout;
 const { Title } = Typography;
 
@@ -154,8 +154,10 @@ const ProductPage = () => {
 
       if (productId) {
         // Chế độ chỉnh sửa - luôn sử dụng FormData
-        await updateProduct(productId, productData);
-        message.success("Cập nhật sản phẩm thành công!");
+        await axios.put(`http://localhost:8080/api/products/${productId}`, productData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        message.success('Cập nhật thành công');
       } else {
         // Chế độ tạo mới
         await createProduct(productData);

@@ -68,6 +68,7 @@ const ProductForm = ({
         setImages(
           productImages.map((img, index) => ({
             uid: img.imageId || `existing-${index}`,
+            imageId: img.imageId, 
             name: img.name || `image-${index}`,
             status: "done",
             url: img.imageUrl || img.url,
@@ -90,21 +91,42 @@ const ProductForm = ({
     try {
       // Kiểm tra nếu đang ở chế độ chỉnh sửa
       if (isEdit) {
-        // Chuẩn bị dữ liệu cho chế độ sửa (không sử dụng FormData)
-        const productData = {
-          name: values.name,
-          sku: values.sku,
-          description: values.description || "",
-          remainQuantity: values.remainQuantity || 0,
-          active: values.active === true, // Sửa logic active
-          status: values.status ? "active" : "inactive",
-          price: values.price,
-          brandId: values.brandId,
-          categoryId: values.categoryId,
-        };
+        const fd = new FormData();
+        // các field chung
+        fd.append('name', values.name);
+        fd.append('sku', values.sku);
+        fd.append('description', values.description || "");
+        fd.append('remainQuantity', values.remainQuantity);
+        fd.append('active', values.active ? 'true' : 'false');
+        fd.append('status', values.status ? 'active' : 'inactive');
+        fd.append('price', values.price);
+        fd.append('brandId', values.brandId);
+        fd.append('categoryId', values.categoryId);
 
-        const productId = product.productId || product.id;
-        await onSubmit(productData, productId);
+        // 1) Append từng existingImageIds riêng lẻ:
+        images
+          .filter(img => img.isExisting && img.imageId != null)
+          .forEach(img => {
+            fd.append('existingImageIds', img.imageId);
+          });
+
+        // 2) Append ảnh mới
+        images.forEach(img => {
+          if (!img.isExisting && img.originFileObj) {
+            fd.append('images', img.originFileObj);
+          }
+        });
+
+        // 3) primaryIndex hoặc primaryImageId
+        const primIdx = images.findIndex(img => img.isPrimary);
+        fd.append('primaryImageIndex', primIdx >= 0 ? primIdx : 0);
+
+        // Gửi lên
+        if (product?.productId) {
+          await onSubmit(fd, product.productId);
+        } else {
+          await onSubmit(fd);
+        }
       } else {
         // Chế độ tạo mới - sử dụng FormData
         const fd = new FormData();
