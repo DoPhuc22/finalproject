@@ -91,6 +91,7 @@ const AttributeValueTable = ({
       dataIndex: "attr_value_id", 
       key: "attr_value_id",
       width: 80,
+      align: "center",
       render: (id, record) => (
         <Text code className="text-blue-600 text-lg">
           #{record.attr_value_id || record.attrValueId || record.id}
@@ -102,7 +103,6 @@ const AttributeValueTable = ({
       dataIndex: "value",
       key: "value",
       width: 200,
-      sorter: true,
       render: (value) => (
         <div className="flex items-center">
           <TagOutlined className="mr-2 text-blue-500" />
@@ -115,7 +115,6 @@ const AttributeValueTable = ({
       dataIndex: "product_id",
       key: "product_id",
       width: 250,
-      sorter: true,
       render: (productId) => (
         <div className="flex items-center">
           <ShoppingOutlined className="mr-2 text-green-500" />
@@ -130,7 +129,6 @@ const AttributeValueTable = ({
       dataIndex: "attr_type_id",
       key: "attr_type_id",
       width: 200,
-      sorter: true,
       render: (typeId) => (
         <div className="flex items-center">
           <InfoCircleOutlined className="mr-2 text-purple-500" />
@@ -143,7 +141,6 @@ const AttributeValueTable = ({
       dataIndex: "status",
       key: "status",
       width: 150,
-      sorter: true,
       render: (status, record) => {
         const isActive = status === "active";
         return (
@@ -169,6 +166,7 @@ const AttributeValueTable = ({
       key: "actions",
       width: 120,
       fixed: "right",
+      align: "center",
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Chỉnh sửa">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { message } from "antd";
 import {
   getAllBrands,
@@ -17,93 +17,170 @@ const useBrand = () => {
     total: 0,
   });
 
-  // Fetch all brands with filters
-  const fetchBrands = useCallback(async (params = {}) => {
-    try {
-      setLoading(true);
-      if (Object.keys(params).length === 0) {
-        const cached = localStorage.getItem("brands");
-        if (cached) {
-          const cachedBrands = JSON.parse(cached);
-          setBrands(cachedBrands);
-          setPagination((prev) => ({
-            ...prev,
-            total: cachedBrands.length,
-          }));
-          setLoading(false);
-          return;
+  const [sortConfig, setSortConfig] = useState({
+    field: "updatedAt", // Thay đổi để ưu tiên item vừa edit
+    order: "desc",
+  });
+
+  const recentlyUpdatedRef = useRef(new Set());
+
+  // Hàm sắp xếp dữ liệu với priority cho recently updated
+  const sortData = useCallback(
+    (data, sortField = "updatedAt", sortOrder = "desc") => {
+      return [...data].sort((a, b) => {
+        const aId = a.brandId || a.id;
+        const bId = b.brandId || b.id;
+
+        // Recently updated items always come first
+        const aIsRecent = recentlyUpdatedRef.current.has(aId);
+        const bIsRecent = recentlyUpdatedRef.current.has(bId);
+
+        if (aIsRecent && !bIsRecent) return -1;
+        if (!aIsRecent && bIsRecent) return 1;
+
+        // Then sort by specified field
+        let aValue = a[sortField];
+        let bValue = b[sortField];
+
+        if (sortField === "createdAt" || sortField === "updatedAt") {
+          aValue = new Date(aValue || 0);
+          bValue = new Date(bValue || 0);
+        } else if (sortField === "name") {
+          aValue = (aValue || "").toLowerCase();
+          bValue = (bValue || "").toLowerCase();
+        } else if (typeof aValue === "string") {
+          aValue = aValue.toLowerCase();
+          bValue = (bValue || "").toLowerCase();
         }
-      }
-      const response = await getAllBrands(params);
-      const data = response.data || response;
 
-      // Add product count for each brand (mock data)
-      let brandsWithCount = data.map((brand) => ({
-        ...brand,
-        createdAt: brand.createdAt || new Date().toISOString(),
-        status: brand.status || "active",
-      }));
+        if (sortOrder === "desc") {
+          return bValue > aValue ? 1 : bValue < aValue ? -1 : 0;
+        } else {
+          return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        }
+      });
+    },
+    []
+  );
 
-      // Client-side filtering
-      if (params.search) {
-        const searchLower = params.search.toLowerCase();
-        const keywords = params.search
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .split(/\s+/);
+  // Fetch all brands with filters
+  const fetchBrands = useCallback(
+    async (params = {}) => {
+      try {
+        setLoading(true);
+        const isFetchingAll = Object.keys(params).length === 0;
+        
+        if (isFetchingAll) {
+          const cached = localStorage.getItem("brands");
+          if (cached) {
+            const cachedBrands = JSON.parse(cached);
+            const sortedBrands = sortData(
+              cachedBrands,
+              sortConfig.field,
+              sortConfig.order
+            );
+            setBrands(sortedBrands);
+            setPagination((prev) => ({
+              ...prev,
+              total: cachedBrands.length,
+            }));
+            setLoading(false);
+            return;
+          }
+        }
 
-        brandsWithCount = brandsWithCount.filter((brand) => {
-          const name =
-            brand.name
-              ?.toLowerCase()
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "") || "";
-          const description = brand.description?.toLowerCase() || "";
-          const status = brand.status?.toLowerCase() || "";
+        const response = await getAllBrands(params);
+        const data = response.data || response;
 
-          return keywords.every(
-            (word) =>
-              name.includes(word) ||
-              description.includes(word) ||
-              status.includes(word)
+        // Normalize data with proper date handling
+        let brandsWithCount = data.map((brand) => ({
+          ...brand,
+          createdAt: brand.createdAt || new Date().toISOString(),
+          updatedAt: brand.updatedAt || new Date().toISOString(),
+          status: brand.status || "active",
+        }));
+
+        // Merge with localStorage to preserve recently updated items
+        const existingData = JSON.parse(localStorage.getItem("brands") || "[]");
+        const mergedData = brandsWithCount.map(item => {
+          const existing = existingData.find(e => (e.brandId || e.id) === (item.brandId || item.id));
+          return existing ? { ...item, ...existing } : item;
+        });
+
+        // Apply filters to merged data
+        let filteredData = mergedData;
+
+        // Client-side filtering
+        if (params.search) {
+          const keywords = params.search
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .split(/\s+/);
+
+          filteredData = filteredData.filter((brand) => {
+            const name =
+              brand.name
+                ?.toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") || "";
+            const description = brand.description?.toLowerCase() || "";
+            const status = brand.status?.toLowerCase() || "";
+
+            return keywords.every(
+              (word) =>
+                name.includes(word) ||
+                description.includes(word) ||
+                status.includes(word)
+            );
+          });
+        }
+
+        if (params.status && params.status !== "all") {
+          filteredData = filteredData.filter(
+            (brand) => brand.status === params.status
           );
-        });
-      }
+        }
 
-      if (params.status && params.status !== "all") {
-        brandsWithCount = brandsWithCount.filter(
-          (brand) => brand.status === params.status
+        if (
+          params.dateRange &&
+          params.dateRange.start &&
+          params.dateRange.end
+        ) {
+          filteredData = filteredData.filter((brand) => {
+            if (!brand.createdAt) return false;
+            const brandDate = new Date(brand.createdAt);
+            const startDate = new Date(params.dateRange.start);
+            const endDate = new Date(params.dateRange.end);
+            endDate.setHours(23, 59, 59, 999);
+            return brandDate >= startDate && brandDate <= endDate;
+          });
+        }
+
+        const sortedData = sortData(
+          filteredData,
+          sortConfig.field,
+          sortConfig.order
         );
-      }
 
-      if (params.dateRange && params.dateRange.start && params.dateRange.end) {
-        brandsWithCount = brandsWithCount.filter((brand) => {
-          if (!brand.createdAt) return false;
-          const brandDate = new Date(brand.createdAt);
-          const startDate = new Date(params.dateRange.start);
-          const endDate = new Date(params.dateRange.end);
-          endDate.setHours(23, 59, 59, 999);
-          return brandDate >= startDate && brandDate <= endDate;
-        });
-      }
+        setBrands(sortedData);
+        setPagination((prev) => ({
+          ...prev,
+          total: sortedData.length,
+        }));
 
-      setBrands(brandsWithCount);
-      setPagination((prev) => ({
-        ...prev,
-        total: brandsWithCount.length,
-      }));
-
-      if (Object.keys(params).length === 0) {
-        localStorage.setItem("brands", JSON.stringify(brandsWithCount));
+        if (isFetchingAll) {
+          localStorage.setItem("brands", JSON.stringify(sortedData));
+        }
+      } catch (error) {
+        message.error("Lỗi khi tải danh sách nhãn hàng");
+        console.error("Error fetching brands:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      message.error("Lỗi khi tải danh sách nhãn hàng");
-      console.error("Error fetching brands:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [sortData, sortConfig]
+  );
 
   // Create brand - REFETCH AFTER SUCCESS
   const createBrandHandler = async (brandData) => {
@@ -121,15 +198,27 @@ const useBrand = () => {
         ...createdBrand,
         brandId: createdBrand.brandId || createdBrand.id,
         id: createdBrand.brandId || createdBrand.id,
-        created_at: createdBrand.joinDate || new Date().toISOString(),
+        createdAt: createdBrand.createdAt || new Date().toISOString(),
+        updatedAt: createdBrand.updatedAt || new Date().toISOString(),
       };
 
       message.success("Tạo nhãn hàng thành công!");
+      
+      // Mark as recently updated
+      const brandId = normalizedBrand.brandId || normalizedBrand.id;
+      recentlyUpdatedRef.current.add(brandId);
+      
       setBrands((prev) => {
         const newList = [normalizedBrand, ...prev];
-        localStorage.setItem("brands", JSON.stringify(newList));
-        return newList;
+        const sortedList = sortData(
+          newList,
+          sortConfig.field,
+          sortConfig.order
+        );
+        localStorage.setItem("brands", JSON.stringify(sortedList));
+        return sortedList;
       });
+
       setPagination((prev) => ({
         ...prev,
         total: prev.total + 1,
@@ -142,12 +231,11 @@ const useBrand = () => {
     }
   };
 
-  // Update brand - REFETCH AND MOVE TO TOP
+  // Update brand - Move to top after update
   const updateBrandHandler = async (id, brandData) => {
     try {
-      console.log("Updating brand:", { id, brandData }); // Debug log
+      console.log("Updating brand:", { id, brandData });
 
-      // Đảm bảo ID là number hoặc string, không phải object
       const brandId = typeof id === "object" ? id.brandId || id.id : id;
 
       if (!brandId) {
@@ -157,27 +245,31 @@ const useBrand = () => {
       const response = await updateBrand(brandId, brandData);
       message.success("Cập nhật nhãn hàng thành công!");
 
-      // Cập nhật brand trong danh sách và đưa lên đầu
+      // Find existing brand to preserve all data
+      const existingBrand = brands.find(b => 
+        (b.brandId || b.id) === brandId
+      );
+
+      // Create normalized updated item with preserved data
+      const normalizedItem = {
+        ...existingBrand, // Preserve existing data including createdAt
+        ...brandData, // Apply updates
+        brandId: brandId,
+        id: brandId,
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Mark as recently updated
+      recentlyUpdatedRef.current.add(brandId);
+
+      // Update brand and move to top
       setBrands((prevBrands) => {
-        const updatedBrands = prevBrands.filter(
+        // Remove the updated item from current position
+        const updatedList = prevBrands.filter(
           (brand) => (brand.brandId || brand.id) !== brandId
         );
-
-        // Tạo brand đã cập nhật với dữ liệu mới
-        const updatedBrand = {
-          ...prevBrands.find(
-            (brand) => (brand.brandId || brand.id) === brandId
-          ),
-          ...brandData,
-          brandId: brandId,
-          id: brandId,
-          joinDate:
-            prevBrands.find((brand) => (brand.brandId || brand.id) === brandId)
-              ?.joinDate || new Date().toISOString(),
-        };
-
-        // Đưa brand đã cập nhật lên đầu danh sách
-        const newList = [updatedBrand, ...updatedBrands];
+        // Add updated item to the beginning
+        const newList = [normalizedItem, ...updatedList];
         localStorage.setItem("brands", JSON.stringify(newList));
         return newList;
       });
@@ -198,8 +290,22 @@ const useBrand = () => {
 
       await deleteBrand(brandId);
       message.success("Xóa nhãn hàng thành công!");
-      localStorage.removeItem("brands");
-      fetchBrands();
+      
+      // Remove from recently updated
+      recentlyUpdatedRef.current.delete(brandId);
+      
+      setBrands((prev) => {
+        const filteredList = prev.filter(
+          (brand) => (brand.brandId || brand.id) !== brandId
+        );
+        localStorage.setItem("brands", JSON.stringify(filteredList));
+        return filteredList;
+      });
+
+      setPagination((prev) => ({
+        ...prev,
+        total: prev.total - 1,
+      }));
     } catch (error) {
       console.error("Delete brand error:", error);
       message.error("Lỗi khi xóa nhãn hàng");
@@ -210,14 +316,28 @@ const useBrand = () => {
   // Handle pagination change
   const handleTableChange = (newPagination, filters, sorter) => {
     setPagination(newPagination);
-    fetchBrands({
-      page: newPagination.current,
-      pageSize: newPagination.pageSize,
-      ...filters,
-      sortBy: sorter.field,
-      sortOrder: sorter.order,
-    });
+    if (sorter && sorter.field) {
+      const newSortConfig = {
+        field: sorter.field,
+        order: sorter.order || "desc",
+      };
+      setSortConfig(newSortConfig);
+
+      // Sắp xếp lại dữ liệu hiện tại
+      setBrands((prev) =>
+        sortData(prev, newSortConfig.field, newSortConfig.order)
+      );
+    }
   };
+
+  // Clear recently updated after some time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      recentlyUpdatedRef.current.clear();
+    }, 30000); // Clear after 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Initial load
   useEffect(() => {
@@ -228,6 +348,7 @@ const useBrand = () => {
     brands,
     loading,
     pagination,
+    sortConfig,
     fetchBrands,
     createBrand: createBrandHandler,
     updateBrand: updateBrandHandler,

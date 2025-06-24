@@ -20,20 +20,35 @@ export const getUserById = async (id) => {
 // Cập nhật thông tin user
 export const updateUser = async (id, userData) => {
   try {
-    const response = await api.put(USER_ENDPOINTS.BY_ID(id), {
-      userId: userData.userId,
+    // Clean và validate dữ liệu
+    const cleanData = {
       name: userData.name,
       email: userData.email,
       phone: userData.phone,
-      password: userData.password,
-      address: userData.address,
-      role: userData.role || 'customer', // Mặc định là 'customer' nếu không có role
-      status: userData.status || 'active',
+      role: userData.role || "customer",
+      status: userData.status || "active",
       gender: userData.gender,
-      resetToken: userData.resetToken,
+      address: userData.address || "",
+    };
+
+    // Chỉ thêm password nếu có và không rỗng
+    if (
+      userData.password &&
+      userData.password.trim() &&
+      userData.password.length >= 6
+    ) {
+      cleanData.password = userData.password;
+    }
+
+    console.log("Updating user with clean data:", {
+      ...cleanData,
+      password: cleanData.password ? "[HIDDEN]" : undefined,
     });
+
+    const response = await api.put(USER_ENDPOINTS.BY_ID(id), cleanData);
     return response;
   } catch (error) {
+    console.error("Update user error:", error);
     throw error;
   }
 };
@@ -49,32 +64,59 @@ export const deleteUser = async (id) => {
 };
 
 // Lấy danh sách tất cả users
-export const getAllUsers = async () => {
+export const getAllUsers = async (params = {}) => {
   try {
-    const response = await api.get(USER_ENDPOINTS.BASE);
+    const response = await api.get(USER_ENDPOINTS.BASE, { params });
     return response;
   } catch (error) {
     throw error;
   }
 };
 
-// Tạo user mới
+// Tạo user mới - FIX: đảm bảo password được gửi đúng format
 export const createUser = async (userData) => {
   try {
-    const response = await api.post(USER_ENDPOINTS.BASE, {
-      userId: userData.userId,
-      name: userData.name,
-      email: userData.email,
-      phone: userData.phone,
-      password: userData.password,
-      role: userData.role,
-      gender: userData.gender,
-      address: userData.address,
-      status: userData.status || 'active',
-      resetToken: userData.resetToken,
+    // Validate required fields
+    if (!userData.name || !userData.email || !userData.password) {
+      throw new Error("Thiếu thông tin bắt buộc: tên, email và mật khẩu");
+    }
+
+    // Validate password strength
+    if (userData.password.length < 6) {
+      throw new Error("Mật khẩu phải có ít nhất 6 ký tự");
+    }
+
+    // Clean và chuẩn hóa dữ liệu - KHÔNG hash password ở frontend
+    const cleanData = {
+      name: userData.name.trim(),
+      email: userData.email.trim().toLowerCase(),
+      phone: userData.phone?.trim() || "",
+      password: userData.password, // Gửi raw password để backend hash
+      role: userData.role || "customer",
+      gender: userData.gender || "M",
+      address: userData.address?.trim() || "",
+      status: userData.status || "active",
+    };
+
+    console.log("Creating user with clean data:", {
+      ...cleanData,
+      password: "[HIDDEN]", // Ẩn password trong log
     });
+
+    const response = await api.post(USER_ENDPOINTS.BASE, cleanData);
     return response;
   } catch (error) {
+    console.error("Create user error:", error);
+
+    // Improve error handling
+    if (error.response?.data) {
+      throw new Error(
+        error.response.data.message ||
+          error.response.data.error ||
+          "Lỗi không xác định từ server"
+      );
+    }
+
     throw error;
   }
 };
@@ -83,7 +125,7 @@ export const changePassword = async (id, passwordData) => {
   try {
     const response = await api.post(USER_ENDPOINTS.CHANGE_PASSWORD(id), {
       currentPassword: passwordData.currentPassword,
-      newPassword: passwordData.newPassword
+      newPassword: passwordData.newPassword,
     });
     return response;
   } catch (error) {

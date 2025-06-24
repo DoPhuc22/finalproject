@@ -50,9 +50,6 @@ const Footer = () => {
                 <li className="mb-2">
                   <Link to="/products?category=classic" className="text-white/80 hover:text-white hover:no-underline">Đồng hồ cổ điển</Link>
                 </li>
-                <li className="mb-2">
-                  <Link to="/products?sale=true" className="text-white/80 hover:text-white hover:no-underline">Khuyến mãi</Link>
-                </li>
               </ul>
             </Col>
 

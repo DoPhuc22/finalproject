@@ -55,6 +55,7 @@ const Sidebar = ({ collapsed, onCollapse }) => {
       key: "/admin/orders",
       icon: <ShoppingCartOutlined />,
       label: <Link to="/admin/orders">Đơn hàng</Link>,
+      disabled: true
     },
     {
       key: "/admin/customers",

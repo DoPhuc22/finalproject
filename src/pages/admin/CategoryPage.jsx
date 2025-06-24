@@ -106,11 +106,34 @@ const CategoryPage = () => {
                     <Statistic
                       title="Ngày tạo"
                       value={
-                        category.createdAt
+                        category.createdAt // Fix: sử dụng đúng field name
                           ? new Date(category.createdAt).toLocaleDateString(
                               "vi-VN"
                             )
-                          : "-"
+                          : category.created_at
+                            ? new Date(category.created_at).toLocaleDateString(
+                                "vi-VN"
+                              )
+                            : "-"
+                      }
+                      formatter={(value) => (
+                        <span className="text-gray-600">{value}</span>
+                      )}
+                    />
+                  </Col>
+                  <Col span={8}>
+                    <Statistic
+                      title="Cập nhật lần cuối"
+                      value={
+                        category.updatedAt
+                          ? new Date(category.updatedAt).toLocaleDateString(
+                              "vi-VN"
+                            )
+                          : category.updated_at
+                            ? new Date(category.updated_at).toLocaleDateString(
+                                "vi-VN"
+                              )
+                            : "-"
                       }
                       formatter={(value) => (
                         <span className="text-gray-600">{value}</span>

@@ -79,8 +79,8 @@ const ProductForm = ({
       } else {
         // Tạo mới - đặt giá trị mặc định
         form.setFieldsValue({
-          active: false,
-          status: false,
+          active: true,
+          status: true,
         });
         setImages([]);
       }
@@ -474,11 +474,12 @@ const ProductForm = ({
                     </Form.Item>
                   </Col>
 
-                  <Col xs={24} md={12}>
+                  <Col xs={24} md={8}>
                     <Form.Item
                       label="Trạng thái"
                       name="status"
                       valuePropName="checked"
+                      className="hidden"
                     >
                       <Switch
                         checkedChildren="Còn hàng"

@@ -34,7 +34,7 @@ const ProfilePage = () => {
         
         // Tải profile trực tiếp từ API để đảm bảo dữ liệu mới nhất
         try {
-          const profileData = await getProfile(true); // Force refresh để lấy dữ liệu mới nhất
+          const profileData = await getProfile(true);
           
           if (!profileData || !Object.keys(profileData).length) {
             throw new Error("Không tìm thấy thông tin người dùng");
@@ -48,7 +48,6 @@ const ProfilePage = () => {
             userData.id = userData.userId || userData._id || Date.now().toString();
           }
           
-          // Lưu vào state và localStorage
           setCurrentUser(userData);
           localStorage.setItem('user', JSON.stringify(userData));
           setLoading(false);
@@ -125,7 +124,7 @@ const ProfilePage = () => {
         <Title level={3} className="mb-6">Tài khoản của tôi</Title>
         
         <Layout className="bg-transparent">
-          <div className="flex flex-col md:flex-row">
+          <div className="flex flex-col md:flex-row ">
             <ProfileSidebar user={currentUser} location={location} />
             
             <Content className="bg-white shadow-sm rounded-lg p-6 w-full">

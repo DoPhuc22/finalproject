@@ -43,6 +43,7 @@ const AccountInfo = ({ user }) => {
           email: user.email || "",
           phone: user.phone || "",
           gender: user.gender || "M",
+          address: user.address || "",
         });
 
         setLoading(false);
@@ -92,6 +93,7 @@ const AccountInfo = ({ user }) => {
           name: values.name,
           phone: values.phone,
           gender: values.gender,
+          address: values.address,
         };
         localStorage.setItem("user", JSON.stringify(updatedUser));
 
@@ -118,6 +120,7 @@ const AccountInfo = ({ user }) => {
             name: values.name,
             phone: values.phone,
             gender: values.gender,
+            address: values.address,
           };
           localStorage.setItem("user", JSON.stringify(updatedUser));
 
@@ -137,6 +140,7 @@ const AccountInfo = ({ user }) => {
             name: values.name,
             phone: values.phone,
             gender: values.gender,
+            address: values.address,
           };
           localStorage.setItem("user", JSON.stringify(updatedUser));
 
@@ -220,6 +224,17 @@ const AccountInfo = ({ user }) => {
             <Input
               prefix={<PhoneOutlined className="text-gray-400" />}
               placeholder="Nhập số điện thoại"
+              className="rounded-lg"
+            />
+          </Form.Item>
+          
+          <Form.Item
+            name="address"
+            label="Địa chỉ"
+          >
+            <Input
+              prefix={<UserOutlined className="text-gray-400" />}
+              placeholder="Nhập địa chỉ"
               className="rounded-lg"
             />
           </Form.Item>

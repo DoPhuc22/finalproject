@@ -58,6 +58,7 @@ const AttributeTypeTable = ({
       dataIndex: "attrTypeId",
       key: "attrTypeId",
       width: 80,
+      align: "center",
       render: (id, record) => (
         <Text code className="text-orange-600 text-lg">
           #{record.attrTypeId || record.id}
@@ -123,7 +124,6 @@ const AttributeTypeTable = ({
       dataIndex: "createdAt",
       key: "createdAt",
       width: 120,
-      sorter: true,
       align: "center",
       render: (date) => (
         <div className="text-center text-sm">
@@ -136,6 +136,7 @@ const AttributeTypeTable = ({
       key: "actions",
       width: 150,
       fixed: "right",
+      align: "center",
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Xem chi tiết">

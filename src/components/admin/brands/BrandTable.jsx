@@ -131,8 +131,7 @@ const BrandTable = ({
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 120,
-      sorter: true,
+      width: 120,    
       align: "center",
       render: (date) => (
         <div className="text-center text-sm">

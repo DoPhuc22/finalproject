@@ -106,7 +106,7 @@ const ProductPage = () => {
                   <Col span={12}>
                     <Statistic
                       title="Tồn kho"
-                      value={product.stockQuantity || 0}
+                      value={product.remainQuantity || 0}
                       suffix="sản phẩm"
                     />
                   </Col>
@@ -166,8 +166,6 @@ const ProductPage = () => {
 
       setShowForm(false);
       setEditingProduct(null);
-      // Đảm bảo load lại dữ liệu sau khi cập nhật
-      fetchProducts();
     } catch (error) {
       console.error("Error submitting form:", error);
       message.error("Có lỗi xảy ra khi lưu sản phẩm: " + (error.message || ""));

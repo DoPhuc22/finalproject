@@ -168,17 +168,6 @@ const Header = () => {
       ),
     },
     {
-      key: "/sale",
-      label: (
-        <Link
-          to="/products?sale=true"
-          className={`text-red-500 font-semibold hover:no-underline ${scrolled ? "" : "text-white"}`}
-        >
-          SALE
-        </Link>
-      ),
-    },
-    {
       key: "/contact",
       label: (
         <Link
@@ -211,8 +200,6 @@ const Header = () => {
 
     // Kiểm tra xem pathname có chứa '/products' không
     if (pathname.includes("/products")) {
-      // Nếu URL có chứa 'sale=true' thì đánh dấu menu SALE
-      if (location.search.includes("sale=true")) return "/sale";
       // Nếu URL có chứa 'filter=brands' thì đánh dấu menu Thương hiệu
       if (location.search.includes("filter=brands")) return "/products";
       // Nếu là trang products khác thì đánh dấu menu Đồng hồ
@@ -522,7 +509,7 @@ const Header = () => {
                   {item.key === "/"
                     ? "Trang chủ"
                     : item.key === "/products"
-                      ? "Thương hiệu"
+                      ? "Đồng hồ"
                       : item.key === "/about"
                         ? "Giới thiệu"
                         : item.key === "/contact"

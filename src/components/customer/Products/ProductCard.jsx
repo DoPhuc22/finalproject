@@ -22,11 +22,12 @@ const ProductCard = ({ product }) => {
 
   const getBrandTag = () => {
     const brandColors = {
-      Omega: "blue",
+      ricons: "blue",
       Casio: "green",
       Apple: "cyan",
       Seiko: "purple",
       Rolex: "gold",
+      default: "red"
     };
 
     const brandName = typeof product.brand === 'object' 
@@ -97,7 +98,10 @@ const ProductCard = ({ product }) => {
             </Link>
           }
           description={
-            <div className="mt-2">
+            <div>
+              <p className="text-gray-500 mb-2 text-sm line-clamp-2">
+                {product.description || "Không có mô tả"}
+              </p>
               <div className="flex items-center mb-2">
                 {getBrandTag()}
                 {getStockStatus()}

@@ -32,6 +32,7 @@ const CategoryTable = ({
       dataIndex: "categoryId",
       key: "categoryId",
       width: 80,
+      align: "center",
       render: (id, record) => (
         <Text code className="text-blue-600 text-lg">
           #{record.categoryId || record.id}
@@ -61,7 +62,6 @@ const CategoryTable = ({
       dataIndex: "createdAt",
       key: "createdAt",
       width: 120,
-      sorter: true,
       align: "center",
       render: (date) => (
         <div className="text-center text-sm">

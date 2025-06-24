@@ -74,6 +74,7 @@ const CustomerTable = ({
       dataIndex: "userId",
       key: "userId",
       width: 80,
+      align: "center",
       render: (id, record) => (
         <Text code className="text-blue-600 text-lg">
           #{record.userId || record.id}
@@ -205,8 +206,7 @@ const CustomerTable = ({
       title: "Ngày tham gia",
       dataIndex: "created_at",
       key: "created_at",
-      width: 120,
-      sorter: true,
+      width: 120,      
       align: "center",
       render: (_, record) => (
         <div className="text-center text-sm">
@@ -228,6 +228,7 @@ const CustomerTable = ({
       key: "actions",
       width: 150,
       fixed: "right",
+      align: "center",
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Xem chi tiết">

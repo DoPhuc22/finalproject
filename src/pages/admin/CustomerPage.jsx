@@ -136,8 +136,8 @@ const CustomerPage = () => {
                     <div>
                       <span className="text-gray-500">Ngày tham gia:</span>
                       <span className="ml-2 font-medium">
-                        {customer.joinDate
-                          ? new Date(customer.joinDate).toLocaleDateString(
+                        {customer.created_at
+                          ? new Date(customer.created_at).toLocaleDateString(
                               "vi-VN"
                             )
                           : "-"}

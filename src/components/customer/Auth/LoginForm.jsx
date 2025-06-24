@@ -28,7 +28,7 @@ const LoginForm = () => {
 
       // Gọi API đăng nhập
       const response = await login({
-        email: values.email,
+        email: values.email.trim().toLowerCase(),
         password: values.password,
       });
 
@@ -95,7 +95,8 @@ const LoginForm = () => {
       console.error("Login error:", error);
 
       // Xử lý các loại lỗi khác nhau
-      let errorMsg = "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.";
+      let errorMsg =
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.";
 
       // Phân tích lỗi để hiển thị thông báo phù hợp
       const errorData = error?.response?.data;
@@ -106,7 +107,8 @@ const LoginForm = () => {
       if (errorStatus === 401) {
         errorMsg = "Email hoặc mật khẩu không chính xác. Vui lòng thử lại.";
       } else if (errorStatus === 403) {
-        errorMsg = "Tài khoản không có quyền truy cập. Vui lòng liên hệ quản trị viên.";
+        errorMsg =
+          "Tài khoản không có quyền truy cập. Vui lòng liên hệ quản trị viên.";
       } else if (errorStatus === 404) {
         errorMsg = "Tài khoản không tồn tại. Vui lòng kiểm tra lại email.";
       } else if (errorStatus === 429) {
@@ -116,21 +118,32 @@ const LoginForm = () => {
       }
 
       // Kiểm tra nội dung lỗi
-      if (errorString === "ACCOUNT_INACTIVE" || 
-          errorString.includes("inactive") || 
-          errorString.includes("blocked") ||
-          (errorData && (errorData.includes("inactive") || errorData.includes("blocked")))) {
-        errorMsg = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
-      } else if (errorString.includes("password") || 
-                (errorData && errorData.includes("password"))) {
+      if (
+        errorString === "ACCOUNT_INACTIVE" ||
+        errorString.includes("inactive") ||
+        errorString.includes("blocked") ||
+        (errorData &&
+          (errorData.includes("inactive") || errorData.includes("blocked")))
+      ) {
+        errorMsg =
+          "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+      } else if (
+        errorString.includes("password") ||
+        (errorData && errorData.includes("password"))
+      ) {
         errorMsg = "Mật khẩu không chính xác. Vui lòng thử lại.";
-      } else if (errorString.includes("email") || 
-                (errorData && errorData.includes("email"))) {
+      } else if (
+        errorString.includes("email") ||
+        (errorData && errorData.includes("email"))
+      ) {
         errorMsg = "Email không chính xác hoặc không tồn tại.";
-      } else if (errorString.includes("network") || 
-                errorString.includes("timeout") ||
-                errorString.includes("Network Error")) {
-        errorMsg = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.";
+      } else if (
+        errorString.includes("network") ||
+        errorString.includes("timeout") ||
+        errorString.includes("Network Error")
+      ) {
+        errorMsg =
+          "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.";
       }
 
       // Hiển thị thông báo lỗi

@@ -2,7 +2,6 @@ import api from "../utils/request";
 
 // API endpoints cho attribute values - chỉ sử dụng product-based endpoints
 const ATTRIBUTE_ENDPOINTS = {
-  // Product-specific attribute value endpoints
   BY_PRODUCT: (productId) => `/products/${productId}/attribute-values`,
   BY_PRODUCT_AND_ID: (productId, id) =>
     `/products/${productId}/attribute-values/${id}`,
@@ -93,14 +92,11 @@ export const getAttributeValuesByProduct = async (productId, params = {}) => {
   }
 };
 
-// Thay thế getAllAttributeValues - không gọi API mà chỉ return empty data
-// vì endpoint này không tồn tại
 export const getAllAttributeValues = async (params = {}) => {
   console.warn(
     "getAllAttributeValues: API endpoint not available, using localStorage only"
   );
 
-  // Trả về empty data để useAttributeValue hook xử lý từ localStorage
   return { data: [] };
 };
 

@@ -26,12 +26,10 @@ const useAttributeValue = () => {
   });
 
   const isFetchingAllRef = useRef(false);
-  // Fetch all attribute values with filters
+
   const fetchAttributeValues = useCallback(async (params = {}) => {
     try {
       setLoading(true);
-
-      // Kiểm tra params có rỗng hay không để xác định là getAllAttributeValues
       const isFetchingAll = Object.keys(params).length === 0;
       isFetchingAllRef.current = isFetchingAll;
 
@@ -49,19 +47,13 @@ const useAttributeValue = () => {
           return;
         }
       }
-
-      // Thay vì gọi API với filter params, luôn lấy tất cả data từ localStorage hoặc cache
-      // sau đó filter phía client
       let data = [];
 
       try {
-        // Thử lấy từ localStorage trước
         const cachedData = localStorage.getItem("attributeValues");
         if (cachedData) {
           data = JSON.parse(cachedData);
         } else {
-          // Nếu không có cache, thử fetch từ API tổng quát (không có params)
-          // Tuy nhiên vì API endpoint không support, ta sẽ dùng localStorage
           console.warn("No cached data available, using empty array");
           data = [];
         }
