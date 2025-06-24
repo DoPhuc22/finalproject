@@ -206,11 +206,17 @@ const useCart = () => {
       setLoading(true);
       const userId = currentUser.userId || currentUser.id;
       
-      const updateData = {
-        quantity: newQuantity
-      };
+      const item = cartItems.find(i => i.itemId === itemId);
+      if (!item) throw new Error('Item not found in cart');
 
-      await updateCartItem(userId, itemId, updateData);
+      const updateData = {
+        itemId: item.itemId,
+        productId: item.productId,
+        quantity: newQuantity,
+      };
+      
+
+      await updateCartItem(userId, updateData);
       
       // Update local state immediately for better UX
       setCartItems(prev => 

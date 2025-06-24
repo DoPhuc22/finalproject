@@ -74,11 +74,9 @@ export const removeCartItem = async (userId, itemId) => {
 };
 
 // Cập nhật số lượng item trong giỏ hàng
-export const updateCartItem = async (userId, itemId, cartItemData) => {
+export const updateCartItem = async (userId, cartItemData) => {
   try {
-    const response = await api.put(CART_ENDPOINTS.ITEM(userId, itemId), {
-      quantity: cartItemData.quantity
-    });
+    const response = await api.put(CART_ENDPOINTS.BASE(userId), cartItemData);
     return response;
   } catch (error) {
     throw error;
