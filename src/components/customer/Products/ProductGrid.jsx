@@ -1,36 +1,41 @@
-// components/customer/Products/ProductGrid.jsx
-import React from "react";
-import { Row, Col, Pagination } from "antd";
-import ProductCard from "./ProductCard";
+import React from 'react';
+import { Row, Col, Pagination } from 'antd';
+import ProductCard from './ProductCard';
 
-const ProductGrid = ({
-  products = [],
-  pagination,
-  onPageChange = () => {},
+const ProductGrid = ({ 
+  products, 
+  pagination, 
+  onPageChange, 
+  onAddToCart, 
+  cartLoading 
 }) => {
   return (
     <div className="product-grid">
       <Row gutter={[24, 24]}>
         {products.map((product) => (
-          <Col xs={24} sm={12} lg={8} key={product.id || product.productId}>
-            <ProductCard product={product} />
+          <Col xs={24} sm={12} md={8} lg={8} xl={6} key={product.id || product.productId}>
+            <ProductCard 
+              product={product} 
+              onAddToCart={onAddToCart}
+              cartLoading={cartLoading}
+            />
           </Col>
         ))}
       </Row>
 
       {pagination && pagination.total > 0 && (
-        <div className="flex justify-center mt-8">
+        <div className="text-center mt-8">
           <Pagination
             current={pagination.current}
-            total={pagination.total}
             pageSize={pagination.pageSize}
-            pageSizeOptions={["9", "18", "27", "36"]} // Các tùy chọn size phù hợp với layout 3 cột
+            total={pagination.total}
+            onChange={onPageChange}
             showSizeChanger
+            showQuickJumper
             showTotal={(total, range) =>
               `${range[0]}-${range[1]} của ${total} sản phẩm`
             }
-            onChange={(page, pageSize) => onPageChange(page, pageSize)}
-            showQuickJumper
+            pageSizeOptions={['6', '12', '24', '48']}
           />
         </div>
       )}

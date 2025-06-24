@@ -1,4 +1,3 @@
-// pages/customer/ProductsPage.jsx
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Row,
@@ -28,6 +27,7 @@ import {
 import ProductGrid from "../../components/customer/Products/ProductGrid";
 import { Link } from "react-router-dom";
 import useProductsData from "../../hooks/useProductsData";
+import useCart from "../../hooks/useCart"; // Import useCart hook
 import { getAllCategories } from "../../services/categories";
 import { getAllBrands } from "../../services/brands";
 
@@ -60,6 +60,9 @@ const ProductsPage = () => {
     handlePaginationChange,
   } = useProductsData();
 
+  // Get cart functionality
+  const { addItemToCart, loading: cartLoading } = useCart();
+
   // Fetch categories and brands
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -84,6 +87,17 @@ const ProductsPage = () => {
 
     fetchMetadata();
   }, []);
+
+  // Handle add to cart
+  const handleAddToCart = async (product, quantity = 1) => {
+    try {
+      const success = await addItemToCart(product, quantity);
+      return success;
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      return false;
+    }
+  };
 
   // Apply filters to all products
   const getFilteredProducts = useCallback(() => {
@@ -200,7 +214,6 @@ const ProductsPage = () => {
     setSortBy("featured");
 
     updateFilters({});
-    fetchProducts();
   };
 
   return (
@@ -408,6 +421,8 @@ const ProductsPage = () => {
                   total: total,
                 }}
                 onPageChange={onPageChange}
+                onAddToCart={handleAddToCart}
+                cartLoading={cartLoading}
               />
             </>
           )}

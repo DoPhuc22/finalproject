@@ -8,7 +8,7 @@ const useProductsData = () => {
   const [filters, setFilters] = useState({});
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 9,
+    pageSize: 6,
     total: 0
   });
 

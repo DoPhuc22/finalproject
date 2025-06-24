@@ -1,36 +1,198 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import CartItem from '../../components/customer/Cart/CartItem';
+import React, { useEffect } from 'react';
+import { Row, Col, Typography, Button, Empty, Spin, Breadcrumb, Space, Popconfirm } from 'antd';
 import { Link } from 'react-router-dom';
+import { HomeOutlined, ShoppingCartOutlined, DeleteOutlined } from '@ant-design/icons';
+import CartItem from '../../components/customer/Cart/CartItem';
+import CartSummary from '../../components/customer/Cart/CartSummary';
+import useCart from '../../hooks/useCart';
+
+const { Title, Text } = Typography;
 
 const CartPage = () => {
-  const cartItems = useSelector((state) => state.cart.items);
-  const totalAmount = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const {
+    cartItems,
+    loading,
+    subtotal,
+    shippingFee,
+    total,
+    totalQuantity,
+    updateItemQuantity,
+    removeItemFromCart,
+    clearEntireCart,
+    fetchCart,
+    isAuthenticated,
+    currentUser
+  } = useCart();
+
+  // Debug logging
+  useEffect(() => {
+    console.log('CartPage - Debug info:', {
+      isAuthenticated,
+      currentUser,
+      cartItems,
+      totalQuantity,
+      loading
+    });
+  }, [isAuthenticated, currentUser, cartItems, totalQuantity, loading]);
+
+  useEffect(() => {
+    // Refresh cart data when component mounts
+    if (isAuthenticated && currentUser) {
+      console.log('CartPage - Fetching cart data...');
+      fetchCart();
+    }
+  }, [isAuthenticated, currentUser, fetchCart]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <div>
+                <Text className="text-lg mb-4 block">
+                  Vui lòng đăng nhập để xem giỏ hàng
+                </Text>
+                <Link to="/auth">
+                  <Button type="primary" size="large">
+                    Đăng nhập
+                  </Button>
+                </Link>
+              </div>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && cartItems.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[300px]">
+          <Spin size="large" tip="Đang tải giỏ hàng..." />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Giỏ Hàng</h1>
-      {cartItems.length === 0 ? (
-        <div className="text-center">
-          <p className="text-lg">Giỏ hàng của bạn đang trống.</p>
-          <Link to="/products" className="text-verdigris-500 hover:text-verdigris-600 hover:no-underline">
-            Tiếp tục mua sắm
+    <div className="container mx-auto px-4 py-6">
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-6">
+        <Breadcrumb.Item>
+          <Link to="/" className="hover:no-underline">
+            <HomeOutlined className="mr-1" />
+            Trang chủ
           </Link>
+        </Breadcrumb.Item>
+        <Breadcrumb.Item>
+          <ShoppingCartOutlined className="mr-1" />
+          Giỏ hàng
+        </Breadcrumb.Item>
+      </Breadcrumb>
+
+      {/* Debug info - có thể xóa sau khi fix */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded">
+          <Text strong>Debug Info:</Text>
+          <br />
+          <Text>Auth: {isAuthenticated ? 'Yes' : 'No'}</Text>
+          <br />
+          <Text>User: {currentUser ? currentUser.name || currentUser.email : 'None'}</Text>
+          <br />
+          <Text>Cart Items: {cartItems.length}</Text>
+          <br />
+          <Text>Loading: {loading ? 'Yes' : 'No'}</Text>
+        </div>
+      )}
+
+      {/* Page Header */}
+      <div className="flex justify-between items-center mb-6">
+        <Title level={2} className="mb-0">
+          Giỏ hàng ({totalQuantity} sản phẩm)
+        </Title>
+        
+        {cartItems.length > 0 && (
+          <Popconfirm
+            title="Xóa toàn bộ giỏ hàng"
+            description="Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng?"
+            onConfirm={clearEntireCart}
+            okText="Xóa tất cả"
+            cancelText="Hủy"
+            okType="danger"
+          >
+            <Button 
+              danger 
+              icon={<DeleteOutlined />}
+              loading={loading}
+            >
+              Xóa tất cả
+            </Button>
+          </Popconfirm>
+        )}
+      </div>
+
+      {cartItems.length === 0 ? (
+        /* Empty Cart */
+        <div className="text-center py-12">
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <div>
+                <Text className="text-lg mb-4 block">
+                  Giỏ hàng của bạn đang trống
+                </Text>
+                <Text type="secondary" className="mb-6 block">
+                  Hãy khám phá các sản phẩm tuyệt vời của chúng tôi!
+                </Text>
+                <Link to="/products">
+                  <Button 
+                    type="primary" 
+                    size="large"
+                    icon={<ShoppingCartOutlined />}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Bắt đầu mua sắm
+                  </Button>
+                </Link>
+              </div>
+            }
+          />
         </div>
       ) : (
-        <>
-          <div className="cart-items">
-            {cartItems.map((item) => (
-              <CartItem key={item.id} item={item} />
-            ))}
-          </div>
-          <div className="mt-4">
-            <h2 className="text-xl font-semibold">Tổng cộng: {totalAmount.toLocaleString("de-DE")} VNĐ</h2>
-            <Link to="/checkout" className="mt-4 inline-block bg-verdigris-500 text-white py-2 px-4 rounded hover:bg-verdigris-600 hover:no-underline">
-              Thanh toán
-            </Link>
-          </div>
-        </>
+        /* Cart Content */
+        <Row gutter={[24, 24]}>
+          {/* Cart Items */}
+          <Col xs={24} lg={16}>
+            <div className="space-y-4">
+              {cartItems.map((item) => {
+                console.log('Rendering cart item:', item); // Debug log
+                return (
+                  <CartItem
+                    key={item.itemId || item.id}
+                    item={item}
+                    onUpdateQuantity={updateItemQuantity}
+                    onRemove={removeItemFromCart}
+                    loading={loading}
+                  />
+                );
+              })}
+            </div>
+          </Col>
+
+          {/* Cart Summary */}
+          <Col xs={24} lg={8}>
+            <CartSummary
+              subtotal={subtotal}
+              shippingFee={shippingFee}
+              total={total}
+              itemCount={totalQuantity}
+              loading={loading}
+            />
+          </Col>
+        </Row>
       )}
     </div>
   );

@@ -92,12 +92,19 @@ export const getAttributeValuesByProduct = async (productId, params = {}) => {
   }
 };
 
-export const getAllAttributeValues = async (params = {}) => {
-  console.warn(
-    "getAllAttributeValues: API endpoint not available, using localStorage only"
-  );
+export const getAllAttributeValues = async () => {
+  try {
+    const response = await api.get(ATTRIBUTE_ENDPOINTS.ALL_ATTRIBUTE_VALUES());
+    return response;
+  } catch (error) {
+    console.error("Get all attribute values API error:", error);
+    throw error;
+  }
+  // console.warn(
+  //   "getAllAttributeValues: API endpoint not available, using localStorage only"
+  // );
 
-  return { data: [] };
+  // return { data: [] };
 };
 
 // Tạo attribute value mới

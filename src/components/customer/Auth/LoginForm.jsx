@@ -28,7 +28,7 @@ const LoginForm = () => {
 
       // Gọi API đăng nhập
       const response = await login({
-        email: values.email.trim().toLowerCase(),
+        email: values.email.trim(),
         password: values.password,
       });
 
@@ -84,12 +84,12 @@ const LoginForm = () => {
       const userRole = userData?.role;
 
       // Chuyển hướng về trang trước đó nếu có
-      const { from } = location.state || { from: { pathname: "/" } };
+      const { from } = location.state || { from: { pathname: "/profile" } };
 
       if (userRole === "admin") {
         navigate("/admin/dashboard");
       } else {
-        navigate(from.pathname || "/");
+        navigate(from.pathname || "/profile");
       }
     } catch (error) {
       console.error("Login error:", error);

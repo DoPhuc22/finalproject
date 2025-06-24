@@ -31,6 +31,7 @@ import {
   getCurrentUser,
   isAuthenticated,
 } from "../../../services/auth";
+import CartIcon from "../Cart/CartIcon";
 
 const { Header: AntHeader } = Layout;
 const { Search } = Input;
@@ -304,14 +305,23 @@ const Header = () => {
       }
     };
 
+    const handleUserLoggedIn = (event) => {
+      if (event.detail) {
+        setAuthenticated(true);
+        setCurrentUser(event.detail);
+      }
+    };
+
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("userLoggedOut", handleUserLoggedOut);
     window.addEventListener("userUpdated", handleUserUpdated);
+    window.addEventListener("userLoggedIn", handleUserLoggedIn);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("userLoggedOut", handleUserLoggedOut);
       window.removeEventListener("userUpdated", handleUserUpdated);
+      window.removeEventListener("userLoggedIn", handleUserLoggedIn);
     };
   }, []);
 
@@ -433,7 +443,8 @@ const Header = () => {
           </Dropdown>
 
           {/* Cart */}
-          <Link to="/cart" className="hover:no-underline">
+          <CartIcon/>
+          {/* <Link to="/cart" className="hover:no-underline">
             <Badge count={cartItems.length} size="small">
               <Button
                 type="text"
@@ -442,7 +453,7 @@ const Header = () => {
                 style={{ color: scrolled ? "#1f2937" : "#ffffff" }}
               />
             </Badge>
-          </Link>
+          </Link> */}
         </div>
       </AntHeader>
 
