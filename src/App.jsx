@@ -3,6 +3,9 @@ import { ConfigProvider } from "antd";
 import { useEffect } from "react";
 import { getCurrentUser } from "./services/auth";
 
+// LAYOUTS
+import CustomerLayout from "./layouts/CustomerLayout";
+
 // ADMIN PAGES
 import AdminLoginPage from "./pages/admin/LoginPage";
 import AdminDashboardPage from "./pages/admin/DashboardPage";
@@ -11,6 +14,8 @@ import CategoryPage from "./pages/admin/CategoryPage";
 import BrandPage from "./pages/admin/BrandPage";
 import CustomerPage from "./pages/admin/CustomerPage";
 import AttributeTypePage from "./pages/admin/AttributeTypePage";
+import OrderPage from "./pages/admin/OrderPage";
+import AttributeValuePage from "./pages/admin/AttributeValuePage";
 
 // CUSTOMER PAGES
 import HomePage from "./pages/customer/HomePage";
@@ -21,10 +26,11 @@ import CheckoutForm from "./components/customer/Cart/CheckoutForm";
 import AuthPage from "./pages/customer/AuthPage";
 import ContactPage from "./pages/customer/ContactPage";
 import ProfilePage from "./pages/customer/ProfilePage";
+import VNPayCallback from "./pages/customer/VNPayCallback";
+import OrderSuccess from "./pages/customer/OrderSuccess";
+import VNPayRedirect from "./pages/customer/VNPayRedirect";
 
-// LAYOUTS
-import CustomerLayout from "./layouts/CustomerLayout";
-import AttributeValuePage from "./pages/admin/AttributeValuePage";
+
 
 function App() {
   // Customize Ant Design theme
@@ -62,6 +68,7 @@ function App() {
           <Route path="/admin/categories" element={<CategoryPage />} />
           <Route path="/admin/brands" element={<BrandPage />} />
           <Route path="/admin/customers" element={<CustomerPage />} />
+          <Route path="/admin/orders" element={<OrderPage />} />
           <Route path="/admin/attribute_types" element={<AttributeTypePage />} />
           <Route path="/admin/attribute_values" element={<AttributeValuePage />} />
 
@@ -75,6 +82,9 @@ function App() {
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/profile/*" element={<ProfilePage />} />
+            <Route path="/vnpay-callback" element={<VNPayCallback />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/vnpay-redirect" element={<VNPayRedirect />} />
           </Route>
         </Routes>
       </Router>

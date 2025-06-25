@@ -47,14 +47,12 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const cartItems = useSelector((state) => state.cart.items);
   const searchInputRef = useRef(null);
 
   // Kiểm tra trạng thái đăng nhập khi component mount và khi location thay đổi
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // Sử dụng phiên bản async của isAuthenticated
         const isAuth = await isAuthenticated();
         setAuthenticated(isAuth);
 
@@ -78,35 +76,26 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       setLogoutLoading(true);
-      // Gọi API logout
       await logoutAPI();
 
       // Xóa thông tin user từ state
       setCurrentUser(null);
       setAuthenticated(false);
 
-      // Hiển thị thông báo thành công
       message.success("Đăng xuất thành công!");
-
-      // Đóng mobile drawer nếu đang mở
       setVisible(false);
-
-      // Chuyển hướng về trang chủ
       navigate("/");
 
-      // Tạo sự kiện tùy chỉnh để thông báo đăng xuất
       const event = new Event("userLoggedOut");
       window.dispatchEvent(event);
     } catch (error) {
       console.error("Logout error:", error);
-      // Dù có lỗi API vẫn logout local state
       setCurrentUser(null);
       setAuthenticated(false);
       message.info("Đã đăng xuất");
       setVisible(false);
       navigate("/");
 
-      // Vẫn tạo sự kiện tùy chỉnh dù có lỗi
       const event = new Event("userLoggedOut");
       window.dispatchEvent(event);
     } finally {
@@ -176,17 +165,6 @@ const Header = () => {
           className={`hover:no-underline ${scrolled ? "text-gray-800" : "text-white"}`}
         >
           Liên hệ
-        </Link>
-      ),
-    },
-    {
-      key: "/admin/dashboard",
-      label: (
-        <Link
-          to="/admin/dashboard"
-          className={`hover:no-underline ${scrolled ? "text-gray-800" : "text-white"}`}
-        >
-          Link sang trang quản trị (để tạm)
         </Link>
       ),
     },

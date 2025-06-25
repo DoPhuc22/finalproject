@@ -13,11 +13,8 @@ const PromoSection = () => {
           Đăng ký nhận thông tin để không bỏ lỡ những ưu đãi độc quyền và bộ sưu tập mới nhất từ Watch Store
         </Paragraph>
         <Space direction="horizontal" size="large">
-          <Button size="large" type="default" ghost>
-            <Link to="/products?sale=true" className='hover:no-underline'>Xem khuyến mãi</Link>
-          </Button>
           <Button size="large" type="primary" className="bg-white text-blue-600 border-white hover:bg-gray-100">
-            <Link to="/register" className='hover:no-underline'>Đăng ký ngay</Link>
+            <Link to="/auth" className='hover:no-underline'>Đăng ký ngay</Link>
           </Button>
         </Space>
       </div>

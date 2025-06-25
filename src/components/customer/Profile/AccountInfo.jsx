@@ -66,7 +66,6 @@ const AccountInfo = ({ user }) => {
         return;
       }
 
-      // Đảm bảo có user.id
       const userId = user.id || user.userId || user._id;
 
       if (!userId) {
@@ -181,9 +180,6 @@ const AccountInfo = ({ user }) => {
         form={form}
         layout="vertical"
         onFinish={handleUpdate}
-        initialValues={{
-          gender: "M",
-        }}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Form.Item

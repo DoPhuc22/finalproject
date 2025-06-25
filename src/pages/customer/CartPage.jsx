@@ -93,21 +93,6 @@ const CartPage = () => {
         </Breadcrumb.Item>
       </Breadcrumb>
 
-      {/* Debug info - có thể xóa sau khi fix */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded">
-          <Text strong>Debug Info:</Text>
-          <br />
-          <Text>Auth: {isAuthenticated ? 'Yes' : 'No'}</Text>
-          <br />
-          <Text>User: {currentUser ? currentUser.name || currentUser.email : 'None'}</Text>
-          <br />
-          <Text>Cart Items: {cartItems.length}</Text>
-          <br />
-          <Text>Loading: {loading ? 'Yes' : 'No'}</Text>
-        </div>
-      )}
-
       {/* Page Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} className="mb-0">

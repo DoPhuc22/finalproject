@@ -58,13 +58,6 @@ const CartItem = ({ item, onUpdateQuantity, onRemove, loading }) => {
 
   return (
     <Card className="mb-4" bodyStyle={{ padding: '16px' }}>
-      {/* Debug info - có thể xóa sau khi fix */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-2 p-2 bg-gray-100 text-xs">
-          <strong>Debug:</strong> ItemID={itemId}, ProductID={productIdForLink}, Name={product.name}, Price={productPrice}
-        </div>
-      )}
-
       <div className="flex flex-col md:flex-row gap-4">
         {/* Product Image */}
         <div className="flex-shrink-0">

@@ -3,7 +3,6 @@ import Banner from '../../components/customer/Home/Banner';
 import FeaturedProducts from '../../components/customer/Home/FeaturedProducts';
 import Categories from '../../components/customer/Home/Categories';
 import AboutSection from '../../components/customer/Home/AboutSection';
-import Testimonials from '../../components/customer/Home/Testimonials';
 import PromoSection from '../../components/customer/Home/PromoSection';
 import { Col, Row, Typography } from 'antd';
 import { ClockCircleOutlined, SafetyCertificateOutlined, TagOutlined, TrophyOutlined } from '@ant-design/icons';
@@ -61,11 +60,8 @@ const HomePage = () => {
       {/* About Section */}
       <AboutSection />
 
-      {/* Testimonials */}
-      <Testimonials />
-
       {/* Promo Section */}
-      {/* <PromoSection /> */}
+      <PromoSection />
 
       {/* Custom styles for this page */}
       <style jsx>{`

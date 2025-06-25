@@ -35,7 +35,7 @@ const ProductGrid = ({
             showTotal={(total, range) =>
               `${range[0]}-${range[1]} của ${total} sản phẩm`
             }
-            pageSizeOptions={['6', '12', '24', '48']}
+            pageSizeOptions={['8', '16', '32', '64']}
           />
         </div>
       )}

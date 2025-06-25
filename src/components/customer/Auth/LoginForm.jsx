@@ -22,74 +22,46 @@ const LoginForm = () => {
 
   const onFinish = async (values) => {
     try {
-      // Xóa thông báo lỗi cũ khi thử đăng nhập lại
       setErrorMessage("");
       setLoading(true);
 
-      // Gọi API đăng nhập
       const response = await login({
         email: values.email.trim(),
         password: values.password,
       });
 
-      // Kiểm tra response có dữ liệu cần thiết không
       if (!response || !response.token) {
         throw new Error("Dữ liệu phản hồi từ server không hợp lệ");
       }
 
-      // Xác định thông tin user từ response
-      let userData = {};
-
-      if (response.user) {
-        userData = { ...response.user };
-      } else if (response.data && response.data.user) {
-        userData = { ...response.data.user };
-      } else {
-        // Trường hợp response chứa thông tin user trực tiếp
-        userData = { ...response };
-        delete userData.token; // Không lưu token vào đối tượng user
-      }
-
-      // Đảm bảo user có trường id và email
-      if (!userData.id) {
-        if (userData.userId) userData.id = userData.userId;
-        else if (userData._id) userData.id = userData._id;
-        else if (response.userId) userData.id = response.userId;
-        else if (response._id) userData.id = response._id;
-        else userData.id = Date.now().toString(); // Tạo ID tạm thời nếu không có
-      }
-
-      if (!userData.email && values.email) {
-        userData.email = values.email;
-      }
-
-      // Kiểm tra trạng thái tài khoản
-      if (userData.status === "inactive" || userData.status === "blocked") {
-        throw new Error("ACCOUNT_INACTIVE");
-      }
-
-      console.log("User data to save:", userData);
-
       // Dispatch action để update Redux store
       dispatch(
         loginSuccess({
-          user: userData,
+          user: response.user || response,
           token: response.token,
         })
       );
 
       message.success("Đăng nhập thành công!");
 
-      // Chuyển hướng dựa vào role của user (với kiểm tra an toàn)
-      const userRole = userData?.role;
+      // Đợi một chút để đảm bảo localStorage được cập nhật
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Chuyển hướng về trang trước đó nếu có
-      const { from } = location.state || { from: { pathname: "/profile" } };
+      // Tạo sự kiện tùy chỉnh để thông báo đăng nhập thành công
+      const userLoggedInEvent = new CustomEvent("userLoggedIn", {
+        detail: response.user || response,
+      });
+      window.dispatchEvent(userLoggedInEvent);
+
+      // Chuyển hướng
+      const userRole = response.user?.role || response.role;
+      const { from } = location.state || { from: { pathname: "/" } };
 
       if (userRole === "admin") {
-        navigate("/admin/dashboard");
+        navigate("/admin/dashboard", { replace: true });
       } else {
-        navigate(from.pathname || "/profile");
+        const targetPath = from.pathname === "/auth" ? "/" : from.pathname;
+        navigate(targetPath, { replace: true });
       }
     } catch (error) {
       console.error("Login error:", error);
