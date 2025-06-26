@@ -60,11 +60,6 @@ const CheckoutForm = () => {
       try {
         setInitialLoading(true);
 
-        if (!isAuthenticated) {
-          message.warning("Vui lòng đăng nhập để tiếp tục thanh toán");
-          return;
-        }
-
         // Lấy thông tin người dùng từ localStorage thay vì API
         const userData = JSON.parse(localStorage.getItem("user") || "{}");
 

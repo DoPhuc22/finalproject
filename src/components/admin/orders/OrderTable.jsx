@@ -53,12 +53,59 @@ const OrderTable = ({
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [receiverForm] = Form.useForm();
 
+  // Hàm chuẩn hóa trạng thái
+  const normalizeStatus = (status) => {
+    if (typeof status === "string") {
+      // Kiểm tra xem status có phải là chuỗi JSON không
+      if (status.startsWith("{") && status.endsWith("}")) {
+        try {
+          const parsedStatus = JSON.parse(status);
+          if (parsedStatus && parsedStatus.status) {
+            return parsedStatus.status;
+          }
+        } catch (error) {
+          console.error("Error parsing status JSON:", error);
+        }
+      }
+    }
+    return status;
+  };
+
   const handleStatusChange = async (orderId, newStatus) => {
   try {
     setStatusLoading(prev => ({ ...prev, [orderId]: true }));
     
-    // Đảm bảo dữ liệu gửi đi đúng định dạng
-    await onStatusUpdate(orderId, newStatus);
+    console.log("OrderTable - handleStatusChange:", { orderId, newStatus });
+    console.log("OrderTable - Type of newStatus:", typeof newStatus);
+    
+    // Đảm bảo newStatus là string đơn giản
+    let statusValue = newStatus;
+    
+    // Xử lý nếu newStatus là JSON string
+    if (typeof newStatus === 'string' && newStatus.startsWith('{') && newStatus.includes('status')) {
+      try {
+        const parsedStatus = JSON.parse(newStatus);
+        if (parsedStatus && parsedStatus.status) {
+          statusValue = parsedStatus.status;
+        }
+      } catch (error) {
+        console.error("Error parsing status JSON:", error);
+      }
+    }
+    
+    // Đảm bảo statusValue là string cơ bản
+    if (typeof statusValue === 'object' && statusValue.status) {
+      statusValue = statusValue.status;
+    }
+    
+    // Đảm bảo là string đơn giản
+    statusValue = typeof statusValue === 'string' ? statusValue : String(statusValue);
+    
+    console.log("OrderTable - Final status value:", statusValue);
+    console.log("OrderTable - Type of final status value:", typeof statusValue);
+    
+    // GỬI TRỰC TIẾP STRING KHÔNG TẠO OBJECT
+    await onStatusUpdate(orderId, statusValue);
     
     // Hiển thị thông báo thành công
     message.success(`Cập nhật trạng thái đơn hàng #${orderId} thành công!`);
@@ -81,12 +128,22 @@ const OrderTable = ({
 };
 
   const showOrderDetail = (order) => {
-    setSelectedOrder(order);
+    // Chuẩn hóa trạng thái đơn hàng trước khi hiển thị
+    const normalizedOrder = {
+      ...order,
+      status: normalizeStatus(order.status),
+    };
+    setSelectedOrder(normalizedOrder);
     setDetailModalVisible(true);
   };
 
   const showReceiverModal = (order) => {
-    setSelectedOrder(order);
+    // Chuẩn hóa trạng thái đơn hàng trước khi hiển thị
+    const normalizedOrder = {
+      ...order,
+      status: normalizeStatus(order.status),
+    };
+    setSelectedOrder(normalizedOrder);
     receiverForm.setFieldsValue({
       receiverName: order.receiverName,
       receiverPhone: order.receiverPhone,
@@ -106,27 +163,29 @@ const OrderTable = ({
   };
 
   const getStatusColor = (status) => {
+    // Chuẩn hóa trạng thái
+    status = normalizeStatus(status);
+
     const statusColors = {
       pending: "orange",
       confirmed: "blue",
-      processing: "cyan",
       shipping: "purple",
       delivered: "green",
       cancelled: "red",
-      returned: "volcano",
     };
     return statusColors[status] || "default";
   };
 
   const getStatusText = (status) => {
+    // Chuẩn hóa trạng thái
+    status = normalizeStatus(status);
+
     const statusTexts = {
       pending: "Chờ xác nhận",
       confirmed: "Đã xác nhận",
-      processing: "Đang xử lý",
       shipping: "Đang giao hàng",
       delivered: "Đã giao hàng",
       cancelled: "Đã hủy",
-      returned: "Đã trả hàng",
     };
     return statusTexts[status] || status;
   };
@@ -140,9 +199,9 @@ const OrderTable = ({
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(amount);
   };
 
@@ -196,37 +255,38 @@ const OrderTable = ({
       key: "status",
       width: 180,
       align: "center",
-      render: (status, record) => (
-        <Select
-          value={status}
-          loading={statusLoading[record.orderId]}
-          onChange={(newStatus) => handleStatusChange(record.orderId, newStatus)}
-          className="w-30"
-          size="large"
-        >
-          <Option value="pending">
-            <Tag color="orange">Chờ xác nhận</Tag>
-          </Option>
-          <Option value="confirmed">
-            <Tag color="blue">Đã xác nhận</Tag>
-          </Option>
-          <Option value="processing">
-            <Tag color="cyan">Đang xử lý</Tag>
-          </Option>
-          <Option value="shipping">
-            <Tag color="purple">Đang giao hàng</Tag>
-          </Option>
-          <Option value="delivered">
-            <Tag color="green">Đã giao hàng</Tag>
-          </Option>
-          <Option value="cancelled">
-            <Tag color="red">Đã hủy</Tag>
-          </Option>
-          <Option value="returned">
-            <Tag color="volcano">Đã trả hàng</Tag>
-          </Option>
-        </Select>
-      ),
+      render: (status, record) => {
+        // Chuẩn hóa trạng thái trước khi hiển thị
+        const normalizedStatus = normalizeStatus(status);
+
+        return (
+          <Select
+            value={normalizedStatus}
+            loading={statusLoading[record.orderId]}
+            onChange={(newStatus) =>
+              handleStatusChange(record.orderId, newStatus)
+            }
+            className="w-30"
+            size="large"
+          >
+            <Option value="pending">
+              <Tag color="orange">Chờ xác nhận</Tag>
+            </Option>
+            <Option value="confirmed">
+              <Tag color="blue">Đã xác nhận</Tag>
+            </Option>
+            <Option value="shipping">
+              <Tag color="purple">Đang giao hàng</Tag>
+            </Option>
+            <Option value="delivered">
+              <Tag color="green">Đã giao hàng</Tag>
+            </Option>
+            <Option value="cancelled">
+              <Tag color="red">Đã hủy</Tag>
+            </Option>
+          </Select>
+        );
+      },
     },
     {
       title: "Thanh toán",
@@ -330,7 +390,7 @@ const OrderTable = ({
         footer={[
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
             Đóng
-          </Button>
+          </Button>,
         ]}
         width={800}
       >
@@ -383,7 +443,8 @@ const OrderTable = ({
                       <div>
                         <Text strong>Sản phẩm #{item.productId}</Text>
                         <div className="text-sm text-gray-500">
-                          Số lượng: {item.quantity} x {formatCurrency(item.unitPrice)}
+                          Số lượng: {item.quantity} x{" "}
+                          {formatCurrency(item.unitPrice)}
                         </div>
                       </div>
                       <Text strong className="text-green-600">
@@ -398,13 +459,10 @@ const OrderTable = ({
             {/* Order Summary */}
             <Card title="Tổng kết đơn hàng" size="small">
               <div className="space-y-2">
-                {/* <div className="flex justify-between">
-                  <Text>Tạm tính:</Text>
-                  <Text>{formatCurrency(selectedOrder.subtotal)}</Text>
-                </div>
-                <Divider className="my-2" /> */}
                 <div className="flex justify-between">
-                  <Text strong className="text-lg">Tổng cộng:</Text>
+                  <Text strong className="text-lg">
+                    Tổng cộng:
+                  </Text>
                   <Text strong className="text-lg text-green-600">
                     {formatCurrency(selectedOrder.total)}
                   </Text>

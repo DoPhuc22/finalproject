@@ -1,7 +1,7 @@
 import React from 'react';
 import Banner from '../../components/customer/Home/Banner';
-import FeaturedProducts from '../../components/customer/Home/FeaturedProducts';
-import Categories from '../../components/customer/Home/Categories';
+// import FeaturedProducts from '../../components/customer/Home/FeaturedProducts';
+// import Categories from '../../components/customer/Home/Categories';
 import AboutSection from '../../components/customer/Home/AboutSection';
 import PromoSection from '../../components/customer/Home/PromoSection';
 import { Col, Row, Typography } from 'antd';
@@ -52,10 +52,10 @@ const HomePage = () => {
     </div>
 
       {/* Featured Products */}
-      <FeaturedProducts />
+      {/* <FeaturedProducts /> */}
 
       {/* Categories */}
-      <Categories />
+      {/* <Categories /> */}
 
       {/* About Section */}
       <AboutSection />

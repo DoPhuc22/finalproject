@@ -70,6 +70,7 @@ const ProductPage = () => {
     setShowForm(true);
   };
 
+  
   const handleView = (product) => {
     Modal.info({
       title: "Chi tiết sản phẩm",

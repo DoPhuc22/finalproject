@@ -67,6 +67,39 @@ const ProductCard = ({ product, onAddToCart, cartLoading }) => {
     return <Tag color={color}>{brandName}</Tag>;
   };
 
+  // Thêm hàm getCategories để hiển thị thẻ danh mục
+  const getCategories = () => {
+    // Danh sách màu cho các danh mục khác nhau
+    const categoryColors = {
+      "Đồng hồ nam": "volcano",
+      "Đồng hồ nữ": "magenta",
+      "Đồng hồ thông minh": "geekblue",
+      "Đồng hồ trẻ em": "lime",
+      "Đồng hồ đôi": "pink",
+      "Phụ kiện": "gold",
+      default: "default"
+    };
+    
+    // Lấy tên danh mục từ dữ liệu sản phẩm
+    let categoryName = "";
+    if (typeof product.category === 'object' && product.category?.name) {
+      categoryName = product.category.name;
+    } else if (typeof product.category === 'string') {
+      categoryName = product.category;
+    } else {
+      return null; // Nếu không có danh mục, không hiển thị gì
+    }
+    
+    // Nếu tên danh mục là rỗng, không hiển thị gì
+    if (!categoryName) return null;
+    
+    // Chọn màu cho danh mục
+    const color = categoryColors[categoryName] || categoryColors.default;
+    
+    // Trả về thẻ Tag với màu tương ứng
+    return <Tag color={color}>{categoryName}</Tag>;
+  };
+
   const productId = product.id || product.productId;
   const inStock = product.remainQuantity > 0;
 
@@ -127,8 +160,9 @@ const ProductCard = ({ product, onAddToCart, cartLoading }) => {
             }
             description={
               <div className="product-info space-y-2">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-wrap gap-1 items-center">
                   {getBrandTag()}
+                  {getCategories()}
                   {getStockStatus()}
                 </div>
                 

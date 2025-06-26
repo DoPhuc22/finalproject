@@ -9,8 +9,8 @@ import {
   Popconfirm,
   Tooltip,
   Rate,
-  Switch,
   Modal,
+  message,
 } from "antd";
 import {
   EditOutlined,
@@ -18,6 +18,8 @@ import {
   EyeOutlined,
   ShoppingOutlined,
   DollarOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
 
 const { Text, Paragraph } = Typography;
@@ -30,35 +32,9 @@ const ProductTable = ({
   onDelete,
   onView,
   onTableChange,
-  onActiveChange,
 }) => {
-  const [switchLoadingStates, setSwitchLoadingStates] = useState({});
   const [previewImage, setPreviewImage] = useState("");
   const [previewVisible, setPreviewVisible] = useState(false);
-
-  const handleActiveChange = async (productId, checked) => {
-    try {
-      // Set loading state for this specific switch
-      setSwitchLoadingStates((prev) => ({
-        ...prev,
-        [productId]: true,
-      }));
-
-      console.log("Table active change:", { productId, checked }); // Debug log
-
-      if (onActiveChange) {
-        await onActiveChange(productId, checked);
-      }
-    } catch (error) {
-      console.error("Error changing active:", error);
-    } finally {
-      // Clear loading state for this specific switch
-      setSwitchLoadingStates((prev) => ({
-        ...prev,
-        [productId]: false,
-      }));
-    }
-  };
 
   const columns = [
     {
@@ -165,24 +141,6 @@ const ProductTable = ({
         </div>
       ),
     },
-    // {
-    //   title: "Đánh giá",
-    //   key: "rating",
-    //   width: 120,
-    //   render: (_, record) => (
-    //     <div className="text-center">
-    //       <Rate
-    //         disabled
-    //         allowHalf
-    //         value={record.rating || 0}
-    //         className="text-sm"
-    //       />
-    //       <div className="text-xs text-gray-500 mt-1">
-    //         ({record.reviewCount || record.reviews || 0} đánh giá)
-    //       </div>
-    //     </div>
-    //   ),
-    // },
     {
       title: "Trạng thái",
       dataIndex: "active",
@@ -191,36 +149,16 @@ const ProductTable = ({
       align: "center",
       render: (active, record) => {
         const isActive = active === true || record.isActive === true;
-        const productId = record.productId || record.id;
-        const isLoading = switchLoadingStates[productId] || false;
 
         return (
           <div className="text-center">
-            <Popconfirm
-              title={
-                isActive ? "Xác nhận ngừng hoạt động" : "Xác nhận kích hoạt"
-              }
-              description={
-                isActive
-                  ? "Sản phẩm sẽ được chuyển sang trạng thái ngừng hoạt động. Bạn có chắc chắn?"
-                  : "Sản phẩm sẽ được kích hoạt lại. Bạn có chắc chắn?"
-              }
-              onConfirm={() => handleActiveChange(productId, !isActive)}
-              okText={isActive ? "Ngừng hoạt động" : "Kích hoạt"}
-              cancelText="Hủy"
-              okType={isActive ? "danger" : "primary"}
+            <Tag
+              color={isActive ? "success" : "error"}
+              icon={isActive ? <CheckCircleOutlined /> : <StopOutlined />}
+              className="text-sm px-3 py-1"
             >
-              <Switch
-                checked={isActive}
-                checkedChildren="Hoạt động"
-                unCheckedChildren="Ngừng"
-                size="small"
-                loading={isLoading}
-              />
-            </Popconfirm>
-            <div className="text-xs text-gray-500 mt-1">
-              {isActive ? "Đang hoạt động" : "Ngừng hoạt động"}
-            </div>
+              {isActive ? "Đang bán" : "Ngừng bán"}
+            </Tag>
           </div>
         );
       },
@@ -307,22 +245,6 @@ const ProductTable = ({
           index % 2 === 0 ? "table-row-light" : "table-row-dark"
         }
       />
-
-      {/* Image Preview Modal */}
-      {/* <Modal
-        open={previewVisible}
-        title="Xem ảnh sản phẩm"
-        footer={null}
-        onCancel={() => setPreviewVisible(false)}
-        width={600}
-        centered
-      >
-        <Image
-          src={previewImage}
-          alt="Product preview"
-          style={{ width: "100%" }}
-        />
-      </Modal> */}
     </>
   );
 };

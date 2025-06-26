@@ -29,14 +29,28 @@ const OrderFilters = ({
   const [expanded, setExpanded] = useState(false);
 
   const handleFilter = (values) => {
-    // Process date range
-    if (values.dateRange) {
-      values.dateRange = [
-        values.dateRange[0].startOf('day').toDate(),
-        values.dateRange[1].endOf('day').toDate()
-      ];
+    // Loại bỏ giá trị "all" để không gửi lên API
+    const cleanedValues = { ...values };
+    
+    if (cleanedValues.status === "all") {
+      delete cleanedValues.status;
     }
-    onFilter(values);
+    
+    if (cleanedValues.paymentMethod === "all") {
+      delete cleanedValues.paymentMethod;
+    }
+    
+    // Process date range
+    if (cleanedValues.dateRange) {
+      cleanedValues.dateFrom = cleanedValues.dateRange[0].startOf('day').toISOString();
+      cleanedValues.dateTo = cleanedValues.dateRange[1].endOf('day').toISOString();
+      delete cleanedValues.dateRange;
+    }
+    
+    // Ghi log để debug
+    console.log("Đang áp dụng bộ lọc:", cleanedValues);
+    
+    onFilter(cleanedValues);
   };
 
   const handleReset = () => {
@@ -45,12 +59,52 @@ const OrderFilters = ({
   };
 
   const handleSearch = (value) => {
-    onFilter({ search: value });
+    form.setFieldsValue({ search: value });
+    const values = form.getFieldsValue();
+    
+    // Loại bỏ giá trị "all"
+    if (values.status === "all") {
+      delete values.status;
+    }
+    
+    if (values.paymentMethod === "all") {
+      delete values.paymentMethod;
+    }
+    
+    values.search = value;
+    
+    // Ghi log để debug
+    console.log("Đang tìm kiếm với bộ lọc:", values);
+    
+    onFilter(values);
   };
 
   const handleQuickFilter = (filterType, filterValue) => {
+    // Lấy các giá trị hiện tại của form
+    const currentValues = form.getFieldsValue();
+    
+    // Cập nhật giá trị trong form
     form.setFieldsValue({ [filterType]: filterValue });
-    onFilter({ [filterType]: filterValue });
+    
+    // Tạo đối tượng mới với các giá trị hiện tại và giá trị lọc mới
+    const updatedValues = { 
+      ...currentValues, 
+      [filterType]: filterValue 
+    };
+    
+    // Loại bỏ giá trị "all"
+    if (updatedValues.status === "all") {
+      delete updatedValues.status;
+    }
+    
+    if (updatedValues.paymentMethod === "all") {
+      delete updatedValues.paymentMethod;
+    }
+    
+    // Ghi log để debug
+    console.log("Đang áp dụng bộ lọc nhanh:", updatedValues);
+    
+    onFilter(updatedValues);
   };
 
   return (
@@ -93,15 +147,13 @@ const OrderFilters = ({
           {/* Status */}
           <Col xs={24} sm={12} lg={8}>
             <Form.Item label="Trạng thái" name="status">
-              <Select placeholder="Chọn trạng thái">
+              <Select placeholder="Chọn trạng thái" onChange={(value) => handleQuickFilter("status", value)}>
                 <Option value="all">Tất cả trạng thái</Option>
                 <Option value="pending">Chờ xác nhận</Option>
                 <Option value="confirmed">Đã xác nhận</Option>
-                <Option value="processing">Đang xử lý</Option>
                 <Option value="shipping">Đang giao hàng</Option>
                 <Option value="delivered">Đã giao hàng</Option>
                 <Option value="cancelled">Đã hủy</Option>
-                <Option value="returned">Đã trả hàng</Option>
               </Select>
             </Form.Item>
           </Col>
@@ -109,7 +161,7 @@ const OrderFilters = ({
           {/* Payment Method */}
           <Col xs={24} sm={12} lg={8}>
             <Form.Item label="Phương thức thanh toán" name="paymentMethod">
-              <Select placeholder="Chọn phương thức">
+              <Select placeholder="Chọn phương thức" onChange={(value) => handleQuickFilter("paymentMethod", value)}>
                 <Option value="all">Tất cả phương thức</Option>
                 <Option value="cod">Thanh toán khi nhận hàng</Option>
                 <Option value="vnpay">VNPay</Option>
@@ -183,7 +235,7 @@ const OrderFilters = ({
         </Row>
 
         {/* Quick filters - always visible */}
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        {/* <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex flex-wrap gap-2">
             <span className="text-sm text-gray-500 mr-2">Lọc nhanh:</span>
             <Button
@@ -222,7 +274,7 @@ const OrderFilters = ({
               Tất cả
             </Button>
           </div>
-        </div>
+        </div> */}
       </Form>
     </Card>
   );

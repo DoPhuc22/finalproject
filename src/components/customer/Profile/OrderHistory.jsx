@@ -33,6 +33,7 @@ import {
   getUserOrders,
   cancelOrderOrUpdateReceiver,
   getAllOrders,
+  getOrderById,
 } from "../../../services/orders";
 import { getCurrentUser } from "../../../services/auth";
 import { getProductImages } from "../../../services/products";
@@ -55,132 +56,139 @@ const OrderHistory = () => {
   }, []);
 
   const initializeUser = async () => {
-  try {
-    const user = await getCurrentUser();
-    if (user) {
-      // Lưu userID dưới dạng string để đảm bảo so sánh chính xác sau này
-      const userId = String(user.id || user.userId);
-      
-      if (!userId) {
-        console.error("Invalid user ID received:", user);
-        message.error("Không thể xác định ID người dùng");
-        return;
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        // Lưu userID dưới dạng string để đảm bảo so sánh chính xác sau này
+        const userId = String(user.id || user.userId);
+
+        if (!userId) {
+          console.error("Invalid user ID received:", user);
+          message.error("Không thể xác định ID người dùng");
+          return;
+        }
+
+        // Lưu thông tin người dùng
+        setCurrentUser({
+          ...user,
+          userId: userId, // Đảm bảo luôn có userId nhất quán
+        });
+
+        console.log("User authenticated with ID:", userId);
+        await fetchOrders(userId);
+      } else {
+        console.error("No user returned from getCurrentUser()");
+        message.error("Không thể lấy thông tin người dùng");
       }
-      
-      // Lưu thông tin người dùng
-      setCurrentUser({
-        ...user,
-        userId: userId // Đảm bảo luôn có userId nhất quán
-      });
-      
-      console.log("User authenticated with ID:", userId);
-      await fetchOrders(userId);
-    } else {
-      console.error("No user returned from getCurrentUser()");
-      message.error("Không thể lấy thông tin người dùng");
+    } catch (error) {
+      console.error("Error initializing user:", error);
+      message.error("Lỗi khi tải thông tin người dùng");
     }
-  } catch (error) {
-    console.error("Error initializing user:", error);
-    message.error("Lỗi khi tải thông tin người dùng");
-  }
-};
+  };
 
   const fetchOrders = async (userId) => {
-  if (!userId) {
-    console.error("fetchOrders: userId is undefined or null");
-    message.error("Không thể xác định thông tin người dùng");
-    setLoading(false);
-    return;
-  }
+    if (!userId) {
+      console.error("fetchOrders: userId is undefined or null");
+      message.error("Không thể xác định thông tin người dùng");
+      setLoading(false);
+      return;
+    }
 
-  setLoading(true);
-  try {
-    console.log("Fetching orders for user:", userId);
-
-    let ordersData = [];
-
+    setLoading(true);
     try {
-      // Try using getUserOrders first
-      const response = await getUserOrders(userId);
-      ordersData = response.data || response || [];
-      
-      // Thêm xác thực để đảm bảo chỉ lấy đơn hàng của người dùng hiện tại
-      if (Array.isArray(ordersData)) {
-        ordersData = ordersData.filter(order => {
-          const orderUserId = order.userId || order.user_id;
-          return String(orderUserId) === String(userId);
-        });
-      }
-    } catch (apiError) {
-      console.error("API error when fetching orders:", apiError);
+      console.log("Fetching orders for user:", userId);
 
-      // Fallback: Try getAllOrders
+      let ordersData = [];
+
       try {
-        const allOrdersResponse = await getAllOrders();
-        const allOrdersData = allOrdersResponse.data || allOrdersResponse || [];
+        // Try using getUserOrders first
+        const response = await getUserOrders(userId);
+        ordersData = response.data || response || [];
 
-        // Filter by userId - ÁP DỤNG SO SÁNH CHÍNH XÁC HƠN
-        ordersData = allOrdersData.filter(order => {
+        // Thêm xác thực để đảm bảo chỉ lấy đơn hàng của người dùng hiện tại
+        if (Array.isArray(ordersData)) {
+          ordersData = ordersData.filter((order) => {
+            const orderUserId = order.userId || order.user_id;
+            return String(orderUserId) === String(userId);
+          });
+        }
+      } catch (apiError) {
+        console.error("API error when fetching orders:", apiError);
+
+        // Fallback: Try getAllOrders
+        try {
+          const allOrdersResponse = await getAllOrders();
+          const allOrdersData =
+            allOrdersResponse.data || allOrdersResponse || [];
+
+          // Filter by userId - ÁP DỤNG SO SÁNH CHÍNH XÁC HƠN
+          ordersData = allOrdersData.filter((order) => {
+            const orderUserId = order.userId || order.user_id;
+            // Chuyển đổi sang string để so sánh chính xác
+            return String(orderUserId) === String(userId);
+          });
+
+          console.log(
+            `Filtered ${allOrdersData.length} orders to ${ordersData.length} for user ${userId}`
+          );
+        } catch (fallbackError) {
+          console.error(
+            "Fallback error when fetching all orders:",
+            fallbackError
+          );
+
+          // Final fallback: Use localStorage
+          const localStorageOrders = JSON.parse(
+            localStorage.getItem("orders") || "[]"
+          );
+
+          // Áp dụng lọc chính xác với localStorage
+          ordersData = localStorageOrders.filter((order) => {
+            const orderUserId = order.userId || order.user_id;
+            return String(orderUserId) === String(userId);
+          });
+
+          console.log(
+            `Using localStorage: Found ${ordersData.length} orders for user ${userId}`
+          );
+        }
+      }
+
+      // Kiểm tra lại một lần nữa để đảm bảo chỉ lấy đơn hàng của người dùng hiện tại
+      if (Array.isArray(ordersData)) {
+        const originalCount = ordersData.length;
+        ordersData = ordersData.filter((order) => {
           const orderUserId = order.userId || order.user_id;
-          // Chuyển đổi sang string để so sánh chính xác
           return String(orderUserId) === String(userId);
         });
-        
-        console.log(`Filtered ${allOrdersData.length} orders to ${ordersData.length} for user ${userId}`);
-      } catch (fallbackError) {
-        console.error(
-          "Fallback error when fetching all orders:",
-          fallbackError
-        );
 
-        // Final fallback: Use localStorage
-        const localStorageOrders = JSON.parse(
-          localStorage.getItem("orders") || "[]"
-        );
-        
-        // Áp dụng lọc chính xác với localStorage
-        ordersData = localStorageOrders.filter(order => {
-          const orderUserId = order.userId || order.user_id;
-          return String(orderUserId) === String(userId);
-        });
-        
-        console.log(`Using localStorage: Found ${ordersData.length} orders for user ${userId}`);
+        if (originalCount !== ordersData.length) {
+          console.warn(
+            `Removed ${originalCount - ordersData.length} orders that didn't belong to user ${userId}`
+          );
+        }
       }
+
+      console.log(`Final orders data for user ${userId}:`, ordersData);
+
+      // Sort orders by date (newest first)
+      const sortedOrders = Array.isArray(ordersData)
+        ? ordersData.sort(
+            (a, b) =>
+              new Date(b.orderDate || b.createdAt || Date.now()) -
+              new Date(a.orderDate || a.createdAt || Date.now())
+          )
+        : [];
+
+      setOrders(sortedOrders);
+    } catch (error) {
+      console.error("Error in entire fetchOrders flow:", error);
+      message.error("Không thể tải lịch sử đơn hàng");
+      setOrders([]);
+    } finally {
+      setLoading(false);
     }
-
-    // Kiểm tra lại một lần nữa để đảm bảo chỉ lấy đơn hàng của người dùng hiện tại
-    if (Array.isArray(ordersData)) {
-      const originalCount = ordersData.length;
-      ordersData = ordersData.filter(order => {
-        const orderUserId = order.userId || order.user_id;
-        return String(orderUserId) === String(userId);
-      });
-      
-      if (originalCount !== ordersData.length) {
-        console.warn(`Removed ${originalCount - ordersData.length} orders that didn't belong to user ${userId}`);
-      }
-    }
-
-    console.log(`Final orders data for user ${userId}:`, ordersData);
-
-    // Sort orders by date (newest first)
-    const sortedOrders = Array.isArray(ordersData)
-      ? ordersData.sort(
-          (a, b) =>
-            new Date(b.orderDate || b.createdAt || Date.now()) -
-            new Date(a.orderDate || a.createdAt || Date.now())
-        )
-      : [];
-
-    setOrders(sortedOrders);
-  } catch (error) {
-    console.error("Error in entire fetchOrders flow:", error);
-    message.error("Không thể tải lịch sử đơn hàng");
-    setOrders([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const getOrderDetails = async (order) => {
     if (!order) return null;
@@ -194,39 +202,45 @@ const OrderHistory = () => {
         // Khởi tạo các giá trị mặc định
         let productId = item.productId;
         let productName = item.product?.name || item.name || "Sản phẩm";
-        let imageUrl = item.product?.imageUrl || item.imageUrl || "/assets/images/products/default.jpg";
+        let imageUrl =
+          item.product?.imageUrl ||
+          item.imageUrl ||
+          "/assets/images/products/default.jpg";
         let unitPrice = item.unitPrice || item.price || 0;
-        
+
         try {
           // Chỉ gọi API nếu có productId
           if (productId) {
             // Lấy ảnh sản phẩm từ API
             const imagesResponse = await getProductImages(productId);
             const images = imagesResponse.data || imagesResponse || [];
-            
+
             // Tìm ảnh chính (isPrimary = true) hoặc lấy ảnh đầu tiên
-            const primaryImage = images.find(img => img.isPrimary) || images[0];
-            
+            const primaryImage =
+              images.find((img) => img.isPrimary) || images[0];
+
             if (primaryImage && primaryImage.imageUrl) {
               imageUrl = primaryImage.imageUrl;
             }
           }
         } catch (error) {
-          console.error(`Error fetching images for product ${productId}:`, error);
+          console.error(
+            `Error fetching images for product ${productId}:`,
+            error
+          );
           // Giữ nguyên URL ảnh mặc định nếu có lỗi
         }
 
         return {
-          orderDetailId: item.orderDetailId || item.id || Math.random().toString(),
+          orderDetailId:
+            item.orderDetailId || item.id || Math.random().toString(),
           productId,
           product: item.product || {},
           name: productName,
           imageUrl,
           quantity: item.quantity || 1,
           unitPrice,
-          lineTotal:
-            item.lineTotal ||
-            unitPrice * (item.quantity || 1),
+          lineTotal: item.lineTotal || unitPrice * (item.quantity || 1),
         };
       })
     );
@@ -245,36 +259,38 @@ const OrderHistory = () => {
     };
   };
 
-const showOrderDetail = async (order) => {
-  // Kiểm tra xem đơn hàng có thuộc về người dùng hiện tại không
-  const orderUserId = String(order.userId || order.user_id);
-  const currentUserId = String(currentUser?.id || currentUser?.userId);
-  
-  if (orderUserId !== currentUserId) {
-    console.error("Attempted to view order that doesn't belong to current user");
-    message.error("Bạn không có quyền xem đơn hàng này");
-    return;
-  }
-  
-  setDetailLoading(true);
-  setSelectedOrder(order);
-  setDetailVisible(true);
-  
-  try {
-    // Xử lý chi tiết đơn hàng để lấy ảnh sản phẩm
-    const enhancedOrder = await getOrderDetails(order);
-    setSelectedOrder(enhancedOrder);
-  } catch (error) {
-    console.error("Error loading order details:", error);
-    message.error("Có lỗi khi tải chi tiết đơn hàng");
-  } finally {
-    setDetailLoading(false);
-  }
-};
+  const showOrderDetail = async (order) => {
+    // Kiểm tra xem đơn hàng có thuộc về người dùng hiện tại không
+    const orderUserId = String(order.userId || order.user_id);
+    const currentUserId = String(currentUser?.id || currentUser?.userId);
+
+    if (orderUserId !== currentUserId) {
+      console.error(
+        "Attempted to view order that doesn't belong to current user"
+      );
+      message.error("Bạn không có quyền xem đơn hàng này");
+      return;
+    }
+
+    setDetailLoading(true);
+    setSelectedOrder(order);
+    setDetailVisible(true);
+
+    try {
+      // Xử lý chi tiết đơn hàng để lấy ảnh sản phẩm
+      const enhancedOrder = await getOrderDetails(order);
+      setSelectedOrder(enhancedOrder);
+    } catch (error) {
+      console.error("Error loading order details:", error);
+      message.error("Có lỗi khi tải chi tiết đơn hàng");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   const navigateToProductDetail = (productId) => {
     if (productId) {
-      window.open(`/products/${productId}`, '_blank');
+      window.open(`/products/${productId}`, "_blank");
     }
   };
 
@@ -289,104 +305,174 @@ const showOrderDetail = async (order) => {
   };
 
   const handleUpdateOrder = async (values) => {
-  if (!selectedOrder) return;
-  
-  // Kiểm tra xem đơn hàng có thuộc về người dùng hiện tại không
-  const orderUserId = String(selectedOrder.userId || selectedOrder.user_id);
-  const currentUserId = String(currentUser?.id || currentUser?.userId);
-  
-  if (orderUserId !== currentUserId) {
-    console.error("Attempted to update order that doesn't belong to current user");
-    message.error("Bạn không có quyền cập nhật đơn hàng này");
-    return;
-  }
+    if (!selectedOrder) return;
 
-  try {
-    setActionLoading(true);
+    // Kiểm tra xem đơn hàng có thuộc về người dùng hiện tại không
+    const orderUserId = String(selectedOrder.userId || selectedOrder.user_id);
+    const currentUserId = String(currentUser?.id || currentUser?.userId);
 
-    const updateData = {
-      receiverName: values.receiverName,
-      receiverPhone: values.receiverPhone,
-      receiverAddress: values.shippingAddress,
-    };
-
-    console.log("Updating order:", selectedOrder.orderId, updateData);
-
-    await cancelOrderOrUpdateReceiver(selectedOrder.orderId, updateData);
-
-    message.success("Cập nhật thông tin đơn hàng thành công!");
-
-    // Refresh orders list
-    if (currentUser) {
-      await fetchOrders(currentUser.id || currentUser.userId);
+    if (orderUserId !== currentUserId) {
+      console.error(
+        "Attempted to update order that doesn't belong to current user"
+      );
+      message.error("Bạn không có quyền cập nhật đơn hàng này");
+      return;
     }
 
-    setEditVisible(false);
-    editForm.resetFields();
+    try {
+      setActionLoading(true);
 
-    // Update selected order if detail modal is open
-    if (detailVisible) {
-      setSelectedOrder((prev) => ({
-        ...prev,
+      const updateData = {
         receiverName: values.receiverName,
         receiverPhone: values.receiverPhone,
-        shippingAddress: values.shippingAddress,
-      }));
+        receiverAddress: values.shippingAddress,
+      };
+
+      console.log("Updating order:", selectedOrder.orderId, updateData);
+
+      await cancelOrderOrUpdateReceiver(selectedOrder.orderId, updateData);
+
+      message.success("Cập nhật thông tin đơn hàng thành công!");
+
+      // Refresh orders list
+      if (currentUser) {
+        await fetchOrders(currentUser.id || currentUser.userId);
+      }
+
+      setEditVisible(false);
+      editForm.resetFields();
+
+      // Update selected order if detail modal is open
+      if (detailVisible) {
+        setSelectedOrder((prev) => ({
+          ...prev,
+          receiverName: values.receiverName,
+          receiverPhone: values.receiverPhone,
+          shippingAddress: values.shippingAddress,
+        }));
+      }
+    } catch (error) {
+      console.error("Error updating order:", error);
+      message.error("Có lỗi xảy ra khi cập nhật thông tin đơn hàng");
+    } finally {
+      setActionLoading(false);
     }
-  } catch (error) {
-    console.error("Error updating order:", error);
-    message.error("Có lỗi xảy ra khi cập nhật thông tin đơn hàng");
-  } finally {
-    setActionLoading(false);
-  }
-};
+  };
 
-const handleCancelOrder = async (orderId) => {
-  // Tìm đơn hàng cần hủy
-  const orderToCancel = orders.find(order => String(order.orderId) === String(orderId));
+    const handleCancelOrder = async (orderId) => {
+    // Tìm đơn hàng cần hủy
+    const orderToCancel = orders.find(
+      (order) => String(order.orderId) === String(orderId)
+    );
   
-  if (!orderToCancel) {
-    console.error("Order not found:", orderId);
-    message.error("Không tìm thấy đơn hàng");
-    return;
-  }
-  
-  // Kiểm tra đơn hàng có thuộc về người dùng hiện tại không
-  const orderUserId = String(orderToCancel.userId || orderToCancel.user_id);
-  const currentUserId = String(currentUser?.id || currentUser?.userId);
-  
-  if (orderUserId !== currentUserId) {
-    console.error("Attempted to cancel order that doesn't belong to current user");
-    message.error("Bạn không có quyền hủy đơn hàng này");
-    return;
-  }
-
-  try {
-    setActionLoading(true);
-
-    console.log("Cancelling order:", orderId);
-
-    await cancelOrderOrUpdateReceiver(orderId, { cancel: true });
-
-    message.success("Hủy đơn hàng thành công!");
-
-    // Refresh orders list
-    if (currentUser) {
-      await fetchOrders(currentUser.id || currentUser.userId);
+    if (!orderToCancel) {
+      console.error("Order not found:", orderId);
+      message.error("Không tìm thấy đơn hàng");
+      return;
     }
-
-    // Close modals if open
-    setDetailVisible(false);
-    setEditVisible(false);
-  } catch (error) {
-    console.error("Error cancelling order:", error);
-    message.error("Có lỗi xảy ra khi hủy đơn hàng");
-  } finally {
-    setActionLoading(false);
-  }
-};
+  
+    // Kiểm tra đơn hàng có thuộc về người dùng hiện tại không
+    const orderUserId = String(orderToCancel.userId || orderToCancel.user_id);
+    const currentUserId = String(currentUser?.id || currentUser?.userId);
+  
+    if (orderUserId !== currentUserId) {
+      console.error(
+        "Attempted to cancel order that doesn't belong to current user"
+      );
+      message.error("Bạn không có quyền hủy đơn hàng này");
+      return;
+    }
+  
+    try {
+      setActionLoading(true);
+  
+      // THÊM BƯỚC NÀY: Kiểm tra lại trạng thái hiện tại của đơn hàng từ server
+      try {
+        // Gọi API để lấy thông tin đơn hàng mới nhất
+        const latestOrderInfo = await getOrderById(orderId);
+        const latestOrder = latestOrderInfo.data || latestOrderInfo;
+        
+        // Chuẩn hóa trạng thái
+        let currentStatus = latestOrder.status;
+        if (typeof currentStatus === 'string' && (currentStatus.startsWith('{') || currentStatus.includes('status'))) {
+          try {
+            const parsedStatus = JSON.parse(currentStatus);
+            if (parsedStatus && parsedStatus.status) {
+              currentStatus = parsedStatus.status;
+            }
+          } catch (error) {
+            console.error("Error parsing status JSON:", error);
+          }
+        }
+        
+        // Kiểm tra xem đơn hàng còn ở trạng thái "pending" không
+        if (currentStatus !== "pending") {
+          console.warn(`Order #${orderId} status changed from pending to ${currentStatus}`);
+          message.warning("Không thể hủy đơn hàng vì trạng thái đã thay đổi. Vui lòng làm mới trang để cập nhật.");
+          
+          // Cập nhật lại danh sách đơn hàng
+          if (currentUser) {
+            await fetchOrders(currentUser.id || currentUser.userId);
+          }
+          return;
+        }
+      } catch (checkError) {
+        console.error("Error checking latest order status:", checkError);
+        // Vẫn tiếp tục thử hủy đơn hàng nếu không kiểm tra được
+      }
+  
+      console.log("Cancelling order:", orderId);
+  
+      await cancelOrderOrUpdateReceiver(orderId, { cancel: true });
+  
+      message.success("Hủy đơn hàng thành công!");
+  
+      // Refresh orders list
+      if (currentUser) {
+        await fetchOrders(currentUser.id || currentUser.userId);
+      }
+  
+      // Close modals if open
+      setDetailVisible(false);
+      setEditVisible(false);
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      
+      // Xử lý lỗi cụ thể hơn
+      if (error.response?.status === 500) {
+        message.error("Không thể hủy đơn hàng. Có thể trạng thái đơn hàng đã thay đổi.");
+        
+        // Cập nhật lại danh sách đơn hàng
+        if (currentUser) {
+          await fetchOrders(currentUser.id || currentUser.userId);
+        }
+      } else {
+        message.error("Có lỗi xảy ra khi hủy đơn hàng: " + (error.response?.data?.message || error.message));
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const getStatusTag = (status) => {
+    // Kiểm tra xem status có phải là chuỗi JSON không
+    if (
+      typeof status === "string" &&
+      (status.startsWith("{") || status.includes("status"))
+    ) {
+      try {
+        // Thử parse chuỗi JSON để lấy giá trị status
+        const parsedStatus = JSON.parse(status);
+        if (parsedStatus && parsedStatus.status) {
+          status = parsedStatus.status;
+        }
+      } catch (error) {
+        console.error("Error parsing status JSON:", error);
+        // Nếu có lỗi parse, giữ nguyên giá trị status
+      }
+    }
+
+    // Tiếp tục xử lý trạng thái như bình thường
     switch (status) {
       case "pending":
         return (
@@ -420,6 +506,26 @@ const handleCancelOrder = async (orderId) => {
   };
 
   const getOrderStatusStep = (status) => {
+    // Kiểm tra xem status có phải là chuỗi JSON không
+    if (
+      typeof status === "string" &&
+      (status.startsWith("{") || status.includes("status"))
+    ) {
+      try {
+        // Thử parse chuỗi JSON để lấy giá trị status
+        const parsedStatus = JSON.parse(status);
+        if (parsedStatus && parsedStatus.status) {
+          status = parsedStatus.status;
+        }
+      } catch (error) {
+        console.error(
+          "Error parsing status JSON in getOrderStatusStep:",
+          error
+        );
+        // Nếu có lỗi parse, giữ nguyên giá trị status
+      }
+    }
+
     switch (status) {
       case "pending":
         return 0;
@@ -437,7 +543,26 @@ const handleCancelOrder = async (orderId) => {
   };
 
   const canEditOrCancel = (order) => {
-    return order.status === "pending";
+    let status = order.status;
+
+    // Kiểm tra xem status có phải là chuỗi JSON không
+    if (
+      typeof status === "string" &&
+      (status.startsWith("{") || status.includes("status"))
+    ) {
+      try {
+        // Thử parse chuỗi JSON để lấy giá trị status
+        const parsedStatus = JSON.parse(status);
+        if (parsedStatus && parsedStatus.status) {
+          status = parsedStatus.status;
+        }
+      } catch (error) {
+        console.error("Error parsing status JSON in canEditOrCancel:", error);
+        // Nếu có lỗi parse, giữ nguyên giá trị status
+      }
+    }
+
+    return status === "pending";
   };
 
   const columns = [
@@ -469,6 +594,7 @@ const handleCancelOrder = async (orderId) => {
       key: "status",
       render: (status) => getStatusTag(status),
     },
+    // Trong columns của Table
     {
       title: "Thao tác",
       key: "action",
@@ -497,7 +623,55 @@ const handleCancelOrder = async (orderId) => {
               <Popconfirm
                 title="Hủy đơn hàng"
                 description="Bạn có chắc chắn muốn hủy đơn hàng này?"
-                onConfirm={() => handleCancelOrder(record.orderId)}
+                onConfirm={async () => {
+                  try {
+                    // Kiểm tra lại trạng thái hiện tại của đơn hàng từ server
+                    const latestOrderInfo = await getOrderById(record.orderId);
+                    const latestOrder = latestOrderInfo.data || latestOrderInfo;
+
+                    // Chuẩn hóa trạng thái
+                    let currentStatus = latestOrder.status;
+                    if (
+                      typeof currentStatus === "string" &&
+                      (currentStatus.startsWith("{") ||
+                        currentStatus.includes("status"))
+                    ) {
+                      try {
+                        const parsedStatus = JSON.parse(currentStatus);
+                        if (parsedStatus && parsedStatus.status) {
+                          currentStatus = parsedStatus.status;
+                        }
+                      } catch (error) {
+                        console.error("Error parsing status JSON:", error);
+                      }
+                    }
+
+                    // Kiểm tra xem đơn hàng còn ở trạng thái "pending" không
+                    if (currentStatus !== "pending") {
+                      console.warn(
+                        `Order #${record.orderId} status changed from pending to ${currentStatus}`
+                      );
+                      message.warning(
+                        "Không thể hủy đơn hàng vì trạng thái đã thay đổi. Vui lòng làm mới trang để cập nhật."
+                      );
+
+                      // Cập nhật lại danh sách đơn hàng
+                      if (currentUser) {
+                        await fetchOrders(currentUser.id || currentUser.userId);
+                      }
+                      return;
+                    }
+
+                    // Tiếp tục hủy đơn hàng
+                    await handleCancelOrder(record.orderId);
+                  } catch (error) {
+                    console.error(
+                      "Error checking status before cancel:",
+                      error
+                    );
+                    handleCancelOrder(record.orderId);
+                  }
+                }}
                 okText="Hủy đơn"
                 cancelText="Không"
                 okType="danger"
@@ -593,7 +767,60 @@ const handleCancelOrder = async (orderId) => {
                   key="cancel"
                   title="Hủy đơn hàng"
                   description="Bạn có chắc chắn muốn hủy đơn hàng này?"
-                  onConfirm={() => handleCancelOrder(selectedOrder.orderId)}
+                  onConfirm={async () => {
+                    try {
+                      // Kiểm tra lại trạng thái hiện tại của đơn hàng từ server
+                      const latestOrderInfo = await getOrderById(
+                        selectedOrder.orderId
+                      );
+                      const latestOrder =
+                        latestOrderInfo.data || latestOrderInfo;
+
+                      // Chuẩn hóa trạng thái
+                      let currentStatus = latestOrder.status;
+                      if (
+                        typeof currentStatus === "string" &&
+                        (currentStatus.startsWith("{") ||
+                          currentStatus.includes("status"))
+                      ) {
+                        try {
+                          const parsedStatus = JSON.parse(currentStatus);
+                          if (parsedStatus && parsedStatus.status) {
+                            currentStatus = parsedStatus.status;
+                          }
+                        } catch (error) {
+                          console.error("Error parsing status JSON:", error);
+                        }
+                      }
+
+                      // Kiểm tra xem đơn hàng còn ở trạng thái "pending" không
+                      if (currentStatus !== "pending") {
+                        console.warn(
+                          `Order #${selectedOrder.orderId} status changed from pending to ${currentStatus}`
+                        );
+                        message.warning(
+                          "Không thể hủy đơn hàng vì trạng thái đã thay đổi. Vui lòng làm mới trang để cập nhật."
+                        );
+
+                        // Cập nhật lại danh sách đơn hàng
+                        if (currentUser) {
+                          await fetchOrders(
+                            currentUser.id || currentUser.userId
+                          );
+                        }
+                        return;
+                      }
+
+                      // Tiếp tục hủy đơn hàng
+                      await handleCancelOrder(selectedOrder.orderId);
+                    } catch (error) {
+                      console.error(
+                        "Error checking status before cancel:",
+                        error
+                      );
+                      handleCancelOrder(selectedOrder.orderId);
+                    }
+                  }}
                   okText="Hủy đơn"
                   cancelText="Không"
                   okType="danger"
@@ -625,7 +852,8 @@ const handleCancelOrder = async (orderId) => {
                 <Steps
                   current={getOrderStatusStep(selectedOrder.status)}
                   status={
-                    selectedOrder.status === "cancelled"
+                    // Sử dụng hàm xử lý status đã được chuẩn hóa
+                    getOrderStatusStep(selectedOrder.status) === 4
                       ? "error"
                       : "process"
                   }
@@ -685,8 +913,7 @@ const handleCancelOrder = async (orderId) => {
 
               <div className="my-4">
                 <div className="font-medium flex items-center mb-2">
-                  <EnvironmentOutlined className="mr-2" /> Địa chỉ nhận
-                  hàng
+                  <EnvironmentOutlined className="mr-2" /> Địa chỉ nhận hàng
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
                   <div className="font-medium">
@@ -716,7 +943,8 @@ const handleCancelOrder = async (orderId) => {
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = "/assets/images/products/default.jpg";
+                                e.target.src =
+                                  "/assets/images/products/default.jpg";
                               }}
                             />
                           ) : (
@@ -728,8 +956,8 @@ const handleCancelOrder = async (orderId) => {
                         <div className="flex-grow">
                           <div className="font-medium">
                             {item.productId ? (
-                              <a 
-                                href="#" 
+                              <a
+                                href="#"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   navigateToProductDetail(item.productId);
@@ -744,13 +972,11 @@ const handleCancelOrder = async (orderId) => {
                           </div>
                           <div className="text-gray-500 text-sm">
                             SL: {item.quantity} x{" "}
-                            {item.unitPrice.toLocaleString("vi-VN")}{" "}
-                            VNĐ
+                            {item.unitPrice.toLocaleString("vi-VN")} VNĐ
                           </div>
                         </div>
                         <div className="font-medium">
-                          {item.lineTotal.toLocaleString("vi-VN")}{" "}
-                          VNĐ
+                          {item.lineTotal.toLocaleString("vi-VN")} VNĐ
                         </div>
                       </div>
                     ))}

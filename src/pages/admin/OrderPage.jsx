@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Layout,
   Card,
@@ -44,6 +44,13 @@ const OrderPage = () => {
 
   const [filters, setFilters] = useState({});
   const [collapsed, setCollapsed] = useState(false);
+  const [statistics, setStatistics] = useState({
+    totalOrders: 0,
+    pendingOrders: 0,
+    deliveredOrders: 0,
+    shippingOrders: 0,
+    totalRevenue: 0,
+  });
 
   const toggleCollapsed = () => {
     setCollapsed(!collapsed);
@@ -52,13 +59,81 @@ const OrderPage = () => {
   // Get notification items
   const notificationItems = getNotificationItems();
 
+  // Cập nhật thống kê mỗi khi orders thay đổi
+  useEffect(() => {
+    calculateStatistics(orders);
+  }, [orders]);
+
+  // Hàm tính toán thống kê
+  const calculateStatistics = (ordersList) => {
+    // Chuẩn hóa trạng thái để xử lý cả chuỗi JSON và giá trị thông thường
+    const normalizedOrders = ordersList.map(order => {
+      let status = order.status;
+      
+      if (typeof status === 'string' && status.startsWith('{') && status.endsWith('}')) {
+        try {
+          const parsedStatus = JSON.parse(status);
+          if (parsedStatus && parsedStatus.status) {
+            status = parsedStatus.status;
+          }
+        } catch (error) {
+          console.error("Error parsing status JSON:", error);
+        }
+      }
+      
+      return {
+        ...order,
+        normalizedStatus: status
+      };
+    });
+    
+    const totalOrders = normalizedOrders.length;
+    const pendingOrders = normalizedOrders.filter(
+      (order) => order.normalizedStatus === "pending"
+    ).length;
+    const deliveredOrders = normalizedOrders.filter(
+      (order) => order.normalizedStatus === "delivered"
+    ).length;
+    const shippingOrders = normalizedOrders.filter(
+      (order) => order.normalizedStatus === "shipping"
+    ).length;
+    
+    // Chỉ tính doanh thu từ đơn hàng đã giao
+    const totalRevenue = normalizedOrders
+      .filter((order) => order.normalizedStatus === "delivered")
+      .reduce((sum, order) => sum + (order.total || 0), 0);
+    
+    setStatistics({
+      totalOrders,
+      pendingOrders,
+      deliveredOrders,
+      shippingOrders,
+      totalRevenue,
+    });
+    
+    console.log("Đã cập nhật thống kê:", {
+      totalOrders,
+      pendingOrders,
+      deliveredOrders,
+      shippingOrders,
+      totalRevenue,
+    });
+  };
+
+  // Đảm bảo fetch dữ liệu khi component được tải
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
   // Handle filter operations
   const handleFilter = (newFilters) => {
+    console.log("Áp dụng bộ lọc mới:", newFilters);
     setFilters(newFilters);
     fetchOrders(newFilters);
   };
 
   const handleResetFilter = () => {
+    console.log("Đặt lại bộ lọc");
     setFilters({});
     fetchOrders();
   };
@@ -66,8 +141,13 @@ const OrderPage = () => {
   // Handle order operations
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      await updateStatus(orderId, newStatus);
+      const success = await updateStatus(orderId, newStatus);
+      if (success) {
+        // Cập nhật thống kê ngay sau khi cập nhật thành công
+        calculateStatistics(orders);
+      }
     } catch (error) {
+      console.error("Error updating order status:", error);
       message.error("Có lỗi xảy ra khi cập nhật trạng thái đơn hàng");
     }
   };
@@ -75,6 +155,8 @@ const OrderPage = () => {
   const handleDelete = async (orderId) => {
     try {
       await deleteOrder(orderId);
+      // Cập nhật thống kê sau khi xóa
+      calculateStatistics(orders);
     } catch (error) {
       message.error("Có lỗi xảy ra khi xóa đơn hàng");
     }
@@ -87,21 +169,6 @@ const OrderPage = () => {
   const handleImport = () => {
     message.info("Tính năng nhập dữ liệu đang được phát triển");
   };
-
-  // Calculate statistics
-  const totalOrders = orders.length;
-  const pendingOrders = orders.filter(
-    (order) => order.status === "pending"
-  ).length;
-  const deliveredOrders = orders.filter(
-    (order) => order.status === "delivered"
-  ).length;
-  const shippingOrders = orders.filter(
-    (order) => order.status === "shipping"
-  ).length;
-  const totalRevenue = orders
-    .filter((order) => order.status === "delivered")
-    .reduce((sum, order) => sum + order.total, 0);
 
   return (
     <Layout className="min-h-screen bg-slate-100">
@@ -170,7 +237,7 @@ const OrderPage = () => {
                 >
                   <Statistic
                     title="Tổng đơn hàng"
-                    value={totalOrders}
+                    value={statistics.totalOrders}
                     prefix={<ShoppingOutlined />}
                     valueStyle={{ color: "#1890ff" }}
                   />
@@ -184,7 +251,7 @@ const OrderPage = () => {
                 >
                   <Statistic
                     title="Chờ xác nhận"
-                    value={pendingOrders}
+                    value={statistics.pendingOrders}
                     prefix={<ClockCircleOutlined />}
                     valueStyle={{ color: "#fa8c16" }}
                   />
@@ -198,7 +265,7 @@ const OrderPage = () => {
                 >
                   <Statistic
                     title="Đang giao hàng"
-                    value={shippingOrders}
+                    value={statistics.shippingOrders}
                     prefix={<TruckOutlined />}
                     valueStyle={{ color: "#722ed1" }}
                   />
@@ -212,7 +279,7 @@ const OrderPage = () => {
                 >
                   <Statistic
                     title="Đã giao hàng"
-                    value={deliveredOrders}
+                    value={statistics.deliveredOrders}
                     prefix={<CheckCircleOutlined />}
                     valueStyle={{ color: "#52c41a" }}
                   />
@@ -230,7 +297,7 @@ const OrderPage = () => {
                 >
                   <Statistic
                     title={<span className="text-white">Tổng doanh thu</span>}
-                    value={totalRevenue}
+                    value={statistics.totalRevenue}
                     prefix={<DollarOutlined className="text-white" />}
                     valueStyle={{ color: "white" }}
                     formatter={(value) =>

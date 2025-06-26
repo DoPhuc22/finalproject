@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Row,
   Col,
@@ -17,17 +17,14 @@ import {
   Spin,
 } from "antd";
 import {
-  ShopOutlined,
-  FilterOutlined,
   AppstoreOutlined,
   BarsOutlined,
   ReloadOutlined,
-  SearchOutlined,
 } from "@ant-design/icons";
 import ProductGrid from "../../components/customer/Products/ProductGrid";
 import { Link } from "react-router-dom";
 import useProductsData from "../../hooks/useProductsData";
-import useCart from "../../hooks/useCart"; // Import useCart hook
+import useCart from "../../hooks/useCart";
 import { getAllCategories } from "../../services/categories";
 import { getAllBrands } from "../../services/brands";
 
@@ -44,8 +41,6 @@ const ProductsPage = () => {
   // UI states
   const [searchTerm, setSearchTerm] = useState("");
   const [priceRange, setPriceRange] = useState([0, 5000000]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedBrands, setSelectedBrands] = useState([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
   const [viewMode, setViewMode] = useState("grid");
@@ -99,35 +94,49 @@ const ProductsPage = () => {
     }
   };
 
+  // Tìm kiếm linh hoạt, hỗ trợ "product 4" tìm được "4 product"
+  const searchInProduct = (product, term) => {
+    if (!term) return true;
+    
+    // Normalize search terms by splitting into individual words
+    const searchWords = term.toLowerCase().split(/\s+/).filter(word => word.length > 0);
+    
+    // Check if all words in the search term exist in product data
+    return searchWords.every(word => {
+      const productName = product.name?.toLowerCase() || '';
+      const productDesc = product.description?.toLowerCase() || '';
+      
+      // Get category name
+      let categoryName = '';
+      if (typeof product.category === 'object' && product.category?.name) {
+        categoryName = product.category.name.toLowerCase();
+      } else if (typeof product.category === 'string') {
+        categoryName = product.category.toLowerCase();
+      }
+      
+      // Get brand name
+      let brandName = '';
+      if (typeof product.brand === 'object' && product.brand?.name) {
+        brandName = product.brand.name.toLowerCase();
+      } else if (typeof product.brand === 'string') {
+        brandName = product.brand.toLowerCase();
+      }
+      
+      // Check if the word exists in any of the product's data
+      return productName.includes(word) || 
+             productDesc.includes(word) || 
+             categoryName.includes(word) || 
+             brandName.includes(word);
+    });
+  };
+
   // Apply filters to all products
   const getFilteredProducts = useCallback(() => {
     let filtered = allProducts || [];
 
-    // Search filter
+    // Search filter - tìm kiếm cả tên, danh mục và thương hiệu
     if (searchTerm) {
-      filtered = filtered.filter(
-        (product) =>
-          product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Category filter
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter((product) => {
-        const productCategoryId =
-          product.categoryId || product.category?.id || product.category;
-        return selectedCategories.includes(productCategoryId);
-      });
-    }
-
-    // Brand filter
-    if (selectedBrands.length > 0) {
-      filtered = filtered.filter((product) => {
-        const productBrandId =
-          product.brandId || product.brand?.id || product.brand;
-        return selectedBrands.includes(productBrandId);
-      });
+      filtered = filtered.filter(product => searchInProduct(product, searchTerm));
     }
 
     // Price range filter
@@ -149,8 +158,6 @@ const ProductsPage = () => {
   }, [
     allProducts,
     searchTerm,
-    selectedCategories,
-    selectedBrands,
     priceRange,
     inStockOnly,
   ]);
@@ -208,12 +215,16 @@ const ProductsPage = () => {
   const resetFilters = () => {
     setSearchTerm("");
     setPriceRange([0, 5000000]);
-    setSelectedCategories([]);
-    setSelectedBrands([]);
     setInStockOnly(false);
     setSortBy("featured");
 
     updateFilters({});
+  };
+
+  // Handle search input
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    handlePaginationChange(1, pagination.pageSize); // Reset to first page
   };
 
   return (
@@ -257,14 +268,19 @@ const ProductsPage = () => {
             <Divider />
 
             <div className="mb-4">
-              <Text strong>Tìm kiếm</Text>
+              <Text strong>Tìm kiếm sản phẩm</Text>
               <Search
-                placeholder="Nhập từ khóa..."
+                placeholder="Tìm theo tên, danh mục, thương hiệu..."
                 allowClear
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onSearch={handleSearch}
+                enterButton
                 className="mt-2"
               />
+              <div className="mt-2 text-xs text-gray-500">
+                Tìm kiếm linh hoạt theo tên sản phẩm, danh mục hoặc thương hiệu
+              </div>
             </div>
 
             <Divider />
@@ -283,42 +299,6 @@ const ProductsPage = () => {
               <div className="flex justify-between">
                 <Text>{priceRange[0].toLocaleString()} VNĐ</Text>
                 <Text>{priceRange[1].toLocaleString()} VNĐ</Text>
-              </div>
-            </div>
-
-            <Divider />
-
-            <div className="mb-4">
-              <Text strong>Danh mục</Text>
-              <div className="mt-2">
-                <Checkbox.Group
-                  options={categories.map((c) => ({
-                    label: c.name || c,
-                    value: c.categoryId || c.id || c,
-                  }))}
-                  value={selectedCategories}
-                  onChange={setSelectedCategories}
-                  className="flex flex-col gap-2"
-                  loading={categoriesLoading}
-                />
-              </div>
-            </div>
-
-            <Divider />
-
-            <div className="mb-4">
-              <Text strong>Thương hiệu</Text>
-              <div className="mt-2">
-                <Checkbox.Group
-                  options={brands.map((b) => ({
-                    label: b.name || b,
-                    value: b.brandId || b.id || b,
-                  }))}
-                  value={selectedBrands}
-                  onChange={setSelectedBrands}
-                  className="flex flex-col gap-2"
-                  loading={brandsLoading}
-                />
               </div>
             </div>
 
@@ -348,28 +328,10 @@ const ProductsPage = () => {
             <div className="flex flex-wrap justify-between items-center">
               <div>
                 <Text className="mr-2">Hiển thị {total} sản phẩm</Text>
-                {selectedCategories.length > 0 && (
-                  <Space size={[0, 8]} wrap className="mt-2">
-                    {selectedCategories.map((cat) => {
-                      const categoryName =
-                        categories.find((c) => (c.categoryId || c.id) === cat)
-                          ?.name || cat;
-
-                      return (
-                        <Tag
-                          key={cat}
-                          closable
-                          onClose={() =>
-                            setSelectedCategories(
-                              selectedCategories.filter((c) => c !== cat)
-                            )
-                          }
-                        >
-                          {categoryName}
-                        </Tag>
-                      );
-                    })}
-                  </Space>
+                {searchTerm && (
+                  <Tag closable onClose={() => setSearchTerm("")}>
+                    Tìm kiếm: {searchTerm}
+                  </Tag>
                 )}
               </div>
 
@@ -423,6 +385,7 @@ const ProductsPage = () => {
                 onPageChange={onPageChange}
                 onAddToCart={handleAddToCart}
                 cartLoading={cartLoading}
+                viewMode={viewMode}
               />
             </>
           )}
