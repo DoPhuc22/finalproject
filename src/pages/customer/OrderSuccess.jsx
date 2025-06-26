@@ -15,6 +15,7 @@ import {
   HistoryOutlined,
 } from "@ant-design/icons";
 import { createOrder } from "../../services/orders";
+import { processCheckout } from "../../services/checkout"; // Thêm import này
 import useCart from "../../hooks/useCart";
 
 const { Title, Text } = Typography;
@@ -198,10 +199,28 @@ const OrderSuccess = () => {
               pendingOrder.orderData.status = "confirmed";
               pendingOrder.orderData.paymentMethod = "vnpay";
 
-              // Tạo đơn hàng
-              console.log("Creating order in database after VNPay payment");
-              const orderResponse = await createOrder(pendingOrder.orderData);
-              console.log("Order created successfully:", orderResponse);
+              // Tạo đơn hàng BẰNG API CHECKOUT thay vì createOrder
+              console.log(
+                "Creating order via checkout API after VNPay payment"
+              );
+
+              // Chuẩn bị dữ liệu cho API checkout
+              const checkoutData = {
+                paymentMethod: "vnpay",
+                orderData: pendingOrder.orderData,
+                vnpayData: {
+                  vnp_ResponseCode: "00", // Mã thành công
+                  vnp_TransactionNo: pendingOrder.transactionId || "UNKNOWN",
+                  vnp_BankCode: pendingOrder.bankCode || "UNKNOWN",
+                },
+              };
+
+              // Gọi API checkout thay vì createOrder
+              const orderResponse = await processCheckout(checkoutData);
+              console.log(
+                "Order created successfully via checkout API:",
+                orderResponse
+              );
 
               // Xác định orderId từ response
               let orderId = null;
@@ -246,7 +265,9 @@ const OrderSuccess = () => {
               // Xóa giỏ hàng
               if (cartItems && cartItems.length > 0) {
                 try {
-                  console.log("Clearing cart after successful order creation");
+                  console.log(
+                    "Clearing cart after successful order creation via checkout API"
+                  );
                   await clearEntireCart();
                   console.log("Cart cleared successfully");
                 } catch (clearError) {

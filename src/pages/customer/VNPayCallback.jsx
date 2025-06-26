@@ -12,6 +12,7 @@ import {
   parseVNPayAmount,
 } from "../../services/vnpay";
 import { createOrder } from "../../services/orders";
+import { processCheckout } from "../../services/checkout";
 import useCart from "../../hooks/useCart";
 
 const { Title, Text } = Typography;
@@ -25,109 +26,112 @@ const VNPayCallback = () => {
   const { clearEntireCart } = useCart();
 
   useEffect(() => {
-  const processPaymentCallback = async () => {
-    try {
-      setLoading(true);
+    const processPaymentCallback = async () => {
+      try {
+        setLoading(true);
 
-      // Lấy tất cả parameters từ URL
-      const params = {};
-      searchParams.forEach((value, key) => {
-        params[key] = value;
-      });
+        // Lấy tất cả parameters từ URL
+        const params = {};
+        searchParams.forEach((value, key) => {
+          params[key] = value;
+        });
 
-      console.log("VNPay callback parameters:", params);
+        console.log("VNPay callback parameters:", params);
 
-      // Validate VNPay response
-      const validation = validateVNPayResponse(params);
-      console.log("VNPay response validation:", validation);
+        // Validate VNPay response
+        const validation = validateVNPayResponse(params);
+        console.log("VNPay response validation:", validation);
 
-      // Lấy thông tin đơn hàng từ sessionStorage
-      const pendingOrderStr = sessionStorage.getItem("pendingOrder");
-      let pendingOrder = null;
+        // Lấy thông tin đơn hàng từ sessionStorage
+        const pendingOrderStr = sessionStorage.getItem("pendingOrder");
+        let pendingOrder = null;
 
-      if (pendingOrderStr) {
-        try {
-          pendingOrder = JSON.parse(pendingOrderStr);
-          setOrderInfo(pendingOrder);
-        } catch (e) {
-          console.error("Error parsing pending order:", e);
-        }
-      }
-
-      // Xử lý payment callback
-      const result = await processVNPayPayment(params);
-      console.log("Payment processing result:", result);
-
-      // Cập nhật kết quả thanh toán
-      const paymentData = {
-        ...result,
-        orderId: pendingOrder?.tempOrderId || params.vnp_TxnRef,
-        amount: parseVNPayAmount(params.vnp_Amount) || pendingOrder?.amount,
-        transactionId: params.vnp_TransactionNo,
-        bankCode: params.vnp_BankCode,
-        responseCode: params.vnp_ResponseCode,
-        transactionDate: params.vnp_PayDate,
-      };
-
-      setPaymentResult(paymentData);
-
-      // Tạo đơn hàng nếu thanh toán thành công và có pendingOrder
-      if (result.success && validation.isSuccess && pendingOrder?.orderData) {
-        try {
-          console.log("Payment successful, preparing order data");
-
-          // Kiểm tra xem đơn hàng đã được tạo chưa
-          if (pendingOrder.createdOrderId) {
-            console.log(
-              "Order already created with ID:",
-              pendingOrder.createdOrderId
-            );
-
-            // Cập nhật paymentResult với orderId đã tạo
-            paymentData.orderId = pendingOrder.createdOrderId;
-            setPaymentResult({ ...paymentData });
-
-            // Đảm bảo xóa giỏ hàng
-            await clearEntireCart();
-            
-            // KHÔNG TẠO ĐƠN HÀNG Ở ĐÂY NỮA, để cho OrderSuccess.jsx xử lý
-          } else {
-            // Cập nhật pendingOrder với thông tin giao dịch để OrderSuccess.jsx có thể sử dụng
-            pendingOrder.transactionId = params.vnp_TransactionNo;
-            pendingOrder.bankCode = params.vnp_BankCode;
-            sessionStorage.setItem("pendingOrder", JSON.stringify(pendingOrder));
-            
-            // KHÔNG TẠO ĐƠN HÀNG Ở ĐÂY NỮA, để cho OrderSuccess.jsx xử lý
+        if (pendingOrderStr) {
+          try {
+            pendingOrder = JSON.parse(pendingOrderStr);
+            setOrderInfo(pendingOrder);
+          } catch (e) {
+            console.error("Error parsing pending order:", e);
           }
-
-          // Chuyển hướng đến trang thành công
-          // Tạo một state object để OrderSuccess.jsx biết là đến từ VNPayCallback
-          navigate("/order-success", {
-            state: {
-              fromVNPayCallback: true,
-              paymentMethod: "vnpay",
-              transactionId: params.vnp_TransactionNo,
-            },
-          });
-        } catch (error) {
-          console.error("Error processing payment:", error);
         }
-      }
-    } catch (error) {
-      console.error('Error in payment callback:', error);
-      setPaymentResult({
-        success: false,
-        transactionStatus: "error",
-        message: "Có lỗi xảy ra khi xử lý thanh toán",
-        error: error.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  processPaymentCallback();
-}, [searchParams, clearEntireCart, navigate]);
+        // Xử lý payment callback
+        const result = await processVNPayPayment(params);
+        console.log("Payment processing result:", result);
+
+        // Cập nhật kết quả thanh toán
+        const paymentData = {
+          ...result,
+          orderId: pendingOrder?.tempOrderId || params.vnp_TxnRef,
+          amount: parseVNPayAmount(params.vnp_Amount) || pendingOrder?.amount,
+          transactionId: params.vnp_TransactionNo,
+          bankCode: params.vnp_BankCode,
+          responseCode: params.vnp_ResponseCode,
+          transactionDate: params.vnp_PayDate,
+        };
+
+        setPaymentResult(paymentData);
+
+        // Tạo đơn hàng nếu thanh toán thành công và có pendingOrder
+        if (result.success && validation.isSuccess && pendingOrder?.orderData) {
+          try {
+            console.log("Payment successful, preparing order data");
+
+            // Kiểm tra xem đơn hàng đã được tạo chưa
+            if (pendingOrder.createdOrderId) {
+              console.log(
+                "Order already created with ID:",
+                pendingOrder.createdOrderId
+              );
+
+              // Cập nhật paymentResult với orderId đã tạo
+              paymentData.orderId = pendingOrder.createdOrderId;
+              setPaymentResult({ ...paymentData });
+
+              // Đảm bảo xóa giỏ hàng
+              await clearEntireCart();
+
+              // KHÔNG TẠO ĐƠN HÀNG Ở ĐÂY NỮA, để cho OrderSuccess.jsx xử lý
+            } else {
+              // Cập nhật pendingOrder với thông tin giao dịch để OrderSuccess.jsx có thể sử dụng
+              pendingOrder.transactionId = params.vnp_TransactionNo;
+              pendingOrder.bankCode = params.vnp_BankCode;
+              sessionStorage.setItem(
+                "pendingOrder",
+                JSON.stringify(pendingOrder)
+              );
+
+              // KHÔNG TẠO ĐƠN HÀNG Ở ĐÂY NỮA, để cho OrderSuccess.jsx xử lý
+            }
+
+            // Chuyển hướng đến trang thành công
+            // Tạo một state object để OrderSuccess.jsx biết là đến từ VNPayCallback
+            navigate("/order-success", {
+              state: {
+                fromVNPayCallback: true,
+                paymentMethod: "vnpay",
+                transactionId: params.vnp_TransactionNo,
+              },
+            });
+          } catch (error) {
+            console.error("Error processing payment:", error);
+          }
+        }
+      } catch (error) {
+        console.error("Error in payment callback:", error);
+        setPaymentResult({
+          success: false,
+          transactionStatus: "error",
+          message: "Có lỗi xảy ra khi xử lý thanh toán",
+          error: error.message,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    processPaymentCallback();
+  }, [searchParams, clearEntireCart, navigate]);
 
   const handleBackToHome = () => {
     navigate("/", { replace: true });

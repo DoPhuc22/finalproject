@@ -62,7 +62,12 @@ const processVNPayCheckout = async (checkoutData) => {
           console.warn('Warning: Could not clear cart after VNPay checkout:', clearError);
         }
         
-        return orderResponse;
+        // Đảm bảo định dạng response thống nhất
+        return {
+          success: true,
+          data: orderResponse.data || orderResponse,
+          orderId: orderResponse.data?.orderId || orderResponse.orderId || orderResponse.id
+        };
       } else {
         throw new Error('Không thể tạo đơn hàng sau thanh toán');
       }
