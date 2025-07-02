@@ -56,13 +56,11 @@ export const login = async (credentials) => {
         delete userData.token; // Không lưu token vào đối tượng user
       }
 
-      // Đảm bảo dữ liệu người dùng chứa id - KHÔNG tạo ID ảo
       if (!userData.id) {
         if (userData.userId) userData.id = userData.userId;
         else if (userData._id) userData.id = userData._id;
         else if (response.userId) userData.id = response.userId;
         else if (response._id) userData.id = response._id;
-        // REMOVED: else userData.id = Date.now().toString(); // Không tạo ID ảo nữa
       }
 
       // Đảm bảo có userId cho compatibility
@@ -75,9 +73,7 @@ export const login = async (credentials) => {
         userData.email = credentials.email;
       }
 
-      // Chỉ lưu vào localStorage nếu có ID thực
       if (userData.id && !userData.id.toString().match(/^\d{13}$/)) {
-        // ID thực (không phải timestamp)
         console.log("Saving user data to localStorage:", userData);
         localStorage.setItem("user", JSON.stringify(userData));
 
@@ -85,7 +81,6 @@ export const login = async (credentials) => {
         profileCache = userData;
         profileFetchedAt = Date.now();
       } else {
-        // Không có ID thực, chỉ lưu token và để profile API load sau
         console.log("No real user ID found, will fetch from profile API");
         localStorage.setItem(
           "user",
@@ -277,11 +272,8 @@ export const getCurrentUser = async (options = { forceRefresh: false }) => {
         if (needsProfileFetch) {
           throw apiError;
         }
-
-        // Fallback to localStorage if available
       }
     } else {
-      console.log("Using cached profile data");
       return profileCache;
     }
 

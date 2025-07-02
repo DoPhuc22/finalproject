@@ -54,7 +54,6 @@ const Header = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // Sử dụng phiên bản async của isAuthenticated
         const isAuth = await isAuthenticated();
         setAuthenticated(isAuth);
 
@@ -66,8 +65,6 @@ const Header = () => {
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
-        setAuthenticated(false);
-        setCurrentUser(null);
       }
     };
 
@@ -78,35 +75,22 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       setLogoutLoading(true);
-      // Gọi API logout
       await logoutAPI();
 
-      // Xóa thông tin user từ state
       setCurrentUser(null);
       setAuthenticated(false);
-
-      // Hiển thị thông báo thành công
       message.success("Đăng xuất thành công!");
 
-      // Đóng mobile drawer nếu đang mở
       setVisible(false);
-
-      // Chuyển hướng về trang chủ
       navigate("/");
-
-      // Tạo sự kiện tùy chỉnh để thông báo đăng xuất
       const event = new Event("userLoggedOut");
       window.dispatchEvent(event);
     } catch (error) {
       console.error("Logout error:", error);
-      // Dù có lỗi API vẫn logout local state
-      setCurrentUser(null);
-      setAuthenticated(false);
-      message.info("Đã đăng xuất");
+      message.error("Đăng xuất không thành công. Vui lòng thử lại sau.");
       setVisible(false);
       navigate("/");
 
-      // Vẫn tạo sự kiện tùy chỉnh dù có lỗi
       const event = new Event("userLoggedOut");
       window.dispatchEvent(event);
     } finally {
@@ -187,15 +171,7 @@ const Header = () => {
   const getCurrentMenuKey = () => {
     const pathname = location.pathname;
     if (pathname === "/") return "/";
-
-    // Kiểm tra xem pathname có chứa '/products' không
-    if (pathname.includes("/products")) {
-      // Nếu URL có chứa 'filter=brands' thì đánh dấu menu Thương hiệu
-      if (location.search.includes("filter=brands")) return "/products";
-      // Nếu là trang products khác thì đánh dấu menu Đồng hồ
-      return "watches";
-    }
-
+    if (pathname.includes("/products")) return "/products";
     return pathname;
   };
 

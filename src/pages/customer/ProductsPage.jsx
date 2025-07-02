@@ -40,7 +40,7 @@ const ProductsPage = () => {
 
   // UI states
   const [searchTerm, setSearchTerm] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 5000000]);
+  const [priceRange, setPriceRange] = useState([0, 20000000]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
   const [viewMode, setViewMode] = useState("grid");
@@ -94,17 +94,13 @@ const ProductsPage = () => {
     }
   };
 
-  // Tìm kiếm linh hoạt, hỗ trợ "product 4" tìm được "4 product"
   const searchInProduct = (product, term) => {
     if (!term) return true;
     
-    // Normalize search terms by splitting into individual words
     const searchWords = term.toLowerCase().split(/\s+/).filter(word => word.length > 0);
     
-    // Check if all words in the search term exist in product data
     return searchWords.every(word => {
       const productName = product.name?.toLowerCase() || '';
-      const productDesc = product.description?.toLowerCase() || '';
       
       // Get category name
       let categoryName = '';
@@ -123,8 +119,7 @@ const ProductsPage = () => {
       }
       
       // Check if the word exists in any of the product's data
-      return productName.includes(word) || 
-             productDesc.includes(word) || 
+      return productName.includes(word) ||  
              categoryName.includes(word) || 
              brandName.includes(word);
     });
@@ -134,13 +129,12 @@ const ProductsPage = () => {
   const getFilteredProducts = useCallback(() => {
     let filtered = allProducts || [];
 
-    // Search filter - tìm kiếm cả tên, danh mục và thương hiệu
     if (searchTerm) {
       filtered = filtered.filter(product => searchInProduct(product, searchTerm));
     }
 
     // Price range filter
-    if (priceRange[0] > 0 || priceRange[1] < 5000000) {
+    if (priceRange[0] > 0 || priceRange[1] < 20000000) {
       filtered = filtered.filter(
         (product) =>
           product.price >= priceRange[0] && product.price <= priceRange[1]
@@ -214,7 +208,7 @@ const ProductsPage = () => {
   // Reset all filters
   const resetFilters = () => {
     setSearchTerm("");
-    setPriceRange([0, 5000000]);
+    setPriceRange([0, 20000000]);
     setInStockOnly(false);
     setSortBy("featured");
 
@@ -290,7 +284,7 @@ const ProductsPage = () => {
               <Slider
                 range
                 min={0}
-                max={5000000}
+                max={20000000}
                 step={100000}
                 value={priceRange}
                 onChange={setPriceRange}
@@ -347,11 +341,10 @@ const ProductsPage = () => {
                     { value: "priceDesc", label: "Giá giảm dần" },
                     { value: "nameAsc", label: "A-Z" },
                     { value: "nameDesc", label: "Z-A" },
-                    { value: "rating", label: "Đánh giá cao" },
                   ]}
                 />
 
-                <div className="view-switcher ml-2">
+                {/* <div className="view-switcher ml-2">
                   <Radio.Group
                     value={viewMode}
                     onChange={(e) => setViewMode(e.target.value)}
@@ -364,7 +357,7 @@ const ProductsPage = () => {
                       <BarsOutlined />
                     </Radio.Button>
                   </Radio.Group>
-                </div>
+                </div> */}
               </div>
             </div>
           </Card>

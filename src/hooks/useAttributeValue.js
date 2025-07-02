@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { message } from "antd";
 import {
-  getAllAttributeValues,
   createAttributeValue as createAttributeValueAPI,
   updateAttributeValue as updateAttributeValueAPI,
   deleteAttributeValue as deleteAttributeValueAPI,
   getAttributeValuesByProduct,
+  getAttributesAndValuesByProduct,
 } from "../services/attribute_values";
 import { getAllProducts } from "../services/products";
 import { getAllAttributeTypes } from "../services/attribute_types";
@@ -33,7 +33,6 @@ const useAttributeValue = () => {
       const isFetchingAll = Object.keys(params).length === 0;
       isFetchingAllRef.current = isFetchingAll;
 
-      // Kiểm tra localStorage nếu đang fetch tất cả
       if (isFetchingAll) {
         const cached = localStorage.getItem("attributeValues");
         if (cached) {
@@ -61,8 +60,6 @@ const useAttributeValue = () => {
         console.error("Error loading attribute values:", error);
         data = [];
       }
-
-      // Apply filters client-side
       let filteredData = [...data];
 
       // Apply search filter
@@ -99,6 +96,8 @@ const useAttributeValue = () => {
         filteredData = filteredData.filter(
           (item) => item.status === params.status
         );
+      } else {
+        filteredData = filteredData.filter((item) => item.status === "active");
       }
 
       // Apply date range filter
@@ -130,14 +129,13 @@ const useAttributeValue = () => {
         total: normalizedData.length,
       }));
 
-      // Chỉ lưu vào localStorage nếu không có filter (để giữ nguyên data gốc)
       if (isFetchingAll && data.length > 0) {
         localStorage.setItem("attributeValues", JSON.stringify(data));
       }
     } catch (error) {
       console.error("Error fetching attribute values:", error);
       message.error("Lỗi khi tải danh sách giá trị thuộc tính");
-      // Set empty array if error
+
       setAttributeValues([]);
     } finally {
       setLoading(false);
@@ -161,13 +159,9 @@ const useAttributeValue = () => {
       }
 
       // Filter active products only
-      const activeProducts = productsData.filter(
-        (product) =>
-          product.active === true ||
-          product.active === "true" ||
-          product.status === "active" ||
-          product.isActive === true
-      );
+      const activeProducts = productsData.filter((product) => {
+        return product.active === true
+      });
 
       // Normalize product data
       const normalizedProducts = activeProducts.map((product) => ({
@@ -175,7 +169,7 @@ const useAttributeValue = () => {
         productId: product.id || product.productId,
         name: product.name,
         sku: product.sku,
-        active: true,
+        status: product.status,
       }));
 
       setProducts(normalizedProducts);
@@ -190,7 +184,6 @@ const useAttributeValue = () => {
   const fetchAttributeTypes = useCallback(async () => {
     try {
       const response = await getAllAttributeTypes();
-      console.log("Attribute types response:", response);
 
       // Handle different API response structures
       let typesData = [];
@@ -207,6 +200,7 @@ const useAttributeValue = () => {
         attr_type_id: type.attr_type_id || type.attrTypeId || type.id,
         name: type.name,
         description: type.description,
+        status: type.status || "active",
       }));
 
       setAttributeTypes(normalizedTypes);

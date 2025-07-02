@@ -35,7 +35,7 @@ const Footer = () => {
             </Col>
             
             {/* Column 2: Links */}
-            <Col xs={24} sm={12} md={6} lg={5}>
+            {/* <Col xs={24} sm={12} md={6} lg={5}>
               <Title level={4} className="text-white">Danh mục</Title>
               <ul className="list-none p-0">
                 <li className="mb-2">
@@ -51,7 +51,7 @@ const Footer = () => {
                   <Link to="/products?category=classic" className="text-white/80 hover:text-white hover:no-underline">Đồng hồ cổ điển</Link>
                 </li>
               </ul>
-            </Col>
+            </Col> */}
 
             {/* Column 3: Support Links */}
             <Col xs={24} sm={12} md={6} lg={5}>

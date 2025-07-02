@@ -75,15 +75,9 @@ const AccountInfo = ({ user }) => {
 
       // Chuẩn bị dữ liệu để cập nhật
       const formattedValues = { ...values };
-      // Không cập nhật email
       delete formattedValues.email;
 
       try {
-        // Thử sử dụng updateCustomer từ hook useCustomer
-        console.log("Updating user with updateCustomer hook:", {
-          userId,
-          formattedValues,
-        });
         await updateCustomer(userId, formattedValues);
 
         // Cập nhật localStorage với thông tin mới
@@ -109,7 +103,6 @@ const AccountInfo = ({ user }) => {
           hookError
         );
 
-        // Fallback: Thử sử dụng API updateUser trực tiếp
         try {
           await updateUser(userId, formattedValues);
 
@@ -133,7 +126,6 @@ const AccountInfo = ({ user }) => {
         } catch (apiError) {
           console.error("API error when updating user:", apiError);
 
-          // Fallback: Chỉ cập nhật localStorage nếu cả hai cách đều thất bại
           const updatedUser = {
             ...user,
             name: values.name,
@@ -176,11 +168,7 @@ const AccountInfo = ({ user }) => {
         Thông tin tài khoản
       </Title>
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleUpdate}
-      >
+      <Form form={form} layout="vertical" onFinish={handleUpdate}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Form.Item
             name="name"
@@ -223,11 +211,8 @@ const AccountInfo = ({ user }) => {
               className="rounded-lg"
             />
           </Form.Item>
-          
-          <Form.Item
-            name="address"
-            label="Địa chỉ"
-          >
+
+          <Form.Item name="address" label="Địa chỉ">
             <Input
               prefix={<UserOutlined className="text-gray-400" />}
               placeholder="Nhập địa chỉ"

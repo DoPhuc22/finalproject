@@ -34,11 +34,9 @@ const useCart = () => {
     console.log("Cart update event dispatched");
   }, [cartItems]);
 
-  // Validate user ID - check if it's a real ID or fake timestamp
   const isValidUserId = (userId) => {
     if (!userId) return false;
     const userIdStr = userId.toString();
-    // Check if it's a 13-digit timestamp (fake ID)
     return !userIdStr.match(/^\d{13}$/);
   };
 
@@ -59,12 +57,9 @@ const useCart = () => {
           return;
         }
 
-        // Luôn lấy thông tin user từ API để đảm bảo có ID thực
-        console.log("Fetching user profile to ensure real user ID...");
         const userData = await getCurrentUser({ forceRefresh: true });
 
         if (userData && userData.id && isValidUserId(userData.id)) {
-          console.log("Profile loaded successfully with real ID:", userData);
           setIsAuthenticated(true);
           setCurrentUser(userData);
 
@@ -101,7 +96,6 @@ const useCart = () => {
 
     // Listen for auth changes
     const handleStorageChange = () => {
-      console.log("Storage change detected, re-initializing auth...");
       initializeAuth();
     };
 
@@ -114,7 +108,6 @@ const useCart = () => {
     };
 
     const handleUserLoggedOut = () => {
-      console.log("User logged out event received");
       setCurrentUser(null);
       setIsAuthenticated(false);
       setCart(null);
@@ -249,20 +242,16 @@ const useCart = () => {
     }
   }, [currentUser]);
 
-  // Load cart chỉ khi user đã được load xong và có ID thực
   useEffect(() => {
     if (!profileLoading && isAuthenticated && currentUser) {
       const userId = currentUser.userId || currentUser.id;
       if (isValidUserId(userId)) {
-        console.log("Profile loaded with valid ID, now fetching cart...");
         fetchCart();
       } else {
-        console.log("User ID is invalid/fake, not fetching cart");
         setCart(null);
         setCartItems([]);
       }
     } else if (!profileLoading && !isAuthenticated) {
-      console.log("User not authenticated, clearing cart...");
       setCart(null);
       setCartItems([]);
     }
@@ -299,7 +288,6 @@ const useCart = () => {
       console.log("Adding item to cart:", { userId, cartItemData });
 
       await addToCart(userId, cartItemData);
-      message.success(`Đã thêm "${productData.name}" vào giỏ hàng`);
 
       await fetchCart();
       return true;
@@ -355,20 +343,15 @@ const useCart = () => {
   // Remove item from cart
   const removeItemFromCart = async (itemId) => {
     if (!isAuthenticated || !currentUser) return;
-
     const userId = currentUser.userId || currentUser.id;
     if (!isValidUserId(userId)) {
       message.error("Lỗi thông tin tài khoản, vui lòng đăng nhập lại");
       return;
     }
-
     try {
       setLoading(true);
-
       await removeCartItem(userId, itemId);
-
       setCartItems((prev) => prev.filter((item) => item.itemId !== itemId));
-
       message.success("Đã xóa sản phẩm khỏi giỏ hàng");
     } catch (error) {
       console.error("Error removing cart item:", error);
@@ -391,12 +374,9 @@ const useCart = () => {
 
     try {
       setLoading(true);
-
       await clearCart(userId);
-
       setCart(null);
       setCartItems([]);
-
       message.success("Đã xóa toàn bộ giỏ hàng");
     } catch (error) {
       console.error("Error clearing cart:", error);

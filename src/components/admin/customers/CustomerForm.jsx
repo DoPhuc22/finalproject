@@ -145,7 +145,7 @@ const CustomerForm = ({
                 { type: "email", message: "Email không hợp lệ" },
               ]}
             >
-              <Input placeholder="Nhập email" size="large" />
+              <Input disabled size="large" />
             </Form.Item>
           </Col>
           {/* Phone */}

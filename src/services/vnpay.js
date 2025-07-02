@@ -88,7 +88,7 @@ export const submitOrderToVNPay = async (amount, orderInfo) => {
   }
 };
 
-// API 2: Xử lý thanh toán VNPay (callback hoặc xác nhận)
+// API 2: Xử lý thanh toán VNPay
 export const processVNPayPayment = async (paymentParams = {}) => {
   try {
     console.log('Processing VNPay payment callback:', paymentParams);

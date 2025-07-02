@@ -70,7 +70,6 @@ const ProductPage = () => {
     setShowForm(true);
   };
 
-  
   const handleView = (product) => {
     Modal.info({
       title: "Chi tiết sản phẩm",
@@ -154,11 +153,10 @@ const ProductPage = () => {
       });
 
       if (productId) {
-        // Chế độ chỉnh sửa - luôn sử dụng FormData
-        await axios.put(`http://localhost:8080/api/products/${productId}`, productData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        message.success('Cập nhật thành công');
+        // Chế độ chỉnh sửa - GỬI QUA HOOK THAY VÌ AXIOS TRỰC TIẾP
+        console.log("Updating product via hook...");
+        await updateProduct(productId, productData);
+        message.success("Cập nhật sản phẩm thành công!");
       } else {
         // Chế độ tạo mới
         await createProduct(productData);
@@ -210,10 +208,11 @@ const ProductPage = () => {
   const outOfStockProducts = products.filter(
     (p) => !p.remainQuantity || p.remainQuantity === 0
   ).length;
-  const totalValue = products.reduce(
-    (sum, p) => sum + p.price * (p.stockQuantity || 0),
-    0
-  );
+  const totalValue = products.reduce((sum, p) => {
+    const quantity = p.remainQuantity || 0;
+    const price = p.price || 0;
+    return sum + (price * quantity);
+  }, 0);
 
   return (
     <Layout className="min-h-screen bg-slate-100">

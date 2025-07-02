@@ -179,8 +179,6 @@ const useCustomer = () => {
   // Create customer
   const createCustomerHandler = async (customerData) => {
     try {
-      console.log("Creating customer with data:", customerData); // Debug log
-
       // Validate dữ liệu trước khi gửi
       if (!customerData.name?.trim()) {
         throw new Error("Tên khách hàng không được để trống");
@@ -194,10 +192,10 @@ const useCustomer = () => {
         throw new Error("Mật khẩu phải có ít nhất 6 ký tự");
       }
 
-      // Clean và validate dữ liệu - FIX: đảm bảo password được hash đúng cách
+      // Clean và validate dữ liệu
       const cleanedData = {
         name: customerData.name.trim(),
-        email: customerData.email.trim().toLowerCase(),
+        email: customerData.email.trim(),
         phone: customerData.phone?.trim() || "",
         password: customerData.password,
         role: customerData.role || "customer",
@@ -303,7 +301,7 @@ const useCustomer = () => {
     }
   };
 
-  // Update customer - Move to top after update
+  // Update customer
   const updateCustomerHandler = async (id, customerData) => {
     try {
       const customerId = typeof id === "object" ? id.userId || id.id : id;
@@ -315,7 +313,6 @@ const useCustomer = () => {
       const response = await updateUser(customerId, customerData);
       message.success("Cập nhật khách hàng thành công!");
 
-      // Find existing customer to preserve all data
       const existingCustomer = customers.find(
         (c) => (c.userId || c.id) === customerId
       );
@@ -332,7 +329,6 @@ const useCustomer = () => {
       // Mark as recently updated
       recentlyUpdatedRef.current.add(customerId);
 
-      // Update customer and move to top
       setCustomers((prevCustomers) => {
         // Remove the updated item from current position
         const updatedList = prevCustomers.filter(

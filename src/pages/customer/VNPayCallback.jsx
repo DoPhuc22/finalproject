@@ -2,17 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, Result, Button, Spin, Typography, Descriptions } from "antd";
 import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-} from "@ant-design/icons";
-import {
   processVNPayPayment,
   validateVNPayResponse,
   parseVNPayAmount,
 } from "../../services/vnpay";
-import { createOrder } from "../../services/orders";
-import { processCheckout } from "../../services/checkout";
 import useCart from "../../hooks/useCart";
 
 const { Title, Text } = Typography;
@@ -88,24 +81,17 @@ const VNPayCallback = () => {
               paymentData.orderId = pendingOrder.createdOrderId;
               setPaymentResult({ ...paymentData });
 
-              // Đảm bảo xóa giỏ hàng
               await clearEntireCart();
-
-              // KHÔNG TẠO ĐƠN HÀNG Ở ĐÂY NỮA, để cho OrderSuccess.jsx xử lý
             } else {
-              // Cập nhật pendingOrder với thông tin giao dịch để OrderSuccess.jsx có thể sử dụng
               pendingOrder.transactionId = params.vnp_TransactionNo;
               pendingOrder.bankCode = params.vnp_BankCode;
               sessionStorage.setItem(
                 "pendingOrder",
                 JSON.stringify(pendingOrder)
               );
-
-              // KHÔNG TẠO ĐƠN HÀNG Ở ĐÂY NỮA, để cho OrderSuccess.jsx xử lý
             }
 
             // Chuyển hướng đến trang thành công
-            // Tạo một state object để OrderSuccess.jsx biết là đến từ VNPayCallback
             navigate("/order-success", {
               state: {
                 fromVNPayCallback: true,

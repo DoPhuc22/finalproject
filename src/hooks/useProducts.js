@@ -88,14 +88,14 @@ const useProducts = () => {
       try {
         setLoading(true);
         const isFetchingAll = Object.keys(params).length === 0;
-  
+
         // Chỉ sử dụng cache khi:
         // 1. Không có recently updated items
         // 2. Không force refresh
         // 3. Đang fetch all (không có params)
         if (
-          isFetchingAll && 
-          recentlyUpdatedRef.current.size === 0 && 
+          isFetchingAll &&
+          recentlyUpdatedRef.current.size === 0 &&
           !forceRefresh
         ) {
           const cached = localStorage.getItem("products");
@@ -121,12 +121,12 @@ const useProducts = () => {
             }
           }
         }
-  
+
         console.log("Fetching products from API...", { params, forceRefresh });
-  
+
         const response = await getAllProducts(params);
         const productsData = response.data || response;
-  
+
         // Lấy ảnh cho từng sản phẩm
         const productsWithImages = await Promise.all(
           productsData.map(async (product) => {
@@ -134,11 +134,11 @@ const useProducts = () => {
               const productId = product.productId || product.id;
               const imagesResponse = await getProductImages(productId);
               const images = imagesResponse.data || imagesResponse || [];
-  
+
               // Tìm ảnh chính (isPrimary = true) hoặc lấy ảnh đầu tiên
               const primaryImage =
                 images.find((img) => img.isPrimary) || images[0];
-  
+
               return {
                 ...product,
                 imageUrl: primaryImage?.imageUrl || null,
@@ -167,10 +167,10 @@ const useProducts = () => {
             }
           })
         );
-  
+
         // Apply filters
         let filteredData = productsWithImages;
-  
+
         // Client-side filtering
         if (params.search) {
           const keywords = params.search
@@ -178,7 +178,7 @@ const useProducts = () => {
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .split(/\s+/);
-  
+
           filteredData = filteredData.filter((product) => {
             const name =
               product.name
@@ -187,7 +187,7 @@ const useProducts = () => {
                 .replace(/[\u0300-\u036f]/g, "") || "";
             const description = product.description?.toLowerCase() || "";
             const status = product.status?.toLowerCase() || "";
-  
+
             return keywords.every(
               (word) =>
                 name.includes(word) ||
@@ -196,25 +196,25 @@ const useProducts = () => {
             );
           });
         }
-  
+
         if (params.status && params.status !== "all") {
           filteredData = filteredData.filter(
             (product) => product.status === params.status
           );
         }
-  
+
         if (params.categoryId && params.categoryId !== "all") {
           filteredData = filteredData.filter(
             (product) => product.categoryId === params.categoryId
           );
         }
-  
+
         if (params.brandId && params.brandId !== "all") {
           filteredData = filteredData.filter(
             (product) => product.brandId === params.brandId
           );
         }
-  
+
         if (
           params.priceRange &&
           params.priceRange.min !== undefined &&
@@ -227,7 +227,7 @@ const useProducts = () => {
             );
           });
         }
-  
+
         if (
           params.dateRange &&
           params.dateRange.start &&
@@ -242,24 +242,24 @@ const useProducts = () => {
             return productDate >= startDate && productDate <= endDate;
           });
         }
-  
+
         const sortedData = sortData(
           filteredData,
           sortConfig.field,
           sortConfig.order
         );
-  
+
         console.log("Setting products:", {
           count: sortedData.length,
-          recentlyUpdated: Array.from(recentlyUpdatedRef.current)
+          recentlyUpdated: Array.from(recentlyUpdatedRef.current),
         });
-  
+
         setProducts(sortedData);
         setPagination((prev) => ({
           ...prev,
           total: sortedData.length,
         }));
-  
+
         // Chỉ cache khi không có filter và fetch thành công
         if (isFetchingAll && !forceRefresh) {
           localStorage.setItem("products", JSON.stringify(sortedData));
@@ -293,10 +293,10 @@ const useProducts = () => {
   const createProductHandler = async (productData) => {
     try {
       setLoading(true);
-  
+
       // Kiểm tra xem productData có phải là FormData không
       const isFormData = productData instanceof FormData;
-  
+
       let response;
       if (isFormData) {
         // Sử dụng axios trực tiếp với config đúng
@@ -311,12 +311,12 @@ const useProducts = () => {
         // Sử dụng hàm API thông thường nếu không phải FormData
         response = await createProduct(productData);
       }
-  
+
       message.success("Tạo sản phẩm thành công!");
-  
+
       // Clear localStorage để đảm bảo không dùng cache cũ
       localStorage.removeItem("products");
-  
+
       // Mark newly created product as recently updated
       const createdProduct = response.data || response;
       const productId = createdProduct.productId || createdProduct.id;
@@ -324,10 +324,10 @@ const useProducts = () => {
         recentlyUpdatedRef.current.add(productId);
         console.log("Marked new product as recently updated:", productId);
       }
-  
+
       // Force refresh để lấy data mới từ server
       await fetchProducts({}, true);
-  
+
       return response;
     } catch (error) {
       message.error(
@@ -344,26 +344,50 @@ const useProducts = () => {
   const updateProductHandler = async (id, productData) => {
     try {
       console.log("Updating product:", { id, productData });
-  
+
       const productId = typeof id === "object" ? id.productId || id.id : id;
-  
+
       if (!productId) {
         throw new Error("Product ID is required for update");
       }
-  
-      const response = await updateProduct(productId, productData);
+
+      // Kiểm tra xem productData có phải là FormData không
+      const isFormData = productData instanceof FormData;
+      let response;
+
+      if (isFormData) {
+        // Sử dụng axios trực tiếp với FormData và config đúng
+        response = await axios.put(
+          `http://localhost:8080/api/products/${productId}`,
+          productData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              // Đảm bảo không có header khác can thiệp
+            },
+          }
+        );
+      } else {
+        // Sử dụng hàm API thông thường nếu không phải FormData
+        response = await updateProduct(productId, productData);
+      }
+
       message.success("Cập nhật sản phẩm thành công!");
-  
+
       // Clear localStorage để đảm bảo không dùng cache cũ
       localStorage.removeItem("products");
-      
+
       // Mark as recently updated
       recentlyUpdatedRef.current.add(productId);
-      console.log("Marked as recently updated:", productId, Array.from(recentlyUpdatedRef.current));
-  
+      console.log(
+        "Marked as recently updated:",
+        productId,
+        Array.from(recentlyUpdatedRef.current)
+      );
+
       // Force refresh - bỏ qua cache hoàn toàn
       await fetchProducts({}, true);
-  
+
       return response;
     } catch (error) {
       console.error("Update product error:", error);
@@ -371,7 +395,7 @@ const useProducts = () => {
       throw error;
     }
   };
-
+  
   // Delete product
   const deleteProductHandler = async (id) => {
     try {

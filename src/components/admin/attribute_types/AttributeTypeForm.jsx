@@ -35,7 +35,7 @@ const AttributeTypeForm = ({
       } else {
         form.resetFields();
         form.setFieldsValue({
-          status: "active", // Default status
+          status: "active",
         });
       }
     }

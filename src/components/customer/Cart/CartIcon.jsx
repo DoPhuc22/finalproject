@@ -27,7 +27,6 @@ const CartIcon = () => {
   useEffect(() => {
     if (isAuthenticated) {
       setDisplayQuantity(totalQuantity);
-      console.log('CartIcon - Updated display quantity:', totalQuantity);
     } else {
       setDisplayQuantity(0);
     }
@@ -43,15 +42,12 @@ const CartIcon = () => {
     };
 
     const handleUserLoggedIn = () => {
-      console.log('CartIcon - User logged in event received');
-      // Force refresh after a short delay to ensure useCart has updated
       setTimeout(() => {
         setDisplayQuantity(totalQuantity);
-      }, 2000);
+      }, 100000);
     };
 
     const handleUserLoggedOut = () => {
-      console.log('CartIcon - User logged out event received');
       setDisplayQuantity(0);
     };
 

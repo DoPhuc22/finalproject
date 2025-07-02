@@ -27,11 +27,6 @@ const ProductParameters = ({ product, attributes = [] }) => {
       name: 'Danh mục', 
       value: typeof product.category === 'object' ? product.category.name : product.category || 'Không có'
     },
-    { 
-      key: 'sku', 
-      name: 'Mã sản phẩm', 
-      value: product.sku || 'Không có'
-    }
   ];
 
   // Kết hợp danh sách thuộc tính API và thuộc tính cơ bản

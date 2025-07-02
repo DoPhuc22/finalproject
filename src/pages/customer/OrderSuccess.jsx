@@ -14,13 +14,11 @@ import {
   ShoppingOutlined,
   HistoryOutlined,
 } from "@ant-design/icons";
-import { createOrder } from "../../services/orders";
-import { processCheckout } from "../../services/checkout"; // Thêm import này
+import { processCheckout } from "../../services/checkout";
 import useCart from "../../hooks/useCart";
 
 const { Title, Text } = Typography;
 
-// Biến global ở ngoài component để đảm bảo không bị reset giữa các lần render
 let isOrderCreationInProgress = false;
 let globalOrderId = null;
 
@@ -38,33 +36,21 @@ const OrderSuccess = () => {
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    // Đánh dấu component đã được mount
     mountedRef.current = true;
-
-    // Cleanup function
     return () => {
       mountedRef.current = false;
     };
   }, []);
 
   useEffect(() => {
-    // Chỉ chạy một lần, không quan tâm đến dependencies
     if (hasInitializedRef.current) {
-      console.log("Already initialized, skipping");
       return;
     }
-
-    // Đánh dấu đã khởi tạo
     hasInitializedRef.current = true;
 
     const initializeOrder = async () => {
       try {
         setLoading(true);
-        console.log(
-          "OrderSuccess: Initializing with search params:",
-          Object.fromEntries(searchParams.entries())
-        );
-        console.log("OrderSuccess: Location state:", location.state);
 
         // ===== TRƯỜNG HỢP 1: Đơn hàng COD đã được tạo từ CheckoutForm =====
         if (
@@ -72,7 +58,6 @@ const OrderSuccess = () => {
           location.state.orderId &&
           location.state.paymentMethod === "cod"
         ) {
-          console.log("COD order detected from state:", location.state);
           setOrderInfo(location.state);
           setLoading(false);
           return;
@@ -83,18 +68,12 @@ const OrderSuccess = () => {
         if (completedOrderStr) {
           try {
             const completedOrder = JSON.parse(completedOrderStr);
-            console.log(
-              "Completed order found in sessionStorage:",
-              completedOrder
-            );
             setOrderInfo(completedOrder);
 
             // Đảm bảo giỏ hàng đã được xóa
             if (cartItems && cartItems.length > 0) {
               try {
-                console.log("Clearing cart from completedOrder flow");
                 await clearEntireCart();
-                console.log("Cart cleared successfully");
               } catch (clearError) {
                 console.error("Error clearing cart:", clearError);
               }
@@ -115,8 +94,6 @@ const OrderSuccess = () => {
           !location.state && window.location.pathname === "/order-success";
 
         if (isDirectVNPayRedirect) {
-          console.log("Direct VNPay redirect detected");
-
           // Lấy thông tin đơn hàng từ pendingOrder
           const pendingOrderStr = sessionStorage.getItem("pendingOrder");
           if (!pendingOrderStr) {
@@ -128,11 +105,6 @@ const OrderSuccess = () => {
 
           // Parse pendingOrder
           const pendingOrder = JSON.parse(pendingOrderStr);
-          console.log(
-            "Processing pending order from direct VNPay redirect:",
-            pendingOrder
-          );
-
           // Kiểm tra xem đơn hàng đã được tạo chưa
           if (pendingOrder.createdOrderId) {
             console.log(
@@ -151,14 +123,11 @@ const OrderSuccess = () => {
             // Đảm bảo giỏ hàng đã được xóa
             if (cartItems && cartItems.length > 0) {
               try {
-                console.log("Clearing cart from existing order flow");
                 await clearEntireCart();
-                console.log("Cart cleared successfully");
               } catch (clearError) {
                 console.error("Error clearing cart:", clearError);
               }
             }
-
             setLoading(false);
             return;
           }
@@ -167,15 +136,8 @@ const OrderSuccess = () => {
           if (pendingOrder.orderData) {
             // KIỂM TRA BIẾN GLOBAL để tránh gọi API hai lần
             if (isOrderCreationInProgress) {
-              console.log("Order creation already in progress (global check)");
-
               // Nếu đã có orderId từ lần gọi trước (trong biến global)
               if (globalOrderId) {
-                console.log(
-                  "Using existing orderId from global variable:",
-                  globalOrderId
-                );
-
                 const newOrderInfo = {
                   orderId: globalOrderId,
                   total: pendingOrder.amount || pendingOrder.orderData.total,
@@ -186,23 +148,16 @@ const OrderSuccess = () => {
                 setOrderInfo(newOrderInfo);
                 setLoading(false);
               }
-
               return;
             }
 
             // Đặt flag để đảm bảo chỉ gọi API một lần - SỬ DỤNG BIẾN GLOBAL
             isOrderCreationInProgress = true;
-            console.log("Setting isOrderCreationInProgress to TRUE");
 
             try {
               // Đặt trạng thái là confirmed vì đã thanh toán
               pendingOrder.orderData.status = "confirmed";
               pendingOrder.orderData.paymentMethod = "vnpay";
-
-              // Tạo đơn hàng BẰNG API CHECKOUT thay vì createOrder
-              console.log(
-                "Creating order via checkout API after VNPay payment"
-              );
 
               // Chuẩn bị dữ liệu cho API checkout
               const checkoutData = {
@@ -215,14 +170,8 @@ const OrderSuccess = () => {
                 },
               };
 
-              // Gọi API checkout thay vì createOrder
+              // Gọi API checkout
               const orderResponse = await processCheckout(checkoutData);
-              console.log(
-                "Order created successfully via checkout API:",
-                orderResponse
-              );
-
-              // Xác định orderId từ response
               let orderId = null;
               if (orderResponse?.data?.orderId) {
                 orderId = orderResponse.data.orderId;
@@ -265,11 +214,7 @@ const OrderSuccess = () => {
               // Xóa giỏ hàng
               if (cartItems && cartItems.length > 0) {
                 try {
-                  console.log(
-                    "Clearing cart after successful order creation via checkout API"
-                  );
                   await clearEntireCart();
-                  console.log("Cart cleared successfully");
                 } catch (clearError) {
                   console.error("Error clearing cart:", clearError);
                 }
@@ -277,7 +222,6 @@ const OrderSuccess = () => {
 
               // Cập nhật UI
               if (mountedRef.current) {
-                // Kiểm tra component còn mounted không
                 setOrderInfo(newOrderInfo);
                 message.success("Đơn hàng đã được tạo thành công!");
               }
@@ -289,10 +233,6 @@ const OrderSuccess = () => {
                 error.response?.data?.message?.includes("duplicate") ||
                 error.message?.includes("đã tồn tại")
               ) {
-                console.log(
-                  "Duplicate order detected, attempting to retrieve existing order"
-                );
-
                 // Tìm kiếm orderId trong message lỗi
                 const orderIdMatch =
                   error.response?.data?.message?.match(/#(\d+)/);
@@ -302,8 +242,6 @@ const OrderSuccess = () => {
 
                 // Lưu orderId vào biến global để có thể sử dụng lại nếu cần
                 globalOrderId = existingOrderId;
-
-                console.log("Found existing order ID:", existingOrderId);
                 const existingOrderInfo = {
                   orderId: existingOrderId,
                   total: pendingOrder.amount || pendingOrder.orderData.total,
@@ -320,16 +258,13 @@ const OrderSuccess = () => {
 
                 // Cập nhật UI
                 if (mountedRef.current) {
-                  // Kiểm tra component còn mounted không
                   setOrderInfo(existingOrderInfo);
                 }
 
                 // Vẫn xóa giỏ hàng
                 if (cartItems && cartItems.length > 0) {
                   try {
-                    console.log("Clearing cart from duplicate order flow");
                     await clearEntireCart();
-                    console.log("Cart cleared successfully");
                   } catch (clearError) {
                     console.error("Error clearing cart:", clearError);
                   }
@@ -337,59 +272,50 @@ const OrderSuccess = () => {
 
                 // Hiển thị thông báo
                 if (mountedRef.current) {
-                  // Kiểm tra component còn mounted không
                   message.warning("Đơn hàng này đã được tạo trước đó");
                 }
               } else {
                 if (mountedRef.current) {
-                  // Kiểm tra component còn mounted không
                   message.error("Có lỗi khi tạo đơn hàng: " + error.message);
                 }
               }
             } finally {
-              // KHÔNG reset isOrderCreationInProgress để ngăn việc gọi API lại
-              // Chúng ta sẽ giữ nó là true để mọi lần render sau đều không gọi API nữa
               console.log("Order creation process completed");
             }
           } else {
             console.error("No order data found in pending order");
             if (mountedRef.current) {
-              // Kiểm tra component còn mounted không
+            
               message.error("Không tìm thấy dữ liệu đơn hàng");
             }
           }
         } else {
           // Không phải từ VNPay và không có state
           console.log("No valid order information found");
-          // Không chuyển hướng, hiển thị UI không tìm thấy đơn hàng
         }
       } catch (error) {
         console.error("Error in order initialization:", error);
         if (mountedRef.current) {
-          // Kiểm tra component còn mounted không
           message.error("Có lỗi xảy ra: " + error.message);
         }
       } finally {
         if (mountedRef.current) {
-          // Kiểm tra component còn mounted không
           setLoading(false);
         }
       }
     };
 
     initializeOrder();
-  }, []); // Empty dependency array - chỉ chạy một lần khi component mount
+  }, []);
 
   // Xóa giỏ hàng lại một lần nữa nếu vẫn còn items trong giỏ hàng
   useEffect(() => {
     if (orderInfo && cartItems && cartItems.length > 0) {
-      console.log("Final attempt to clear cart if needed");
       const timer = setTimeout(async () => {
-        if (!mountedRef.current) return; // Kiểm tra component còn mounted không
+        if (!mountedRef.current) return;
 
         try {
           await clearEntireCart();
-          console.log("Cart cleared in final attempt");
         } catch (error) {
           console.error("Error in final cart clearing:", error);
         }

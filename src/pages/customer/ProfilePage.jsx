@@ -40,10 +40,8 @@ const ProfilePage = () => {
             throw new Error("Không tìm thấy thông tin người dùng");
           }
           
-          // Chuẩn hóa dữ liệu
           const userData = { ...profileData };
           
-          // Đảm bảo có ID
           if (!userData.id) {
             userData.id = userData.userId || userData._id || Date.now().toString();
           }
@@ -55,7 +53,6 @@ const ProfilePage = () => {
         } catch (profileError) {
           console.error("Error fetching profile:", profileError);
           
-          // Thử lấy từ getCurrentUser như fallback
           const user = await getCurrentUser({ forceRefresh: true });
           
           if (!user) {
@@ -79,8 +76,8 @@ const ProfilePage = () => {
     checkAuth();
   }, [navigate, location]);
   
-  // Khi có sự thay đổi localStorage, cập nhật lại currentUser
-  useEffect(() => {
+
+  useEffect(() => {  // Khi có sự thay đổi localStorage, cập nhật lại currentUser
     const handleStorageChange = () => {
       const userStr = localStorage.getItem('user');
       if (userStr) {

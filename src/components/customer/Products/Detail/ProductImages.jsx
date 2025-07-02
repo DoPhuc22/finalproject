@@ -1,4 +1,3 @@
-// components/customer/Products/Detail/ProductImages.jsx
 import React, { useState } from 'react';
 import { Image, Row, Col } from 'antd';
 
@@ -19,7 +18,6 @@ const ProductImages = ({ product, images = [] }) => {
 
   return (
     <div className="product-images">
-      {/* Main Image with Preview */}
       <div className="main-image mb-4">
         <Image
           src={selectedImage}

@@ -73,35 +73,27 @@ export const getAllUsers = async (params = {}) => {
   }
 };
 
-// Tạo user mới - FIX: đảm bảo password được gửi đúng format
+// Tạo user mới
 export const createUser = async (userData) => {
   try {
-    // Validate required fields
     if (!userData.name || !userData.email || !userData.password) {
       throw new Error("Thiếu thông tin bắt buộc: tên, email và mật khẩu");
     }
 
-    // Validate password strength
     if (userData.password.length < 6) {
       throw new Error("Mật khẩu phải có ít nhất 6 ký tự");
     }
 
-    // Clean và chuẩn hóa dữ liệu - KHÔNG hash password ở frontend
     const cleanData = {
       name: userData.name.trim(),
-      email: userData.email.trim().toLowerCase(),
+      email: userData.email.trim(),
       phone: userData.phone?.trim() || "",
-      password: userData.password, // Gửi raw password để backend hash
+      password: userData.password,
       role: userData.role || "customer",
       gender: userData.gender || "M",
       address: userData.address?.trim() || "",
       status: userData.status || "active",
     };
-
-    console.log("Creating user with clean data:", {
-      ...cleanData,
-      password: "[HIDDEN]", // Ẩn password trong log
-    });
 
     const response = await api.post(USER_ENDPOINTS.BASE, cleanData);
     return response;

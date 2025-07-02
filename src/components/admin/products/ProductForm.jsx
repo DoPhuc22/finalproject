@@ -29,7 +29,6 @@ import {
   getBase64,
   uploadImage,
 } from "../../../utils/imageUpload";
-import axios from "axios";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -63,7 +62,6 @@ const ProductForm = ({
           active: product.active === true,
         });
 
-        // Set images với logic ảnh chính đúng - SỬA CHÍNH Ở ĐÂY
         const productImages = product.images || [];
         setImages(
           productImages.map((img, index) => ({
@@ -72,12 +70,11 @@ const ProductForm = ({
             name: img.name || `image-${index}`,
             status: "done",
             url: img.imageUrl || img.url,
-            isPrimary: img.isPrimary === true, // Chỉ dựa vào dữ liệu từ server
-            isExisting: true, // Đánh dấu là ảnh đã tồn tại
+            isPrimary: img.isPrimary === true,
+            isExisting: true,
           }))
         );
       } else {
-        // Tạo mới - đặt giá trị mặc định
         form.setFieldsValue({
           active: true,
           status: true,
@@ -134,7 +131,7 @@ const ProductForm = ({
         fd.append("sku", values.sku);
         fd.append("description", values.description || "");
         fd.append("remainQuantity", values.remainQuantity || 0);
-        fd.append("active", values.active === true ? "true" : "false"); // Sửa logic active
+        fd.append("active", values.active === true ? "true" : "false");
         fd.append("status", values.status ? "active" : "inactive");
         fd.append("price", values.price);
         fd.append("brandId", values.brandId);

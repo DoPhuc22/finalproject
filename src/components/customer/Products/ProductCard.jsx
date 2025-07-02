@@ -31,6 +31,7 @@ const ProductCard = ({ product, onAddToCart, cartLoading }) => {
     try {
       if (onAddToCart) {
         await onAddToCart(product, 1);
+        message.success("Sản phẩm đã được thêm vào giỏ hàng");
       }
     } catch (error) {
       console.error('Error in handleAddToCart:', error);
@@ -87,16 +88,11 @@ const ProductCard = ({ product, onAddToCart, cartLoading }) => {
     } else if (typeof product.category === 'string') {
       categoryName = product.category;
     } else {
-      return null; // Nếu không có danh mục, không hiển thị gì
+      return null;
     }
     
-    // Nếu tên danh mục là rỗng, không hiển thị gì
     if (!categoryName) return null;
-    
-    // Chọn màu cho danh mục
     const color = categoryColors[categoryName] || categoryColors.default;
-    
-    // Trả về thẻ Tag với màu tương ứng
     return <Tag color={color}>{categoryName}</Tag>;
   };
 
@@ -104,7 +100,7 @@ const ProductCard = ({ product, onAddToCart, cartLoading }) => {
   const inStock = product.remainQuantity > 0;
 
   return (
-    <Link to={`/products/${productId}`} className="product-card-link">
+    <Link to={`/products/${productId}`} className="product-card-link hover:no-underline">
       <Badge.Ribbon 
         text={inStock ? "Còn hàng" : "Hết hàng"} 
         color={inStock ? "green" : "red"}
@@ -152,7 +148,7 @@ const ProductCard = ({ product, onAddToCart, cartLoading }) => {
             title={
               <div className="product-title">
                 <Tooltip title={product.name}>
-                  <span className="text-base font-medium line-clamp-2">
+                  <span className="text-base font-medium line-clamp-1">
                     {product.name}
                   </span>
                 </Tooltip>

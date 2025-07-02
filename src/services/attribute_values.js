@@ -1,6 +1,5 @@
 import api from "../utils/request";
 
-// API endpoints cho attribute values - chỉ sử dụng product-based endpoints
 const ATTRIBUTE_ENDPOINTS = {
   BY_PRODUCT: (productId) => `/products/${productId}/attribute-values`,
   BY_PRODUCT_AND_ID: (productId, id) =>
@@ -90,21 +89,6 @@ export const getAttributeValuesByProduct = async (productId, params = {}) => {
     console.error("Get attribute values by product API error:", error);
     throw error;
   }
-};
-
-export const getAllAttributeValues = async () => {
-  try {
-    const response = await api.get(ATTRIBUTE_ENDPOINTS.ALL_ATTRIBUTE_VALUES());
-    return response;
-  } catch (error) {
-    console.error("Get all attribute values API error:", error);
-    throw error;
-  }
-  // console.warn(
-  //   "getAllAttributeValues: API endpoint not available, using localStorage only"
-  // );
-
-  // return { data: [] };
 };
 
 // Tạo attribute value mới

@@ -76,12 +76,23 @@ const AttributeValueForm = ({
     onCancel();
   };
 
+  const unorderedSearchFilter = (input, option) => {
+    if (!option?.children) return false;
+
+    const inputWords = input.toLowerCase().split(" ").filter(Boolean);
+    const optionText = option.children.toLowerCase();
+
+    return inputWords.every((word) => optionText.includes(word));
+  };
+
   return (
     <Modal
       title={
         <Space>
           <TagOutlined />
-          {isEdit ? "Chỉnh sửa giá trị thuộc tính" : "Thêm giá trị thuộc tính mới"}
+          {isEdit
+            ? "Chỉnh sửa giá trị thuộc tính"
+            : "Thêm giá trị thuộc tính mới"}
         </Space>
       }
       open={visible}
@@ -91,11 +102,7 @@ const AttributeValueForm = ({
       destroyOnClose
       className="attribute-value-form-modal"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        scrollToFirstError
-      >
+      <Form form={form} layout="vertical" scrollToFirstError>
         <Row gutter={16}>
           <Col span={24}>
             <Form.Item
@@ -107,9 +114,8 @@ const AttributeValueForm = ({
                 placeholder="Chọn sản phẩm"
                 loading={loading}
                 showSearch
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().includes(input.toLowerCase())
-                }
+                optionFilterProp="children"
+                filterOption={unorderedSearchFilter}
               >
                 {products.map((product) => (
                   <Option
@@ -127,9 +133,17 @@ const AttributeValueForm = ({
             <Form.Item
               name="attr_type_id"
               label="Loại thuộc tính"
-              rules={[{ required: true, message: "Vui lòng chọn loại thuộc tính" }]}
+              rules={[
+                { required: true, message: "Vui lòng chọn loại thuộc tính" },
+              ]}
             >
-              <Select placeholder="Chọn loại thuộc tính">
+              <Select
+                placeholder="Chọn loại thuộc tính"
+                loading={loading}
+                showSearch
+                optionFilterProp="children"
+                filterOption={unorderedSearchFilter}
+              >
                 {attributeTypes.map((type) => (
                   <Option key={type.attr_type_id} value={type.attr_type_id}>
                     {type.name}
@@ -153,11 +167,7 @@ const AttributeValueForm = ({
           </Col>
 
           <Col span={24}>
-            <Form.Item
-              name="status"
-              label="Trạng thái"
-              initialValue="active"
-            >
+            <Form.Item name="status" label="Trạng thái" initialValue="active">
               <Select placeholder="Chọn trạng thái">
                 <Option value="active">Hoạt động</Option>
                 <Option value="inactive">Không hoạt động</Option>
@@ -179,13 +189,15 @@ const AttributeValueForm = ({
                 {attributeValue.created_at && (
                   <Text type="secondary">
                     <InfoCircleOutlined className="mr-1" />
-                    Ngày tạo: {new Date(attributeValue.created_at).toLocaleString()}
+                    Ngày tạo:{" "}
+                    {new Date(attributeValue.created_at).toLocaleString()}
                   </Text>
                 )}
                 {attributeValue.updated_at && (
                   <Text type="secondary">
                     <InfoCircleOutlined className="mr-1" />
-                    Cập nhật lần cuối: {new Date(attributeValue.updated_at).toLocaleString()}
+                    Cập nhật lần cuối:{" "}
+                    {new Date(attributeValue.updated_at).toLocaleString()}
                   </Text>
                 )}
               </Space>

@@ -60,8 +60,10 @@ const ProductInfo = ({ product }) => {
 
     const success = await addItemToCart(product, quantity);
     if (success) {
-      // Reset quantity after successful add
       setQuantity(1);
+      message.success(
+        <span className="text-2xl">Đã thêm {product.name} vào giỏ hàng</span>
+      );
     }
   };
 
@@ -148,11 +150,6 @@ const ProductInfo = ({ product }) => {
         ) : (
           <Tag color="error">Hết hàng</Tag>
         )}
-      </div>
-
-      {/* Description */}
-      <div className="mb-6">
-        <Paragraph>{product.description}</Paragraph>
       </div>
 
       {/* Quantity Selection */}

@@ -445,12 +445,6 @@ const CheckoutForm = () => {
             {/* User Info Display */}
             {currentUser && (
               <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center mb-2">
-                  <UserOutlined className="text-blue-600 mr-2" />
-                  <Text strong className="text-blue-800">
-                    Thông tin tài khoản
-                  </Text>
-                </div>
                 <Text className="text-sm text-blue-700">
                   Thông tin dưới đây được lấy từ tài khoản của bạn. Bạn có thể
                   chỉnh sửa nếu cần.

@@ -165,8 +165,6 @@ const OrderFilters = ({
                 <Option value="all">Tất cả phương thức</Option>
                 <Option value="cod">Thanh toán khi nhận hàng</Option>
                 <Option value="vnpay">VNPay</Option>
-                <Option value="banking">Chuyển khoản</Option>
-                <Option value="wallet">Ví điện tử</Option>
               </Select>
             </Form.Item>
           </Col>

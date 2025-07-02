@@ -53,10 +53,8 @@ const OrderTable = ({
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [receiverForm] = Form.useForm();
 
-  // Hàm chuẩn hóa trạng thái
   const normalizeStatus = (status) => {
     if (typeof status === "string") {
-      // Kiểm tra xem status có phải là chuỗi JSON không
       if (status.startsWith("{") && status.endsWith("}")) {
         try {
           const parsedStatus = JSON.parse(status);
@@ -72,60 +70,52 @@ const OrderTable = ({
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
-  try {
-    setStatusLoading(prev => ({ ...prev, [orderId]: true }));
-    
-    console.log("OrderTable - handleStatusChange:", { orderId, newStatus });
-    console.log("OrderTable - Type of newStatus:", typeof newStatus);
-    
-    // Đảm bảo newStatus là string đơn giản
-    let statusValue = newStatus;
-    
-    // Xử lý nếu newStatus là JSON string
-    if (typeof newStatus === 'string' && newStatus.startsWith('{') && newStatus.includes('status')) {
-      try {
-        const parsedStatus = JSON.parse(newStatus);
-        if (parsedStatus && parsedStatus.status) {
-          statusValue = parsedStatus.status;
+    try {
+      setStatusLoading((prev) => ({ ...prev, [orderId]: true }));
+      let statusValue = newStatus;
+
+      if (
+        typeof newStatus === "string" &&
+        newStatus.startsWith("{") &&
+        newStatus.includes("status")
+      ) {
+        try {
+          const parsedStatus = JSON.parse(newStatus);
+          if (parsedStatus && parsedStatus.status) {
+            statusValue = parsedStatus.status;
+          }
+        } catch (error) {
+          console.error("Error parsing status JSON:", error);
         }
-      } catch (error) {
-        console.error("Error parsing status JSON:", error);
       }
+
+      if (typeof statusValue === "object" && statusValue.status) {
+        statusValue = statusValue.status;
+      }
+
+      statusValue =
+        typeof statusValue === "string" ? statusValue : String(statusValue);
+
+      await onStatusUpdate(orderId, statusValue);
+
+      message.success(`Cập nhật trạng thái đơn hàng #${orderId} thành công!`);
+    } catch (error) {
+      console.error("Error changing status:", error);
+
+      // Hiển thị thông báo lỗi chi tiết
+      let errorMessage = "Có lỗi xảy ra khi cập nhật trạng thái đơn hàng";
+
+      if (error.response?.data?.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      } else if (error.message) {
+        errorMessage += `: ${error.message}`;
+      }
+
+      message.error(errorMessage);
+    } finally {
+      setStatusLoading((prev) => ({ ...prev, [orderId]: false }));
     }
-    
-    // Đảm bảo statusValue là string cơ bản
-    if (typeof statusValue === 'object' && statusValue.status) {
-      statusValue = statusValue.status;
-    }
-    
-    // Đảm bảo là string đơn giản
-    statusValue = typeof statusValue === 'string' ? statusValue : String(statusValue);
-    
-    console.log("OrderTable - Final status value:", statusValue);
-    console.log("OrderTable - Type of final status value:", typeof statusValue);
-    
-    // GỬI TRỰC TIẾP STRING KHÔNG TẠO OBJECT
-    await onStatusUpdate(orderId, statusValue);
-    
-    // Hiển thị thông báo thành công
-    message.success(`Cập nhật trạng thái đơn hàng #${orderId} thành công!`);
-  } catch (error) {
-    console.error("Error changing status:", error);
-    
-    // Hiển thị thông báo lỗi chi tiết
-    let errorMessage = "Có lỗi xảy ra khi cập nhật trạng thái đơn hàng";
-    
-    if (error.response?.data?.message) {
-      errorMessage += `: ${error.response.data.message}`;
-    } else if (error.message) {
-      errorMessage += `: ${error.message}`;
-    }
-    
-    message.error(errorMessage);
-  } finally {
-    setStatusLoading(prev => ({ ...prev, [orderId]: false }));
-  }
-};
+  };
 
   const showOrderDetail = (order) => {
     // Chuẩn hóa trạng thái đơn hàng trước khi hiển thị

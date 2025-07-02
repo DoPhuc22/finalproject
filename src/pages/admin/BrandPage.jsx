@@ -153,11 +153,8 @@ const BrandPage = () => {
     }
   };
 
-  // Fix handleStatusChange - lấy đầy đủ thông tin brand trước khi update
   const handleStatusChange = async (brandId, isActive) => {
     try {
-      console.log("Status change for brand:", { brandId, isActive }); // Debug log
-
       // Tìm brand trong danh sách để lấy thông tin đầy đủ
       const currentBrand = brands.find(
         (brand) => (brand.brandId || brand.id) === brandId
@@ -174,8 +171,6 @@ const BrandPage = () => {
         status: isActive ? "active" : "inactive",
       };
 
-      console.log("Update data for status change:", updateData); // Debug log
-
       await updateBrand(brandId, updateData);
       message.success(
         `${isActive ? "Kích hoạt" : "Ngừng hoạt động"} nhãn hàng thành công`
@@ -186,16 +181,11 @@ const BrandPage = () => {
     }
   };
 
-  // Fix handleFormSubmit - thay đổi thứ tự tham số
   const handleFormSubmit = async (brandData, brandId = null) => {
     try {
-      console.log("Form submit:", { brandData, brandId }); // Debug log
-
       if (brandId) {
-        // Edit mode - truyền brandId và brandData
         await updateBrand(brandId, brandData);
       } else {
-        // Create mode - chỉ truyền brandData
         await createBrand(brandData);
       }
       setShowForm(false);
@@ -228,10 +218,6 @@ const BrandPage = () => {
   const totalBrands = brands.length;
   const activeBrands = brands.filter((b) => b.status === "active").length;
   const inactiveBrands = totalBrands - activeBrands;
-  const totalProducts = brands.reduce(
-    (sum, b) => sum + (b.productCount || 0),
-    0
-  );
 
   return (
     <Layout className="min-h-screen bg-slate-100">
